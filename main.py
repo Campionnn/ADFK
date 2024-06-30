@@ -13,31 +13,42 @@ except ImportError:
 process_name = "RobloxPlayerBeta.exe"
 with OpenProcess(process_name=process_name) as process:
     print(process.pid)
-    # addresses = memory_search.search_memory_for_float(process.pid, 12.680, 0.0005)
+    addresses = memory_search.search_memory_for_float(process.pid, 12.680, 0.0005)
     # for address in addresses:
     #     print(f"Found address: {address}")
-    # print(len(addresses))
-    # input("Press enter once in afk...")
-    # addresses2 = memory_search.search_memory_for_float_in_addresses(process.pid, addresses, -2.3425, 0.005)
-    # for address in addresses2:
-    #     print(f"Found address: {address}")
-    # y_addrs = 0x2E5E72195E4
-    # x_addrs = y_addrs - 0x4
-    # z_addrs = y_addrs + 0x4
-    # pitch_addrs = y_addrs + 0x18C
-    # yaw_addrs = y_addrs + 0x188
-    # addrs = [x_addrs, y_addrs, z_addrs, pitch_addrs, yaw_addrs]
-    # print(f"Process ID: {process.pid}")
-    # while True:
-    #     for address, value in process.search_by_addresses(bytes, 4, addrs):
-    #         if address == x_addrs:
-    #             print(f"x: {struct.unpack('f', value)[0]}")
-    #         elif address == y_addrs:
-    #             print(f"y: {struct.unpack('f', value)[0]}")
-    #         elif address == z_addrs:
-    #             print(f"z: {struct.unpack('f', value)[0]}")
-    #         elif address == pitch_addrs:
-    #             print(f"pitch: {struct.unpack('f', value)[0]}")
-    #         elif address == yaw_addrs:
-    #             print(f"yaw: {struct.unpack('f', value)[0]}")
-    #     time.sleep(1)
+    print(len(addresses))
+    input("Press enter once in afk...")
+    addresses2 = memory_search.search_memory_for_float_in_addresses(process.pid, addresses, -2.3425, 0.005)
+    for address in addresses2:
+        print(f"Found address: {hex(address)}")
+
+    if len(addresses2) == 1:
+        y_addrs = addresses2[0]
+    elif len(addresses2) == 2:
+        y_addrs = addresses2[1]
+    else:
+        print("Could not find one address")
+        exit()
+    x_addrs = y_addrs - 0x4
+    z_addrs = y_addrs + 0x4
+    pitch_addrs = y_addrs + 0x18C
+    yaw_addrs = y_addrs + 0x188
+    addrs = [x_addrs, y_addrs, z_addrs, pitch_addrs, yaw_addrs]
+    while True:
+        player_pos = {}
+        for address, value in process.search_by_addresses(bytes, 4, addrs):
+            if address == x_addrs:
+                player_pos['x'] = struct.unpack('f', value)[0]
+            elif address == y_addrs:
+                player_pos['y'] = struct.unpack('f', value)[0]
+            elif address == z_addrs:
+                player_pos['z'] = struct.unpack('f', value)[0]
+            elif address == pitch_addrs:
+                player_pos['pitch'] = struct.unpack('f', value)[0]
+            elif address == yaw_addrs:
+                player_pos['yaw'] = struct.unpack('f', value)[0]
+        pos_order = ['x', 'y', 'z', 'pitch', 'yaw']
+        print(' '.join(f"{pos}: {player_pos[pos]}" for pos in pos_order))
+        time.sleep(0.2)
+    else:
+        print("Could not find one address")

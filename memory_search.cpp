@@ -10,13 +10,9 @@ bool ReadMemory(HANDLE hProcess, LPCVOID address, LPVOID buffer, SIZE_T size) {
 }
 
 #undef min
-std::vector<int> SearchMemoryForFloat(DWORD pid, float targetValue, float tolerance) {
-    std::vector<int> foundAddresses;
-    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-    if (hProcess == NULL) {
-        foundAddresses.push_back(-1);
-        return foundAddresses;
-    }
+std::vector<LPCVOID> SearchMemoryForFloat(DWORD pid, float targetValue, float tolerance) {
+    std::vector<LPCVOID> foundAddresses;
+    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS | PROCESS_VM_READ, FALSE, pid);
 
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
@@ -24,16 +20,15 @@ std::vector<int> SearchMemoryForFloat(DWORD pid, float targetValue, float tolera
     LPCVOID endAddress = sysInfo.lpMaximumApplicationAddress;
 
     MEMORY_BASIC_INFORMATION memInfo;
-    int bufferSize = 0x400;
-    std::vector<char> buffer(bufferSize);
+    std::vector<char> buffer(4096);
 
     for (LPCVOID address = startAddress; address < endAddress;) {
         if (VirtualQueryEx(hProcess, address, &memInfo, sizeof(memInfo)) == 0) {
-            address = reinterpret_cast<LPCVOID>(reinterpret_cast<SIZE_T>(address) + bufferSize);
+            address = reinterpret_cast<LPCVOID>(reinterpret_cast<SIZE_T>(address) + 0x1000);
             continue;
         }
 
-        if (memInfo.State == MEM_COMMIT && (memInfo.Protect == PAGE_READWRITE || memInfo.Protect == PAGE_READONLY || memInfo.Protect == PAGE_WRITECOPY)) {
+        if (memInfo.State == MEM_COMMIT && (memInfo.Protect == PAGE_READWRITE || memInfo.Protect == PAGE_READONLY)) {
             SIZE_T regionSize = memInfo.RegionSize;
             LPCVOID regionBase = memInfo.BaseAddress;
 
@@ -46,8 +41,7 @@ std::vector<int> SearchMemoryForFloat(DWORD pid, float targetValue, float tolera
                     for (SIZE_T i = 0; i < numFloats; ++i) {
                         float value = floatBuffer[i];
                         if (std::abs(value - targetValue) <= tolerance) {
-                            foundAddresses.push_back(static_cast<int>(reinterpret_cast<SIZE_T>(regionBase) + bytesRead + i * sizeof(float)));
-                            std::cout << "Found: " << value << " at address: " << std::hex << foundAddresses.back() << std::endl;
+                            foundAddresses.push_back(reinterpret_cast<LPCVOID>(reinterpret_cast<SIZE_T>(regionBase) + bytesRead + i * sizeof(float)));
                         }
                     }
                 } else {
@@ -64,22 +58,16 @@ std::vector<int> SearchMemoryForFloat(DWORD pid, float targetValue, float tolera
     return foundAddresses;
 }
 
-std::vector<int> SearchMemoryForFloatInAddresses(DWORD pid, std::vector<int> addresses, float targetValue, float tolerance) {
-    std::vector<int> foundAddresses;
-    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-    if (hProcess == NULL) {
-        foundAddresses.push_back(-1);
-        return foundAddresses;
-    }
+std::vector<uint64_t> SearchMemoryForFloatInAddresses(DWORD pid, std::vector<LPCVOID> addresses, float targetValue, float tolerance) {
+    std::vector<uint64_t> foundAddresses;
+    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS | PROCESS_VM_READ, FALSE, pid);
 
     float buffer;
     for (auto address : addresses) {
-        LPCVOID addressLPCVOID = reinterpret_cast<LPCVOID>(reinterpret_cast<SIZE_T>(static_cast<uintptr_t>(static_cast<uint32_t>(address))));
-        std::cout << "Checking address: " << addressLPCVOID << std::endl;
-        if (ReadMemory(hProcess, addressLPCVOID, &buffer, sizeof(float))) {
-            std::cout << "Checking: " << buffer << " at address: " << std::hex << address << std::endl;
+        if (ReadMemory(hProcess, address, &buffer, sizeof(float))) {
             if (std::abs(buffer - targetValue) <= tolerance) {
-                foundAddresses.push_back(address);
+                foundAddresses.push_back(reinterpret_cast<uint64_t>(address));
+                std::cout << "address lcpvoid: " << address << std::endl;
             }
         }
     }
@@ -89,10 +77,10 @@ std::vector<int> SearchMemoryForFloatInAddresses(DWORD pid, std::vector<int> add
 }
 
 int main() {
-    DWORD pid = 34604;
+    DWORD pid = 11468;
     float targetValue = 12.680f;
     float tolerance = 0.0005f;
-    std::vector<int> addresses = SearchMemoryForFloat(pid, targetValue, tolerance);
+    std::vector<LPCVOID> addresses = SearchMemoryForFloat(pid, targetValue, tolerance);
     // for (auto address : addresses) {
     //     std::cout << "Found float at address: " << std::hex << address << std::endl;
     // }
@@ -102,9 +90,9 @@ int main() {
 
     targetValue = -2.3425f;
     tolerance = 0.0005f;
-    std::vector<int> addresses2 = SearchMemoryForFloatInAddresses(pid, addresses, targetValue, tolerance);
+    std::vector<uint64_t> addresses2 = SearchMemoryForFloatInAddresses(pid, addresses, targetValue, tolerance);
     for (auto address : addresses2) {
-        std::cout << "Found float at address: " << std::hex << address << std::endl;
+        std::cout << "address hex: " << std::hex << address << std::endl;
     }
 
     return 0;
