@@ -2,6 +2,7 @@ import time
 import mouse
 import keyboard
 import vgamepad as vg
+import memory
 
 
 class Control:
