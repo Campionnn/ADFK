@@ -76,7 +76,7 @@ std::vector<uint64_t> SearchMemoryForFloatInAddresses(DWORD pid, std::vector<LPC
     return foundAddresses;
 }
 
-std::vector<float> ReadPlayerPos(DWORD pid, uint64_t int_address) {
+std::vector<float> ReadPlayerInfo(DWORD pid, uint64_t int_address) {
     HANDLE hProcess = OpenProcess(PROCESS_VM_READ, FALSE, pid);
 
     LPCVOID base_address = reinterpret_cast<LPCVOID>(int_address);
@@ -98,6 +98,48 @@ std::vector<float> ReadPlayerPos(DWORD pid, uint64_t int_address) {
     float yaw2 = *reinterpret_cast<float*>(buffer.data() + 0x194);
 
     return {x_addrs, y_addrs, z_addrs, pitch, yaw1, yaw2};
+}
+
+std::vector<float> ReadPlayerPos(DWORD pid, uint64_t int_address) {
+    HANDLE hProcess = OpenProcess(PROCESS_VM_READ, FALSE, pid);
+
+    LPCVOID base_address = reinterpret_cast<LPCVOID>(int_address);
+    LPCVOID start_address = reinterpret_cast<LPCVOID>(reinterpret_cast<SIZE_T>(base_address) - 0x4);
+    SIZE_T size_to_read = 0xC;
+
+    std::vector<BYTE> buffer(size_to_read);
+    if (!ReadMemory(hProcess, start_address, buffer.data(), size_to_read)) {
+        CloseHandle(hProcess);
+        return {};
+    }
+    CloseHandle(hProcess);
+
+    float x_addrs = *reinterpret_cast<float*>(buffer.data());
+    float y_addrs = *reinterpret_cast<float*>(buffer.data() + 0x4);
+    float z_addrs = *reinterpret_cast<float*>(buffer.data() + 0x8);
+
+    return {x_addrs, y_addrs, z_addrs};
+}
+
+std::vector<float> ReadPlayerRot(DWORD pid, uint64_t int_address) {
+    HANDLE hProcess = OpenProcess(PROCESS_VM_READ, FALSE, pid);
+
+    LPCVOID base_address = reinterpret_cast<LPCVOID>(int_address);
+    LPCVOID start_address = reinterpret_cast<LPCVOID>(reinterpret_cast<SIZE_T>(base_address) + 0x188);
+    SIZE_T size_to_read = 0xC;
+
+    std::vector<BYTE> buffer(size_to_read);
+    if (!ReadMemory(hProcess, start_address, buffer.data(), size_to_read)) {
+        CloseHandle(hProcess);
+        return {};
+    }
+    CloseHandle(hProcess);
+
+    float pitch = *reinterpret_cast<float*>(buffer.data()+ 0x4);
+    float yaw1 = *reinterpret_cast<float*>(buffer.data());
+    float yaw2 = *reinterpret_cast<float*>(buffer.data() + 0x8);
+
+    return {pitch, yaw1, yaw2};
 }
 
 //int main() {
@@ -123,13 +165,15 @@ std::vector<float> ReadPlayerPos(DWORD pid, uint64_t int_address) {
 //
 //}
 
- #include <pybind11/pybind11.h>
- #include <pybind11/stl.h>
- namespace py = pybind11;
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+namespace py = pybind11;
 
- PYBIND11_MODULE(memory_search, m) {
-     m.doc() = "Memory module for searching for floats in memory";
-     m.def("search_memory_for_float", &SearchMemoryForFloat);
-     m.def("search_memory_for_float_in_addresses", &SearchMemoryForFloatInAddresses);
-     m.def("read_player_pos", &ReadPlayerPos);
- }
+PYBIND11_MODULE(memory_search, m) {
+    m.doc() = "Memory module for searching for floats in memory";
+    m.def("search_memory_for_float", &SearchMemoryForFloat);
+    m.def("search_memory_for_float_in_addresses", &SearchMemoryForFloatInAddresses);
+    m.def("read_player_info", &ReadPlayerInfo);
+    m.def("read_player_pos", &ReadPlayerPos);
+    m.def("read_player_rot", &ReadPlayerRot);
+}
