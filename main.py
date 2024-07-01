@@ -23,7 +23,7 @@ pid = pids[0]
 addresses = memory.search_init_pos(pid, initial_pos, tolerance)
 print(f"Found {len(addresses)} addresses")
 input("Press enter to continue")
-final_address = memory.search_final_pos(pid, addresses, final_pos, tolerance)
+final_address = memory.search_final_pos(pid, addresses, final_pos, tolerance * 100)
 if len(final_address) == 0:
     print("Could not find any addresses")
     exit()
