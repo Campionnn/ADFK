@@ -10,15 +10,19 @@ except ImportError:
     os.system("python setup.py build_ext --inplace")
     import memory_search
 
+initial_pos = 13.1508
+final_pos = -2.3425
+tolerance = 0.0005
+
 process_name = "RobloxPlayerBeta.exe"
 with OpenProcess(process_name=process_name) as process:
-    print(process.pid)
-    addresses = memory_search.search_memory_for_float(process.pid, 12.680, 0.0005)
+    print(f"Process ID: {process.pid}")
+    addresses = memory_search.search_memory_for_float(process.pid, 13.1508, tolerance)
     # for address in addresses:
     #     print(f"Found address: {address}")
     print(len(addresses))
     input("Press enter once in afk...")
-    addresses2 = memory_search.search_memory_for_float_in_addresses(process.pid, addresses, -2.3425, 0.005)
+    addresses2 = memory_search.search_memory_for_float_in_addresses(process.pid, addresses, -2.3425, tolerance)
     for address in addresses2:
         print(f"Found address: {hex(address)}")
 
@@ -49,6 +53,6 @@ with OpenProcess(process_name=process_name) as process:
                 player_pos['yaw'] = struct.unpack('f', value)[0]
         pos_order = ['x', 'y', 'z', 'pitch', 'yaw']
         print(' '.join(f"{pos}: {player_pos[pos]}" for pos in pos_order))
-        time.sleep(0.2)
+        time.sleep(1)
     else:
         print("Could not find one address")

@@ -12,7 +12,7 @@ bool ReadMemory(HANDLE hProcess, LPCVOID address, LPVOID buffer, SIZE_T size) {
 #undef min
 std::vector<LPCVOID> SearchMemoryForFloat(DWORD pid, float targetValue, float tolerance) {
     std::vector<LPCVOID> foundAddresses;
-    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS | PROCESS_VM_READ, FALSE, pid);
+    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
@@ -20,15 +20,16 @@ std::vector<LPCVOID> SearchMemoryForFloat(DWORD pid, float targetValue, float to
     LPCVOID endAddress = sysInfo.lpMaximumApplicationAddress;
 
     MEMORY_BASIC_INFORMATION memInfo;
-    std::vector<char> buffer(4096);
+    int bufferSize = 4096;
+    std::vector<char> buffer(bufferSize);
 
     for (LPCVOID address = startAddress; address < endAddress;) {
         if (VirtualQueryEx(hProcess, address, &memInfo, sizeof(memInfo)) == 0) {
-            address = reinterpret_cast<LPCVOID>(reinterpret_cast<SIZE_T>(address) + 0x1000);
+            address = reinterpret_cast<LPCVOID>(reinterpret_cast<SIZE_T>(address) + bufferSize);
             continue;
         }
 
-        if (memInfo.State == MEM_COMMIT && (memInfo.Protect == PAGE_READWRITE || memInfo.Protect == PAGE_READONLY)) {
+        if (memInfo.State == MEM_COMMIT && (memInfo.Protect == PAGE_READWRITE || memInfo.Protect == PAGE_READONLY || memInfo.Protect == PAGE_WRITECOPY)) {
             SIZE_T regionSize = memInfo.RegionSize;
             LPCVOID regionBase = memInfo.BaseAddress;
 
@@ -60,14 +61,13 @@ std::vector<LPCVOID> SearchMemoryForFloat(DWORD pid, float targetValue, float to
 
 std::vector<uint64_t> SearchMemoryForFloatInAddresses(DWORD pid, std::vector<LPCVOID> addresses, float targetValue, float tolerance) {
     std::vector<uint64_t> foundAddresses;
-    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS | PROCESS_VM_READ, FALSE, pid);
+    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 
     float buffer;
     for (auto address : addresses) {
         if (ReadMemory(hProcess, address, &buffer, sizeof(float))) {
             if (std::abs(buffer - targetValue) <= tolerance) {
                 foundAddresses.push_back(reinterpret_cast<uint64_t>(address));
-                std::cout << "address lcpvoid: " << address << std::endl;
             }
         }
     }
@@ -76,35 +76,35 @@ std::vector<uint64_t> SearchMemoryForFloatInAddresses(DWORD pid, std::vector<LPC
     return foundAddresses;
 }
 
-int main() {
-    DWORD pid = 11468;
-    float targetValue = 12.680f;
-    float tolerance = 0.0005f;
-    std::vector<LPCVOID> addresses = SearchMemoryForFloat(pid, targetValue, tolerance);
-    // for (auto address : addresses) {
-    //     std::cout << "Found float at address: " << std::hex << address << std::endl;
-    // }
+//int main() {
+//    DWORD pid = 11468;
+//    float targetValue = 12.680f;
+//    float tolerance = 0.0005f;
+//    std::vector<LPCVOID> addresses = SearchMemoryForFloat(pid, targetValue, tolerance);
+//    // for (auto address : addresses) {
+//    //     std::cout << "Found float at address: " << std::hex << address << std::endl;
+//    // }
+//
+//    std::cout << "Press Enter to continue...";
+//    std::cin.get();
+//
+//    targetValue = -2.3425f;
+//    tolerance = 0.0005f;
+//    std::vector<uint64_t> addresses2 = SearchMemoryForFloatInAddresses(pid, addresses, targetValue, tolerance);
+//    for (auto address : addresses2) {
+//        std::cout << "address hex: " << std::hex << address << std::endl;
+//    }
+//
+//    return 0;
+//
+//}
 
-    std::cout << "Press Enter to continue...";
-    std::cin.get();
+ #include <pybind11/pybind11.h>
+ #include <pybind11/stl.h>
+ namespace py = pybind11;
 
-    targetValue = -2.3425f;
-    tolerance = 0.0005f;
-    std::vector<uint64_t> addresses2 = SearchMemoryForFloatInAddresses(pid, addresses, targetValue, tolerance);
-    for (auto address : addresses2) {
-        std::cout << "address hex: " << std::hex << address << std::endl;
-    }
-
-    return 0;
-
-}
-
-// #include <pybind11/pybind11.h>
-// #include <pybind11/stl.h>
-// namespace py = pybind11;
-
-// PYBIND11_MODULE(memory_search, m) {
-//     m.doc() = "Memory module for searching for floats in memory";
-//     m.def("search_memory_for_float", &SearchMemoryForFloat);
-//     m.def("search_memory_for_float_in_addresses", &SearchMemoryForFloatInAddresses);
-// }
+ PYBIND11_MODULE(memory_search, m) {
+     m.doc() = "Memory module for searching for floats in memory";
+     m.def("search_memory_for_float", &SearchMemoryForFloat);
+     m.def("search_memory_for_float_in_addresses", &SearchMemoryForFloatInAddresses);
+ }
