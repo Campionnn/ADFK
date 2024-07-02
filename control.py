@@ -1,6 +1,4 @@
 import time
-import mouse
-import keyboard
 import math
 import vgamepad as vg
 import memory
