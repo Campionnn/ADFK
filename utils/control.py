@@ -1,8 +1,8 @@
 import time
 import math
 import vgamepad as vg
-import memory
 import logging
+from utils import memory
 
 
 class Control:

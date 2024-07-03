@@ -3,16 +3,16 @@ import logging
 import time
 import pathlib
 
-from roblox import Roblox
+from utils.roblox_manager import RobloxManager
 import config
 if config.port == 0000:
     import config_personal as config
 
 try:
-    import memory_search
+    import utils.memory_search
 except ImportError:
     os.system("python compile.py build_ext --inplace")
-    import memory_search
+    import utils.memory_search
 
 pathlib.Path("./logs/").mkdir(parents=True, exist_ok=True)
 if config.logging_level == "debug":
@@ -32,7 +32,8 @@ logger = logging.getLogger()
 logger.setLevel(level)
 logging.getLogger().addHandler(consoleHandler)
 
-roblox_controller = Roblox(logger)
-pids = roblox_controller.start_all_accounts()
+roblox_manager = RobloxManager(logger)
+roblox_manager.start_all_accounts()
+pids = {instance.pid: instance.y_addrs for instance in roblox_manager.roblox_instances}
 print(pids)
-roblox_controller.all_enter_story()
+roblox_manager.all_enter_story()

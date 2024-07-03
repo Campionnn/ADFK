@@ -2,10 +2,10 @@ import os
 import math
 import psutil
 try:
-    import memory_search
+    from utils import memory_search
 except ImportError:
     os.system("python compile.py build_ext --inplace")
-    import memory_search
+    from utils import memory_search\
 
 
 def floats_to_degree(float1, float2):
