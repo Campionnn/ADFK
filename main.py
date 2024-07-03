@@ -2,6 +2,8 @@ import os
 import logging
 import time
 import pathlib
+import keyboard
+import threading
 
 from utils.roblox_manager import RobloxManager
 import config
@@ -13,6 +15,11 @@ try:
 except ImportError:
     os.system("python compile.py build_ext --inplace")
     import utils.memory_search
+
+def kill_thread():
+    keyboard.wait("esc")
+    os._exit(0)
+threading.Thread(target=kill_thread).start()
 
 pathlib.Path("./logs/").mkdir(parents=True, exist_ok=True)
 if config.logging_level == "debug":
@@ -33,7 +40,7 @@ logger.setLevel(level)
 logging.getLogger().addHandler(consoleHandler)
 
 roblox_manager = RobloxManager(logger)
-roblox_manager.start_all_accounts()
+roblox_manager.all_start_instance()
 pids = {instance.pid: instance.y_addrs for instance in roblox_manager.roblox_instances}
 print(pids)
 roblox_manager.all_enter_story()

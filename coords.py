@@ -33,16 +33,28 @@ infinite_sequence = "s"*14
 confirm_sequence = "s"*16
 # Start button
 start_sequence = "d"*50 + "a"
+# Upgrade sequence
+upgrade_sequence = "s" + "d"*2
+# Target sequence
+target_sequence = "s"
+# Settings button
+settings_sequence = ""
+# Leave button
+leave_sequence = "s"*3
+# Confirm leave button
+confirm_leave_sequence = "s"
+# Check death button
+check_death_sequence = "s"*50
 
 
 # Roblox in game coordinates for lobby
 story_play_pos = [-228.59048461914062, -269.32598876953125] # middle of story area
-story_play_pos_tolerance = 2.0
+story_play_pos_tolerance = 5.0
 story_enter_pos = [-259.55291748046875, -298.91363525390625]
 story_enter_pos_tolerance = 5.0
 
 # Roblox in game coordinates for story
 story_place_pos = [-1666.4205322265625, -532.5964965820312]
-story_place_pos_tolerance = 2.0
+story_place_pos_tolerance = 1
 story_place_rot = 0
-story_place_rot_tolerance = 2.0
+story_place_rot_tolerance = 1.0

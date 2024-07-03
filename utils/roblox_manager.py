@@ -24,7 +24,7 @@ class RobloxManager:
                 instance = Roblox(self.logger, self.controller, username, pid, y_addrs)
                 self.roblox_instances.append(instance)
 
-    def start_all_accounts(self):
+    def all_start_instance(self):
         for i, username in enumerate(config.usernames):
             instance = Roblox(self.logger, self.controller, username)
             if instance.start_account() != 200:
@@ -38,22 +38,37 @@ class RobloxManager:
                         pids.remove(pid)
                 if len(pids) != 0:
                     instance.pid = pids[0]
-                    self.roblox_instances.append(instance)
-                    self.logger.debug(f"Roblox instance for {username} started")
-                    time.sleep(15)
+                    self.logger.debug(f"Roblox instance for {username} started. Waiting for window to appear")
+                    while True:
+                        try:
+                            instance.set_foreground()
+                            break
+                        except RuntimeError:
+                            time.sleep(1)
+                    time.sleep(2)
                     self.logger.debug(f"Getting memory address for {username}")
                     address = instance.get_address()
                     if address is not None:
+                        self.roblox_instances.append(instance)
                         self.logger.debug(f"Memory address for {username} is {hex(address)}")
                         break
                 time.sleep(1)
 
     def all_enter_story(self):
         self.logger.debug("Entering story for all accounts")
+        for instance in self.roblox_instances:
+            instance.teleport_story()
         for i, instance in enumerate(self.roblox_instances):
             instance.enter_story()
             if i == 0:
+                self.controller.zoom_in()
+                self.controller.zoom_out(0.5)
                 instance.select_story()
         self.logger.debug(f"Starting story")
+        roblox_main = self.roblox_instances[0]
         time.sleep(0.5)
-        self.roblox_instances[0].start_story()
+        roblox_main.start_story()
+        time.sleep(2)
+        roblox_main.play_story()
+        roblox_main.place_towers(config.tower_hotkey, config.tower_cap, config.tower_wait)
+        self.logger.debug(f"Finished placing towers")
