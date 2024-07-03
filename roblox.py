@@ -161,7 +161,7 @@ class Roblox:
                     return None
         self.logger.debug(f"Starting story")
         time.sleep(0.5)
-        self.set_foreground_window(self.roblox_pids[0])
+        self.set_foreground_window(list(self.roblox_pids.keys())[0])
         time.sleep(0.5)
         if not self.click_nav_rect(coords.start_sequence, config.usernames[0], "Could not find start button"):
             return None
@@ -220,7 +220,7 @@ class Roblox:
         keyboard.press_and_release("\\")
         time.sleep(0.1)
         for key in list(sequence):
-            time.sleep(0.1)
+            time.sleep(0.05)
             keyboard.press_and_release(key)
         time.sleep(0.5)
         screen = pyautogui.screenshot()
@@ -262,5 +262,9 @@ class Roblox:
                     os.kill(pid, 15)
                 except:
                     pass
+                while True:
+                    if not pid in get_pids_by_name(self.roblox_exe):
+                        break
+                    time.sleep(1)
                 return True
         return False

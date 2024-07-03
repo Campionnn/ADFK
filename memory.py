@@ -4,7 +4,7 @@ import psutil
 try:
     import memory_search
 except ImportError:
-    os.system("python setup.py build_ext --inplace")
+    os.system("python compile.py build_ext --inplace")
     import memory_search
 
 

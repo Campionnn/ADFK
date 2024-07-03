@@ -1,7 +1,7 @@
 import os
 import logging
 import time
-from pathlib import Path
+import pathlib
 
 from roblox import Roblox
 import config
@@ -11,15 +11,14 @@ if config.port == 0000:
 try:
     import memory_search
 except ImportError:
-    os.system("python setup.py build_ext --inplace")
+    os.system("python compile.py build_ext --inplace")
     import memory_search
 
-Path("./logs/").mkdir(parents=True, exist_ok=True)
+pathlib.Path("./logs/").mkdir(parents=True, exist_ok=True)
 if config.logging_level == "debug":
     level = logging.DEBUG
 else:
     level = logging.INFO
-logging.basicConfig(filename='ADFK.log', level=level)
 logFormatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 rootLogger = logging.getLogger()
 logPath = "./logs"
@@ -30,6 +29,7 @@ rootLogger.addHandler(fileHandler)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(logFormatter)
 logger = logging.getLogger()
+logger.setLevel(level)
 logging.getLogger().addHandler(consoleHandler)
 
 roblox_controller = Roblox(logger)
