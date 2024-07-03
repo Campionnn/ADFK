@@ -142,29 +142,6 @@ std::vector<float> ReadPlayerRot(DWORD pid, uint64_t int_address) {
     return {pitch, yaw1, yaw2};
 }
 
-//int main() {
-//    DWORD pid = 11468;
-//    float targetValue = 12.680f;
-//    float tolerance = 0.0005f;
-//    std::vector<LPCVOID> addresses = SearchMemoryForFloat(pid, targetValue, tolerance);
-//    // for (auto address : addresses) {
-//    //     std::cout << "Found float at address: " << std::hex << address << std::endl;
-//    // }
-//
-//    std::cout << "Press Enter to continue...";
-//    std::cin.get();
-//
-//    targetValue = -2.3425f;
-//    tolerance = 0.0005f;
-//    std::vector<uint64_t> addresses2 = SearchMemoryForFloatInAddresses(pid, addresses, targetValue, tolerance);
-//    for (auto address : addresses2) {
-//        std::cout << "address hex: " << std::hex << address << std::endl;
-//    }
-//
-//    return 0;
-//
-//}
-
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 namespace py = pybind11;
