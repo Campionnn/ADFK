@@ -3,5 +3,12 @@
 /build/
 /.vscode/
 /__pycache__/
+/logs/
+/images/
 /*.pyd
 /*.exe
+/ADFK.log
+
+/config_personal.py
+/dev.py
+/test.py

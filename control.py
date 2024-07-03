@@ -2,13 +2,16 @@ import time
 import math
 import vgamepad as vg
 import memory
+import logging
 
 
 class Control:
-    def __init__(self):
+    def __init__(self, logger: logging.Logger):
+        self.logger = logger
         self.gamepad = vg.VX360Gamepad()
 
     def wake_up(self):
+        self.logger.debug(f"Waking up controller")
         self.gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_DPAD_UP)
         self.gamepad.update()
         time.sleep(0.1)
@@ -19,22 +22,27 @@ class Control:
         self.gamepad.update()
 
     def look_down(self, value):
+        self.logger.debug(f"Looking down by {value}")
         self.gamepad.right_joystick_float(x_value_float=0, y_value_float=-value)
         self.gamepad.update()
 
     def look_up(self, value):
+        self.logger.debug(f"Looking up by {value}")
         self.gamepad.right_joystick_float(x_value_float=0, y_value_float=value)
         self.gamepad.update()
 
     def look_left(self, value):
+        self.logger.debug(f"Looking left by {value}")
         self.gamepad.right_joystick_float(x_value_float=-value, y_value_float=0)
         self.gamepad.update()
 
     def look_right(self, value):
+        self.logger.debug(f"Looking right by {value}")
         self.gamepad.right_joystick_float(x_value_float=value, y_value_float=0)
         self.gamepad.update()
 
     def move_forward(self, value):
+        self.logger.debug(f"Moving forward by {value}")
         self.gamepad.left_joystick_float(x_value_float=0, y_value_float=value)
         self.gamepad.update()
 
@@ -51,6 +59,7 @@ class Control:
         return diff
 
     def turn_towards(self, pid, y_addrs, degree, tolerance):
+        self.logger.debug(f"Turning towards {degree}")
         while True:
             rot = memory.get_current_rot(pid, y_addrs)[1]
             diff = self.calculate_degree_difference(rot, degree)
@@ -78,6 +87,8 @@ class Control:
     def go_to_pos(self, pid, y_addrs, final_x, final_z, tolerance):
         current_pos = memory.get_current_pos(pid, y_addrs)
         init_distance = self.calculate_distance(current_pos[0], current_pos[2], final_x, final_z)
+        self.logger.debug(f"Going to {final_x}, {final_z} from {current_pos[0]}, {current_pos[2]}")
+        self.logger.debug(f"Distance to target: {init_distance}")
         while True:
             current_x = current_pos[0]
             current_z = current_pos[2]
@@ -86,6 +97,7 @@ class Control:
             final_rot = self.calculate_degree_pos(current_x, current_z, final_x, final_z)
             self.turn_towards(pid, y_addrs, final_rot, 5)
             distance = self.calculate_distance(current_x, current_z, final_x, final_z)
+            self.logger.debug(f"Distance to target: {distance}")
             amount = abs(distance/init_distance)+0.4
             self.move_forward(amount if amount < 1 else 1)
             time.sleep(0.25)
