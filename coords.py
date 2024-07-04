@@ -13,7 +13,7 @@ intro_sequence = "d"*50
 # Fast travel button
 fast_travel_sequence = "d"
 # AFK fast travel button
-afk_sequence = "d" + "s"
+afk_sequence = "d" + "s"*5
 # Leaderboard fast travel button
 leaderboard_sequence = "d" + "s"*3
 # Story fast travel button
@@ -33,18 +33,18 @@ infinite_sequence = "s"*14
 confirm_sequence = "s"*16
 # Start button
 start_sequence = "d"*50 + "a"
-# Upgrade sequence
-upgrade_sequence = "s" + "d"*2
-# Target sequence
-target_sequence = "s"
+# Upgrade button
+upgrade_sequence = "a"*2 + "s" + "d"*2
+# Change targeting button
+target_sequence = "a"*2 + "s"
 # Settings button
-settings_sequence = ""
+settings_sequence = "a"*2
 # Leave button
-leave_sequence = "s"*3
+leave_sequence = "a"*2 + "s"*3
 # Confirm leave button
 confirm_leave_sequence = "s"
 # Check death button
-check_death_sequence = "s"*50
+check_death_sequence = "a"*5 + "s"*3
 
 
 # Roblox in game coordinates for lobby
@@ -55,6 +55,6 @@ story_enter_pos_tolerance = 5.0
 
 # Roblox in game coordinates for story
 story_place_pos = [-1666.4205322265625, -532.5964965820312]
-story_place_pos_tolerance = 1
+story_place_pos_tolerance = 5.0
 story_place_rot = 0
 story_place_rot_tolerance = 1.0

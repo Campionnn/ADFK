@@ -16,7 +16,8 @@ from utils.memory import get_pids_by_name
 
 
 class Roblox:
-    def __init__(self, logger: logging.Logger, controller: control.Control, username, pid=None, y_addrs=None):
+    def __init__(self, roblox_instances, logger: logging.Logger, controller: control.Control, username, pid=None, y_addrs=None):
+        self.roblox_instances = roblox_instances
         self.logger = logger
         self.controller = controller
         self.pid = pid
@@ -128,6 +129,10 @@ class Roblox:
         self.logger.debug(f"Final address found: {hex(self.y_addrs)}")
 
         self.set_foreground()
+        time.sleep(1)
+        if not self.wait_game_load():
+            return None
+        time.sleep(0.5)
         if not self.click_nav_rect(coords.leave_afk_sequence, "Could not find AFK leave button"):
             return None
         time.sleep(0.5)
@@ -194,7 +199,10 @@ class Roblox:
         return True
 
     def click_nav_rect(self, sequence, error_message, click=True, restart=True):
-        self.logger.debug(f"Clicking button with sequence {sequence} for {self.username}")
+        if click:
+            self.logger.debug(f"Clicking button with sequence {sequence} for {self.username}")
+        else:
+            self.logger.debug(f"Finding button with sequence {sequence} for {self.username}")
         keyboard.send("\\")
         time.sleep(0.1)
         rect = self.find_nav_rect(sequence)
@@ -243,42 +251,44 @@ class Roblox:
         self.wait_game_load()
         self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_place_pos[0], coords.story_place_pos[1], coords.story_place_pos_tolerance, 10, True)
         self.controller.reset()
+        self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_place_pos[0], coords.story_place_pos[1], coords.story_place_pos_tolerance/5, 10)
+        self.controller.reset()
         self.controller.turn_towards_yaw(self.pid, self.y_addrs, coords.story_place_rot, coords.story_place_rot_tolerance)
         self.controller.look_down(1.0)
         time.sleep(1)
         self.controller.reset_look()
         self.controller.zoom_out()
 
-    def check_if_tower_place(self):
-        blue_threshold = 200
-        percentage = 90
+    def check_high_color_percentage(self, color_channel, threshold, percentage, sequence=None, click=False):
+        if color_channel == "B":
+            color_channel = 0
+        elif color_channel == "G":
+            color_channel = 1
+        elif color_channel == "R":
+            color_channel = 2
 
-        rect = self.click_nav_rect(coords.target_sequence, "", False, False)
-        if not rect:
-            return False
-        screen = pyautogui.screenshot(region=rect)
+        rect = None
+        if sequence:
+            rect = self.click_nav_rect(sequence, "", False, False)
+            if not rect:
+                return False
+        if rect:
+            screen = pyautogui.screenshot(region=rect)
+        else:
+            screen = pyautogui.screenshot()
         image = np.array(screen)
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
         total_pixels = image.shape[0] * image.shape[1]
-        blue_channel = image[:, :, 0]
-        high_blue_pixels = cv2.inRange(blue_channel, blue_threshold, 255)
-        count_high_blue_pixels = cv2.countNonZero(high_blue_pixels)
-        high_blue_percentage = (count_high_blue_pixels / total_pixels) * 100
-        return high_blue_percentage >= percentage
-
-    def check_if_place_mode(self):
-        red_threshold = 200
-        percentage = 30
-
-        screen = pyautogui.screenshot()
-        image = np.array(screen)
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        total_pixels = image.shape[0] * image.shape[1]
-        red_channel = image[:, :, 2]
-        high_red_pixels = cv2.inRange(red_channel, red_threshold, 255)
-        count_high_red_pixels = cv2.countNonZero(high_red_pixels)
-        high_red_percentage = (count_high_red_pixels / total_pixels) * 100
-        return high_red_percentage >= percentage
+        channel = image[:, :, color_channel]
+        high_pixels = cv2.inRange(channel, threshold, 255)
+        count_high_pixels = cv2.countNonZero(high_pixels)
+        high_percentage = (count_high_pixels / total_pixels) * 100
+        if high_percentage >= percentage and click:
+            x = rect[0] + rect[2] // 2
+            y = rect[1] + rect[3] // 2
+            autoit.mouse_click("left", x, y)
+            return True
+        return high_percentage >= percentage
 
     def get_window_rect(self):
         app = Application().connect(process=self.pid)
@@ -287,7 +297,6 @@ class Roblox:
 
     def place_towers(self, tower_key, num_towers, wait_time, distance=0.025):
         self.set_foreground()
-        time.sleep(1)
         for i in range(num_towers):
             time.sleep(wait_time)
             rect = self.get_window_rect()
@@ -302,15 +311,16 @@ class Roblox:
             steps_in_current_direction = 0
             change_direction_after_steps = 1
 
+            if self.check_if_dead():
+                return False
+
             while 0 <= x < window_width and 0 <= y < window_height:
-                if not self.check_if_place_mode():
+                if not self.check_high_color_percentage("R", 150, 30):
                     keyboard.send(tower_key)
                 if (x, y) not in self.placed_towers and (x, y) not in self.invalid_towers:
                     autoit.mouse_click("left", x + rect[0], y + rect[1])
-                    time.sleep(0.5)
-                    autoit.mouse_click("left", x + rect[0], y + rect[1])
-                    time.sleep(0.1)
-                    if self.check_if_tower_place():
+                    time.sleep(0.25)
+                    if not self.check_high_color_percentage("R", 150, 30):
                         self.logger.debug(f"Placed tower at {x}, {y}")
                         self.placed_towers.append((x, y))
                         break
@@ -329,3 +339,41 @@ class Roblox:
                 self.logger.warning("Could not place tower")
                 continue
         return True
+
+    def upgrade_towers(self):
+        self.set_foreground()
+        time.sleep(1)
+        count = 0
+        while True:
+            if count % 10 == 0:
+                self.anti_afk()
+            if len(self.placed_towers) == 0:
+                if self.check_if_dead():
+                    return False
+            for x, y in self.placed_towers:
+                if self.check_if_dead():
+                    return False
+                autoit.mouse_click("left", x, y)
+                time.sleep(0.5)
+                if self.check_high_color_percentage("G", 200, 90, coords.upgrade_sequence, True):
+                    self.logger.debug(f"Upgraded tower at {x}, {y}")
+            count += 1
+
+    def anti_afk(self):
+        for instance in self.roblox_instances:
+            instance.set_foreground()
+            time.sleep(1)
+            instance.jump()
+
+    def check_if_dead(self):
+        dead = self.check_high_color_percentage("R", 200, 60, coords.check_death_sequence)
+        return dead
+
+    def leave_story(self):
+        self.set_foreground()
+        time.sleep(1)
+        self.click_nav_rect(coords.check_death_sequence, "Could not find leave button")
+        time.sleep(1)
+        self.wait_game_load()
+        time.sleep(1)
+        self.click_nav_rect(coords.intro_sequence, "Could not find intro close button")

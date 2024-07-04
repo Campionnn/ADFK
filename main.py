@@ -43,4 +43,5 @@ roblox_manager = RobloxManager(logger)
 roblox_manager.all_start_instance()
 pids = {instance.pid: instance.y_addrs for instance in roblox_manager.roblox_instances}
 print(pids)
-roblox_manager.all_enter_story()
+while True:
+    roblox_manager.all_enter_story()

@@ -21,12 +21,12 @@ class RobloxManager:
         if roblox_pids is not None:
             for pid, y_addrs in roblox_pids.items():
                 username = config.usernames[list(roblox_pids.keys()).index(pid)]
-                instance = Roblox(self.logger, self.controller, username, pid, y_addrs)
+                instance = Roblox(self.roblox_instances, self.logger, self.controller, username, pid, y_addrs)
                 self.roblox_instances.append(instance)
 
     def all_start_instance(self):
         for i, username in enumerate(config.usernames):
-            instance = Roblox(self.logger, self.controller, username)
+            instance = Roblox(self.roblox_instances, self.logger, self.controller, username)
             if instance.start_account() != 200:
                 self.logger.error(f"Failed to start Roblox instance for {username}")
                 continue
@@ -70,5 +70,13 @@ class RobloxManager:
         roblox_main.start_story()
         time.sleep(2)
         roblox_main.play_story()
-        roblox_main.place_towers(config.tower_hotkey, config.tower_cap, config.tower_wait)
+        if not roblox_main.place_towers(config.tower_hotkey, config.tower_cap, config.tower_wait):
+            self.all_leave_story()
         self.logger.debug(f"Finished placing towers")
+        self.logger.debug(f"Upgrading towers")
+        if not roblox_main.upgrade_towers():
+            self.all_leave_story()
+
+    def all_leave_story(self):
+        for instance in self.roblox_instances:
+            instance.leave_story()
