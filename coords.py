@@ -44,7 +44,7 @@ leave_sequence = "a"*2 + "s"*3
 # Confirm leave button
 confirm_leave_sequence = "s"
 # Check death button
-check_death_sequence = "a"*5 + "s"*3
+check_death_sequence = "a"*5 + "s"*5
 
 
 # Roblox in game coordinates for lobby

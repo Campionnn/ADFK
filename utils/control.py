@@ -51,7 +51,7 @@ class Control:
     def jump(self):
         self.gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
         self.gamepad.update()
-        time.sleep(0.01)
+        time.sleep(0.1)
         self.gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
         self.gamepad.update()
 

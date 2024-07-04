@@ -42,6 +42,6 @@ logging.getLogger().addHandler(consoleHandler)
 roblox_manager = RobloxManager(logger)
 roblox_manager.all_start_instance()
 pids = {instance.pid: instance.y_addrs for instance in roblox_manager.roblox_instances}
-print(pids)
+logger.debug(f"Roblox pids: {pids}")
 while True:
     roblox_manager.all_enter_story()

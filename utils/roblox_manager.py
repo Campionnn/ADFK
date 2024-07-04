@@ -26,33 +26,16 @@ class RobloxManager:
 
     def all_start_instance(self):
         for i, username in enumerate(config.usernames):
+            self.logger.debug(f"Creating instance object for {username}")
             instance = Roblox(self.roblox_instances, self.logger, self.controller, username)
-            if instance.start_account() != 200:
-                self.logger.error(f"Failed to start Roblox instance for {username}")
-                continue
-            self.logger.debug(f"Waiting for Roblox instance for {username} to start")
-            while True:
-                pids = get_pids_by_name(self.roblox_exe)
-                for pid in pids:
-                    if pid in [instance.pid for instance in self.roblox_instances]:
-                        pids.remove(pid)
-                if len(pids) != 0:
-                    instance.pid = pids[0]
-                    self.logger.debug(f"Roblox instance for {username} started. Waiting for window to appear")
-                    while True:
-                        try:
-                            instance.set_foreground()
-                            break
-                        except RuntimeError:
-                            time.sleep(1)
-                    time.sleep(2)
-                    self.logger.debug(f"Getting memory address for {username}")
-                    address = instance.get_address()
-                    if address is not None:
-                        self.roblox_instances.append(instance)
-                        self.logger.debug(f"Memory address for {username} is {hex(address)}")
-                        break
-                time.sleep(1)
+            while instance.y_addrs is None:
+                instance.start_account()
+                print(instance.y_addrs)
+            for instance in self.roblox_instances:
+                if instance.check_crash():
+                    self.roblox_instances.remove(instance)
+                    self.logger.warning(f"Instance for {instance.username} crashed")
+                    instance.start_account()
 
     def all_enter_story(self):
         self.logger.debug("Entering story for all accounts")
@@ -65,7 +48,7 @@ class RobloxManager:
                 self.controller.zoom_out(0.5)
                 instance.select_story()
         self.logger.debug(f"Starting story")
-        roblox_main = self.roblox_instances[0]
+        roblox_main = [instance for instance in self.roblox_instances if instance.username == config.usernames[0]][0]
         time.sleep(0.5)
         roblox_main.start_story()
         time.sleep(2)

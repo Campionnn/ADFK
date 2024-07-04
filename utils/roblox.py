@@ -7,6 +7,7 @@ import autoit
 import keyboard
 import pyautogui
 import psutil
+import pywinauto.application
 from pywinauto import Application
 
 import coords
@@ -42,7 +43,32 @@ class Roblox:
         # return result.status_code
         self.logger.info(f"Join private server with account {self.username} from Roblox Account Manager")
         self.logger.info(f"This will automatically start once I fix the bug with RAM")
-        return 200
+        self.logger.debug(f"Waiting for Roblox instance for {self.username} to start")
+
+        unique_pids = []
+        while len(unique_pids) == 0:
+            pids = get_pids_by_name(self.roblox_exe)
+            current_pids = [instance.pid for instance in self.roblox_instances]
+            unique_pids = [pid for pid in pids if pid not in current_pids]
+            time.sleep(1)
+        self.pid = unique_pids[0]
+        self.logger.debug(f"Roblox instance for {self.username} started. Waiting for window to appear")
+        while True:
+            try:
+                self.set_foreground()
+                break
+            except RuntimeError:
+                time.sleep(1)
+        time.sleep(2)
+        self.logger.debug(f"Getting memory address for {self.username}")
+        self.get_address()
+        if self.y_addrs is not None:
+            for instance in self.roblox_instances:
+                if instance.username == self.username:
+                    self.roblox_instances.remove(instance)
+            self.roblox_instances.append(self)
+            self.logger.debug(f"Memory address for {self.username} is {hex(self.y_addrs)}")
+        return
 
     def close_instance(self):
         self.logger.debug(f"Closing Roblox instance for {self.username}")
@@ -57,16 +83,25 @@ class Roblox:
         return True
 
     def set_foreground(self):
-        app = Application().connect(process=self.pid)
-        app.top_window().set_focus()
-        self.logger.debug(f"Set foreground window to {self.pid}")
+        try:
+            app = Application().connect(process=self.pid)
+            app.top_window().set_focus()
+            self.logger.debug(f"Set foreground window to {self.pid}")
+        except pywinauto.application.ProcessNotFoundError:
+            self.logger.warning(f"Could not set foreground window to {self.pid}")
+            self.logger.warning(f"Restarting account {self.username}")
+            self.close_instance()
+            time.sleep(3)
+            self.start_account()
 
     def get_address(self):
         if not self.wait_game_load():
             return None
         time.sleep(1)
-        if not self.click_nav_rect(coords.intro_sequence, "Could not find intro close button"):
-            return None
+        if not self.click_nav_rect(coords.intro_sequence, "Could not find intro close button", restart=False):
+            keyboard.send("tab")
+            if not self.click_nav_rect(coords.intro_sequence, "Could not find intro close button"):
+                return None
 
         init_addresses = []
         attempts = 0
@@ -108,7 +143,7 @@ class Roblox:
             self.start_account()
             return None
 
-        self.set_foreground()
+        self.set_foreground() # TODO exception check
         if not self.wait_game_load():
             return None
         time.sleep(2)
@@ -127,6 +162,13 @@ class Roblox:
             self.start_account()
             return None
         self.logger.debug(f"Final address found: {hex(self.y_addrs)}")
+        # process = psutil.Process(self.pid)
+        # memory_maps = process.memory_maps(grouped=False)
+        # all_addresses = [int(region.addr.split('-')[0], 16) for region in memory_maps] + [int(region.addr.split('-')[1], 16) for region in memory_maps]
+        # first_address = min(all_addresses)
+        # last_address = max(all_addresses)
+        # self.logger.debug(f"First address: {hex(first_address)}. Difference: {hex(self.y_addrs - first_address)}")
+        # self.logger.debug(f"Last address: {hex(last_address)}. Difference: {hex(last_address - self.y_addrs)}")
 
         self.set_foreground()
         time.sleep(1)
@@ -135,10 +177,10 @@ class Roblox:
         time.sleep(0.5)
         if not self.click_nav_rect(coords.leave_afk_sequence, "Could not find AFK leave button"):
             return None
-        time.sleep(0.5)
+        time.sleep(1)
         if not self.click_nav_rect(coords.claim_afk_sequence, "Could not find claim afk button"):
             return None
-        time.sleep(3)
+        time.sleep(5)
 
         if not self.wait_game_load():
             return None
@@ -216,6 +258,9 @@ class Roblox:
                 self.start_account()
             return False
         if click:
+            # window_rect = self.get_window_rect()
+            # x = (rect[0] + rect[2] // 2) + window_rect[0]
+            # y = (rect[1] + rect[3] // 2) + window_rect[1]
             x = rect[0] + rect[2] // 2
             y = rect[1] + rect[3] // 2
             autoit.mouse_click("left", x, y)
@@ -227,6 +272,7 @@ class Roblox:
             keyboard.send(key)
         time.sleep(0.5)
         screen = pyautogui.screenshot()
+        # screen = pyautogui.screenshot(region=self.get_window_rect())
         screen_np = np.array(screen)
         image = cv2.cvtColor(screen_np, cv2.COLOR_RGB2BGR)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -251,6 +297,7 @@ class Roblox:
         self.wait_game_load()
         self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_place_pos[0], coords.story_place_pos[1], coords.story_place_pos_tolerance, 10, True)
         self.controller.reset()
+        time.sleep(1)
         self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_place_pos[0], coords.story_place_pos[1], coords.story_place_pos_tolerance/5, 10)
         self.controller.reset()
         self.controller.turn_towards_yaw(self.pid, self.y_addrs, coords.story_place_rot, coords.story_place_rot_tolerance)
@@ -292,8 +339,8 @@ class Roblox:
 
     def get_window_rect(self):
         app = Application().connect(process=self.pid)
-        rect = app.top_window().rectangle()
-        return rect.left, rect.top, rect.width(), rect.height()
+        client_rect = app.top_window().rectangle()
+        return client_rect.left, client_rect.top, client_rect.width(), client_rect.height()
 
     def place_towers(self, tower_key, num_towers, wait_time, distance=0.025):
         self.set_foreground()
@@ -343,10 +390,11 @@ class Roblox:
     def upgrade_towers(self):
         self.set_foreground()
         time.sleep(1)
-        count = 0
+        start = time.time()
         while True:
-            if count % 10 == 0:
+            if time.time() - start > 300:
                 self.anti_afk()
+                start = time.time()
             if len(self.placed_towers) == 0:
                 if self.check_if_dead():
                     return False
@@ -355,15 +403,17 @@ class Roblox:
                     return False
                 autoit.mouse_click("left", x, y)
                 time.sleep(0.5)
-                if self.check_high_color_percentage("G", 200, 90, coords.upgrade_sequence, True):
+                if self.check_high_color_percentage("G", 200, 60, coords.upgrade_sequence, True):
                     self.logger.debug(f"Upgraded tower at {x}, {y}")
-            count += 1
 
     def anti_afk(self):
         for instance in self.roblox_instances:
             instance.set_foreground()
             time.sleep(1)
-            instance.jump()
+            for i in range(5):
+                instance.controller.jump()
+            time.sleep(0.5)
+        self.set_foreground()
 
     def check_if_dead(self):
         dead = self.check_high_color_percentage("R", 200, 60, coords.check_death_sequence)

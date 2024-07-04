@@ -6,8 +6,8 @@
 /logs/
 /images/
 /*.exe
+/*.zip
 /ADFK.log
-
 /config_personal.py
 /dev.py
 /test.py
