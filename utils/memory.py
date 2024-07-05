@@ -24,11 +24,17 @@ def get_pids_by_name(process_name):
 
 
 def search_init_pos(pid, value, tolerance):
-    return memory_search.search_memory_for_float(pid, value, tolerance)
+    suspend_process(pid)
+    addresses = memory_search.search_memory_for_float(pid, value, tolerance)
+    resume_process(pid)
+    return addresses
 
 
 def search_final_pos(pid, addresses, value, tolerance):
-    return memory_search.search_memory_for_float_in_addresses(pid, addresses, value, tolerance)
+    suspend_process(pid)
+    addresses = memory_search.search_memory_for_float_in_addresses(pid, addresses, value, tolerance)
+    resume_process(pid)
+    return addresses
 
 
 def get_current_info(pid, y_address):
@@ -50,3 +56,13 @@ def get_current_rot(pid, y_address):
     if len(pos) != 3:
         raise Exception("Could not read memory")
     return [pos[0], floats_to_degree(pos[1], pos[2])]
+
+
+def suspend_process(pid):
+    process = psutil.Process(pid)
+    process.suspend()
+
+
+def resume_process(pid):
+    process = psutil.Process(pid)
+    process.resume()

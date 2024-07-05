@@ -32,6 +32,9 @@ class Roblox:
         self.invalid_towers = []
 
     def start_account(self):
+        self.pid = None
+        self.y_addrs = None
+
         # params = {
         #     "Account": self.username,
         #     "PlaceId": self.place_id,
@@ -82,17 +85,18 @@ class Roblox:
             time.sleep(1)
         return True
 
-    def set_foreground(self):
+    def set_foreground(self, start=False):
         try:
             app = Application().connect(process=self.pid)
             app.top_window().set_focus()
             self.logger.debug(f"Set foreground window to {self.pid}")
+            return True
         except pywinauto.application.ProcessNotFoundError:
-            self.logger.warning(f"Could not set foreground window to {self.pid}")
-            self.logger.warning(f"Restarting account {self.username}")
-            self.close_instance()
-            time.sleep(3)
-            self.start_account()
+            if self.check_crash():
+                self.logger.warning("Roblox instance crashed")
+                if start:
+                    self.start_account()
+                return False
 
     def get_address(self):
         if not self.wait_game_load():
@@ -143,7 +147,7 @@ class Roblox:
             self.start_account()
             return None
 
-        self.set_foreground() # TODO exception check
+        self.set_foreground(True)
         if not self.wait_game_load():
             return None
         time.sleep(2)
@@ -170,7 +174,7 @@ class Roblox:
         # self.logger.debug(f"First address: {hex(first_address)}. Difference: {hex(self.y_addrs - first_address)}")
         # self.logger.debug(f"Last address: {hex(last_address)}. Difference: {hex(last_address - self.y_addrs)}")
 
-        self.set_foreground()
+        self.set_foreground(True)
         time.sleep(1)
         if not self.wait_game_load():
             return None
