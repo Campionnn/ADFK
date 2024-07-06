@@ -91,7 +91,7 @@ class Roblox:
             app.top_window().set_focus()
             self.logger.debug(f"Set foreground window to {self.pid}")
             return True
-        except pywinauto.application.ProcessNotFoundError:
+        except pywinauto.application.ProcessNotFoundError or OSError:
             if self.check_crash():
                 self.logger.warning("Roblox instance crashed")
                 if start:
@@ -103,9 +103,7 @@ class Roblox:
             return None
         time.sleep(1)
         if not self.click_nav_rect(coords.intro_sequence, "Could not find intro close button", restart=False):
-            keyboard.send("tab")
-            if not self.click_nav_rect(coords.intro_sequence, "Could not find intro close button"):
-                return None
+            return None
 
         init_addresses = []
         attempts = 0
@@ -132,6 +130,7 @@ class Roblox:
                 self.logger.warning("Initial addresses not in desired range. Trying again")
                 attempts += 1
 
+        time.sleep(1)
         if not self.click_nav_rect(coords.fast_travel_sequence, "Could not find fast travel button"):
             return None
         time.sleep(0.5)
@@ -198,9 +197,10 @@ class Roblox:
         self.logger.debug(f"Teleporting to story for {self.username}")
         self.set_foreground()
         time.sleep(1)
-        self.click_nav_rect(coords.fast_travel_sequence, "Could not find fast travel button")
+        if not self.click_nav_rect(coords.fast_travel_sequence, "Could not find fast travel button", restart=False):
+            self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_backup_pos[0], coords.story_backup_pos[1], coords.story_backup_pos_tolerance, 10)
         time.sleep(0.5)
-        self.click_nav_rect(coords.story_sequence, "Could not find story fast travel button")
+        self.click_nav_rect(coords.story_sequence, "Could not find story fast travel button", restart=False)
         time.sleep(0.5)
         self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_play_pos[0], coords.story_play_pos[1],coords.story_play_pos_tolerance, 10)
 
@@ -225,7 +225,8 @@ class Roblox:
     def wait_game_load(self):
         self.logger.debug(f"Waiting for game to load for {self.username}")
         rect = None
-        for i in range(30):
+        start = time.time()
+        while time.time() - start < 30:
             if self.check_crash():
                 self.logger.warning("Roblox instance crashed")
                 break
@@ -262,9 +263,6 @@ class Roblox:
                 self.start_account()
             return False
         if click:
-            # window_rect = self.get_window_rect()
-            # x = (rect[0] + rect[2] // 2) + window_rect[0]
-            # y = (rect[1] + rect[3] // 2) + window_rect[1]
             x = rect[0] + rect[2] // 2
             y = rect[1] + rect[3] // 2
             autoit.mouse_click("left", x, y)
