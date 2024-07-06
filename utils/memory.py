@@ -2,10 +2,10 @@ import os
 import math
 import psutil
 try:
-    from utils import memory_search
+    import memory_search
 except ImportError:
-    os.system("python compile.py build_ext --inplace")
-    from utils import memory_search\
+    os.system("python utils/compile.py build_ext --inplace")
+    import memory_search
 
 
 def floats_to_degree(float1, float2):
@@ -59,10 +59,18 @@ def get_current_rot(pid, y_address):
 
 
 def suspend_process(pid):
-    process = psutil.Process(pid)
-    process.suspend()
+    try:
+        process = psutil.Process(pid)
+        process.suspend()
+        return True
+    except psutil.NoSuchProcess:
+        return False
 
 
 def resume_process(pid):
-    process = psutil.Process(pid)
-    process.resume()
+    try:
+        process = psutil.Process(pid)
+        process.resume()
+        return True
+    except psutil.NoSuchProcess:
+        return False
