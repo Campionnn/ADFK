@@ -48,8 +48,10 @@ check_death_sequence = "a"*5 + "s"*5
 
 
 # Roblox in game coordinates for lobby
-story_play_pos = [-228.59048461914062, -269.32598876953125] # middle of story area
+story_play_pos = [-229.5482177734375, -270.2830810546875] # middle of story area
 story_play_pos_tolerance = 5.0
+story_backup_pos = [-128.5938720703125, -370.9233703613281] # middle of street
+story_backup_pos_tolerance = 5.0
 story_enter_pos = [-259.55291748046875, -298.91363525390625]
 story_enter_pos_tolerance = 5.0
 
