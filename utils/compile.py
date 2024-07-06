@@ -4,7 +4,7 @@ import pybind11
 ext_modules = [
     Extension(
         "memory_search",
-        ["memory_search.cpp"],
+        ["utils/memory_search.cpp"],
         include_dirs=[pybind11.get_include()],
         language='c++',
     ),

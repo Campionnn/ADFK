@@ -29,7 +29,7 @@ std::vector<LPCVOID> SearchMemoryForFloat(DWORD pid, float targetValue, float to
             continue;
         }
 
-        if (memInfo.State == MEM_COMMIT && (memInfo.Protect == PAGE_READWRITE || memInfo.Protect == PAGE_READONLY || memInfo.Protect == PAGE_WRITECOPY)) {
+        if (memInfo.State == MEM_COMMIT && (memInfo.Protect == PAGE_READWRITE)) {
             SIZE_T regionSize = memInfo.RegionSize;
             LPCVOID regionBase = memInfo.BaseAddress;
 

@@ -10,12 +10,6 @@ import config
 if config.port == 0000:
     import config_personal as config
 
-try:
-    import utils.memory_search
-except ImportError:
-    os.system("python compile.py build_ext --inplace")
-    import utils.memory_search
-
 def kill_thread():
     keyboard.wait("esc")
     os._exit(0)
