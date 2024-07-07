@@ -98,7 +98,7 @@ class Control:
     def calculate_distance(self, x1, z1, x2, z2):
         return math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2)
 
-    def go_to_pos(self, pid, y_addrs, final_x, final_z, tolerance, turn_tolerance=5, jump=False):
+    def go_to_pos(self, pid, y_addrs, final_x, final_z, tolerance, turn_tolerance=5, jump=False, min_speed=0.4):
         current_pos = memory.get_current_pos(pid, y_addrs)
         init_distance = self.calculate_distance(current_pos[0], current_pos[2], final_x, final_z)
         self.logger.debug(f"Going to {final_x}, {final_z} from {current_pos[0]}, {current_pos[2]}")
@@ -113,7 +113,7 @@ class Control:
             final_rot = self.calculate_degree_pos(current_x, current_z, final_x, final_z)
             self.turn_towards_yaw(pid, y_addrs, final_rot, turn_tolerance)
             distance = self.calculate_distance(current_x, current_z, final_x, final_z)
-            amount = abs(distance/(init_distance/2))+0.4
+            amount = abs(distance/(init_distance/2)) + min_speed
             if jump:
                 self.jump()
             self.move_forward(amount if amount < 1 else 1)
