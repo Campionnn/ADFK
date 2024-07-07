@@ -211,6 +211,10 @@ class Roblox:
         self.set_foreground()
         time.sleep(1)
         self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_enter_pos[0], coords.story_enter_pos[1], coords.story_enter_pos_tolerance, 20)
+        if self.username == self.roblox_instances[0].username:
+            self.controller.zoom_in()
+            self.controller.zoom_out(0.25)
+            self.select_story()
 
     def select_story(self):
         self.click_nav_rect(coords.world_sequence, "Could not find world button")
@@ -304,7 +308,7 @@ class Roblox:
         self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_place_pos[0], coords.story_place_pos[1], coords.story_place_pos_tolerance, 10, True)
         self.controller.reset()
         time.sleep(1)
-        self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_place_pos[0], coords.story_place_pos[1], coords.story_place_pos_tolerance/5, 10)
+        self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_place_pos[0], coords.story_place_pos[1], coords.story_place_pos_tolerance/5, 10, min_speed=0.2)
         self.controller.reset()
         self.controller.turn_towards_yaw(self.pid, self.y_addrs, coords.story_place_rot, coords.story_place_rot_tolerance)
         self.controller.look_down(1.0)
@@ -433,3 +437,5 @@ class Roblox:
         self.wait_game_load()
         time.sleep(1)
         self.click_nav_rect(coords.intro_sequence, "Could not find intro close button")
+
+

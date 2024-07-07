@@ -39,6 +39,7 @@ class RobloxManager:
 
     def all_enter_story(self):
         self.logger.debug("Entering story for all accounts")
+
         roblox_instances = []
         for username in config.usernames:
             for instance in self.roblox_instances:
@@ -51,10 +52,6 @@ class RobloxManager:
             instance.teleport_story()
         for i, instance in enumerate(self.roblox_instances):
             instance.enter_story()
-            if i == 0:
-                self.controller.zoom_in()
-                self.controller.zoom_out(0.5)
-                instance.select_story()
         self.logger.debug(f"Starting story")
         roblox_main = [instance for instance in self.roblox_instances if instance.username == config.usernames[0]][0]
         time.sleep(0.5)
