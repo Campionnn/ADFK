@@ -107,7 +107,9 @@ class Roblox:
 
         init_addresses = []
         attempts = 0
-        while len(init_addresses) < 1000 or len(init_addresses) > 7000:
+        min_addresses = 900
+        max_addresses = 7000
+        while len(init_addresses) < min_addresses or len(init_addresses) > max_addresses:
             time.sleep(0.5)
             if not self.click_nav_rect(coords.fast_travel_sequence, "Could not find fast travel button"):
                 return None
@@ -126,11 +128,11 @@ class Roblox:
                 time.sleep(3)
                 self.start_account()
                 return None
-            if len(init_addresses) < 1000 or len(init_addresses) > 7000:
+            if len(init_addresses) < min_addresses or len(init_addresses) > max_addresses:
                 self.logger.warning("Initial addresses not in desired range. Trying again")
                 attempts += 1
 
-        time.sleep(1)
+        time.sleep(2)
         if not self.click_nav_rect(coords.fast_travel_sequence, "Could not find fast travel button"):
             return None
         time.sleep(0.5)
@@ -218,6 +220,8 @@ class Roblox:
         self.click_nav_rect(coords.confirm_sequence, "Could not find confirm button")
 
     def start_story(self):
+        self.placed_towers = []
+        self.invalid_towers = []
         self.set_foreground()
         time.sleep(0.5)
         self.click_nav_rect(coords.start_sequence, "Could not find start button")
