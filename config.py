@@ -2,12 +2,14 @@
 
 # How much logging you want ex: "default" or "debug"
 logging_level = "default"
+# Tesseract OCR Path. Default Location: r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+tesseract_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 # Tower hotkey that you want main account to use ex: "1"
 tower_hotkey = "1"
 # Tower cap for the tower above ex: 3
 tower_cap = 3
-# How long you want to wait in seconds before placing a tower (so you have enough money) ex: 5
-tower_wait = 5
+# How much the tower costs to place ex: 2000
+tower_cost = 850
 
 
 # Roblox Account Manger (RAM) Settings

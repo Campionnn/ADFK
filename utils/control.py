@@ -75,13 +75,13 @@ class Control:
             diff -= 360
         return diff
 
-    def turn_towards_yaw(self, pid, y_addrs, degree, tolerance):
+    def turn_towards_yaw(self, pid, y_addrs, degree, tolerance, min_amount=0.4):
         while True:
             rot = memory.get_current_rot(pid, y_addrs)[1]
             diff = self.calculate_degree_difference(rot, degree)
             if abs(diff) < tolerance:
                 break
-            amount = min(abs(diff/90)+0.2, 1)
+            amount = max(min(abs(diff/90), 1), min_amount)
             if diff > 0:
                 self.look_right(amount)
             else:
@@ -98,13 +98,13 @@ class Control:
     def calculate_distance(self, x1, z1, x2, z2):
         return math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2)
 
-    def go_to_pos(self, pid, y_addrs, final_x, final_z, tolerance, turn_tolerance=5, jump=False, min_speed=0.4):
+    def go_to_pos(self, pid, y_addrs, final_x, final_z, tolerance, turn_tolerance=5, jump=False, min_speed=0.4, min_turn=0.4):
         current_pos = memory.get_current_pos(pid, y_addrs)
         init_distance = self.calculate_distance(current_pos[0], current_pos[2], final_x, final_z)
         self.logger.debug(f"Going to {final_x}, {final_z} from {current_pos[0]}, {current_pos[2]}")
         self.logger.debug(f"Distance to target: {init_distance}")
         final_rot = self.calculate_degree_pos(current_pos[0], current_pos[2], final_x, final_z)
-        self.turn_towards_yaw(pid, y_addrs, final_rot, 5)
+        self.turn_towards_yaw(pid, y_addrs, final_rot, 5, min_turn)
         while True:
             current_x = current_pos[0]
             current_z = current_pos[2]
@@ -113,7 +113,7 @@ class Control:
             final_rot = self.calculate_degree_pos(current_x, current_z, final_x, final_z)
             self.turn_towards_yaw(pid, y_addrs, final_rot, turn_tolerance)
             distance = self.calculate_distance(current_x, current_z, final_x, final_z)
-            amount = abs(distance/(init_distance/2)) + min_speed
+            amount = max(min((distance / 15), 1), min_speed)
             if jump:
                 self.jump()
             self.move_forward(amount if amount < 1 else 1)

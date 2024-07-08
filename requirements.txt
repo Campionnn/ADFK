@@ -1,9 +1,11 @@
-psutil~=6.0.0
+pytesseract~=0.3.10
 opencv-python~=4.10.0.84
 numpy~=2.0.0
+psutil~=6.0.0
 keyboard~=0.13.5
 PyAutoGUI~=0.9.54
 pywinauto~=0.6.8
 pybind11~=2.13.1
 setuptools~=70.2.0
 vgamepad~=0.1.0
+PyAutoIt~=0.6.5

@@ -30,7 +30,10 @@ class RobloxManager:
             instance = Roblox(self.roblox_instances, self.logger, self.controller, username)
             while instance.y_addrs is None:
                 instance.start_account()
-                print(instance.y_addrs)
+                if instance.y_addrs is None:
+                    self.logger.warning(f"Failed to start {username} instance")
+                    instance.close_instance()
+                    time.sleep(3)
             for instance in self.roblox_instances:
                 if instance.check_crash():
                     self.roblox_instances.remove(instance)
@@ -58,7 +61,7 @@ class RobloxManager:
         roblox_main.start_story()
         time.sleep(2)
         roblox_main.play_story()
-        if not roblox_main.place_towers(config.tower_hotkey, config.tower_cap, config.tower_wait):
+        if not roblox_main.place_towers(config.tower_hotkey, config.tower_cap, config.tower_cost):
             self.all_leave_story()
         self.logger.debug(f"Finished placing towers")
         self.logger.debug(f"Upgrading towers")
@@ -68,3 +71,5 @@ class RobloxManager:
     def all_leave_story(self):
         for instance in self.roblox_instances:
             instance.leave_story()
+        for instance in self.roblox_instances:
+            instance.close_announcement()
