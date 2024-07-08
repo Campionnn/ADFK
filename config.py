@@ -1,5 +1,7 @@
 # ADFK Settings
 
+# Kill key ex: "del" or "esc"
+kill_key = "del"
 # How much logging you want ex: "default" or "debug"
 logging_level = "default"
 # Tesseract OCR Path. Default Location: r"C:\Program Files\Tesseract-OCR\tesseract.exe"
@@ -8,8 +10,10 @@ tesseract_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 tower_hotkey = "1"
 # Tower cap for the tower above ex: 3
 tower_cap = 3
-# How much the tower costs to place ex: 2000
+# How much the tower costs to place ex: 850
 tower_cost = 850
+# What wave to stop at and leave the game ex: 31
+wave_stop = 31
 
 
 # Roblox Account Manger (RAM) Settings

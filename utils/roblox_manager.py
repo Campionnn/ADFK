@@ -6,7 +6,6 @@ from utils.control import Control
 from utils.roblox import Roblox
 if config.port == 0000:
     import config_personal as config
-from utils.memory import get_pids_by_name
 
 
 class RobloxManager:
@@ -52,7 +51,8 @@ class RobloxManager:
         self.roblox_instances = roblox_instances
 
         for instance in self.roblox_instances:
-            instance.teleport_story()
+            while not instance.teleport_story():
+                time.sleep(0.5)
         for i, instance in enumerate(self.roblox_instances):
             instance.enter_story()
         self.logger.debug(f"Starting story")
@@ -61,15 +61,31 @@ class RobloxManager:
         roblox_main.start_story()
         time.sleep(2)
         roblox_main.play_story()
-        if not roblox_main.place_towers(config.tower_hotkey, config.tower_cap, config.tower_cost):
-            self.all_leave_story()
+        if not roblox_main.place_towers(config.tower_hotkey, config.tower_cap, config.tower_cost, config.wave_stop):
+            if roblox_main.current_wave[0] >= config.wave_stop:
+                self.all_leave_story_wave()
+                return
+            else:
+                self.all_leave_story_death()
+                return
         self.logger.debug(f"Finished placing towers")
         self.logger.debug(f"Upgrading towers")
-        if not roblox_main.upgrade_towers():
-            self.all_leave_story()
+        if not roblox_main.upgrade_towers(config.wave_stop):
+            if roblox_main.current_wave[0] >= config.wave_stop:
+                self.all_leave_story_wave()
+                return
+            else:
+                self.all_leave_story_death()
+                return
 
-    def all_leave_story(self):
+    def all_leave_story_death(self):
         for instance in self.roblox_instances:
-            instance.leave_story()
+            instance.leave_story_death()
+        for instance in self.roblox_instances:
+            instance.close_announcement()
+
+    def all_leave_story_wave(self):
+        for instance in self.roblox_instances:
+            instance.leave_story_wave()
         for instance in self.roblox_instances:
             instance.close_announcement()

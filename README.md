@@ -19,6 +19,7 @@ Make sure the following are true for all accounts:
 * Unit Info Position is set to Left
 * Auto Skip Wave is enabled
 * Optionally turn on Low Quality mode and turn graphics all the way down
+* All instances of Roblox must be on the primary monitor or only have 1 monitor turned on
 * Have the appropriate level that you want to farm unlocked
 
 #### Running from source

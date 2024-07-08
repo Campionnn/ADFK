@@ -18,23 +18,10 @@ money_tolerance = 10
 # Sequence required to get to button after pressing UI Navigation Toggle
 # Fast travel button
 fast_travel_sequence = "d"
-# AFK fast travel button
-afk_sequence = "d" + "s"*5
-# Leaderboard fast travel button
-leaderboard_sequence = "d" + "s"*3
-# Story fast travel button
-story_sequence = "d" + "s"*7
-# Teleport after clicking afk
-teleport_sequence = "s"*3 + "d"*2
-
 # World you want to farm (Windmill Village)
 world_sequence = "a" + "s"
 # Settings button
 settings_sequence = "a"*2
-# Leave button
-leave_sequence = "a"*2 + "s"*3
-# Confirm leave button
-confirm_leave_sequence = "s"
 
 
 # Roblox in game coordinates for lobby

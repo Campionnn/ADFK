@@ -9,11 +9,13 @@ import pyautogui
 import psutil
 import pywinauto
 
+import config
 import coords
 from utils import ocr
 from utils import memory
 from utils import control
 from utils.memory import get_pids_by_name
+from utils.repeated_timer import RepeatedTimer
 
 
 class Roblox:
@@ -30,6 +32,8 @@ class Roblox:
 
         self.placed_towers = []
         self.invalid_towers = []
+        self.current_wave = [0]
+        self.wave_checker = None
 
     def start_account(self):
         self.pid = None
@@ -158,6 +162,7 @@ class Roblox:
         return rect
 
     def click_text(self, text):
+        self.logger.debug(f"Clicking text {text} for {self.username}")
         text_coords = ocr.find_text(self.screenshot(), text)
         if text_coords is None:
             return False
@@ -222,20 +227,34 @@ class Roblox:
     def fast_travel(self, location):
         self.logger.debug(f"Fast traveling to {location} for {self.username}")
         rect = self.click_nav_rect(coords.fast_travel_sequence, "", restart=False)
+        time.sleep(0.1)
         attempts = 0
-        while rect is None:
+        while rect is None or not self.check_fast_travel(self.screenshot()):
             if attempts > 5:
                 return False
             rect = self.click_nav_rect(coords.fast_travel_sequence, "", restart=False)
             attempts += 1
+            time.sleep(0.1)
         time.sleep(0.25)
-        fast_travel_coords = ocr.find_fast_travel(self.screenshot(), location)
+        screen = self.screenshot()
+        fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=2)
         if fast_travel_coords is None:
-            fast_travel_coords = ocr.find_fast_travel(self.screenshot(), location, ratio=4)
+            fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=3)
             if fast_travel_coords is None:
-                self.logger.warning(f"Could not find fast travel location: {location}")
-                return False
+                fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=4)
+                if fast_travel_coords is None:
+                    self.logger.warning(f"Could not find fast travel location: {location}")
+                    return False
         autoit.mouse_click("left", fast_travel_coords[0], fast_travel_coords[1])
+        return True
+
+    def check_fast_travel(self, screen):
+        self.logger.debug(f"Checking if afk fast travel on screen for {self.username}")
+        location = "afk"
+        fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=4)
+        if fast_travel_coords is None:
+            self.logger.warning(f"Could not find afk fast travel location")
+            return False
         return True
 
     def get_address(self):
@@ -250,8 +269,8 @@ class Roblox:
         max_addresses = 7000
         while len(init_addresses) < min_addresses or len(init_addresses) > max_addresses:
             time.sleep(0.5)
-            while not self.fast_travel("leaderboards"):
-                time.sleep(0.5)
+            if not self.fast_travel("leaderboards"):
+                return
             time.sleep(1.0)
 
             self.logger.debug(f"Searching for initial addresses for {self.username}")
@@ -269,8 +288,8 @@ class Roblox:
                 attempts += 1
 
         time.sleep(2)
-        while not self.fast_travel("trading"):
-            time.sleep(0.5)
+        if not self.fast_travel("trading"):
+            return
 
         self.logger.info(f"Go into the AFK zone for {self.username}. Type 'crash' and press enter if the game crashes or is frozen")
         self.logger.info(f"This will be done automatically once devs fix fast travel locations")
@@ -315,17 +334,26 @@ class Roblox:
 
     def teleport_story(self):
         self.set_foreground()
-        time.sleep(1)
-        while not self.fast_travel("story"):
+        pos = memory.get_current_pos(self.pid, self.y_addrs)
+        attempts = 0
+        while self.controller.calculate_distance(pos[0], pos[2], coords.story_play_pos[0], coords.story_play_pos[1]) > 50 and attempts < 5:
             time.sleep(0.5)
+            if not self.fast_travel("story"):
+                return False
+            time.sleep(0.5)
+            pos = memory.get_current_pos(self.pid, self.y_addrs)
         time.sleep(0.5)
+        if not self.click_text("leave"):
+            time.sleep(0.5)
         self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_play_pos[0], coords.story_play_pos[1],coords.story_play_pos_tolerance, 10)
+        return True
 
     def enter_story(self):
         self.logger.debug(f"Entering story for {self.username}")
         self.set_foreground()
         time.sleep(1)
-        self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_enter_pos[0], coords.story_enter_pos[1], coords.story_enter_pos_tolerance, 20)
+        self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_enter_pos[0], coords.story_enter_pos[1],
+                                  coords.story_enter_pos_tolerance, 20)
         if self.username == self.roblox_instances[0].username:
             self.controller.zoom_in()
             self.controller.zoom_out(0.25)
@@ -341,6 +369,7 @@ class Roblox:
     def start_story(self):
         self.placed_towers = []
         self.invalid_towers = []
+        self.current_wave = [0]
         self.set_foreground()
         time.sleep(0.5)
         self.click_text("start")
@@ -352,7 +381,7 @@ class Roblox:
         self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_place_pos[0], coords.story_place_pos[1], coords.story_place_pos_tolerance, 10, True)
         self.controller.reset()
         time.sleep(0.1)
-        self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_place_pos[0], coords.story_place_pos[1], coords.story_place_pos_tolerance/10, 10, min_speed=0.2, min_turn=0.2)
+        self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_place_pos[0], coords.story_place_pos[1], coords.story_place_pos_tolerance / 10, 10, min_speed=0.2, max_speed=0.3, min_turn=0.5, precise=True)
         self.controller.reset()
         self.controller.turn_towards_yaw(self.pid, self.y_addrs, coords.story_place_rot, coords.story_place_rot_tolerance, 0.2)
         self.controller.look_down(1.0)
@@ -360,14 +389,25 @@ class Roblox:
         self.controller.reset_look()
         self.controller.zoom_out()
 
-    def place_towers(self, tower_key, num_towers, tower_cost):
+    def place_towers(self, tower_key, num_towers, tower_cost, wave_stop):
         self.set_foreground()
+        self.wave_checker = RepeatedTimer(1, self.check_wave)
         for i in range(num_towers):
+            if self.find_death_text() is not None:
+                self.wave_checker.stop()
+                return False
+
+            if self.current_wave[0] >= wave_stop:
+                self.wave_checker.stop()
+                time.sleep(3)
+                return False
+
             current_money = 0
             while current_money is None or current_money < tower_cost:
                 screen = self.screenshot()
                 current_money = ocr.read_current_money(screen)
                 time.sleep(0.25)
+
             rect = self.get_window_rect()
             window_width = rect[2]
             window_height = rect[3]
@@ -380,10 +420,16 @@ class Roblox:
             steps_in_current_direction = 0
             change_direction_after_steps = 1
 
-            if self.find_death_text() is not None:
-                return False
-
             while 0 <= x < window_width and 0 <= y < window_height:
+                if self.find_death_text() is not None:
+                    self.wave_checker.stop()
+                    return False
+
+                if self.current_wave[0] >= wave_stop:
+                    self.wave_checker.stop()
+                    time.sleep(3)
+                    return False
+
                 if not self.check_high_color_percentage("R", 150, 30):
                     keyboard.send(tower_key)
                 if (x, y) not in self.placed_towers and (x, y) not in self.invalid_towers:
@@ -409,7 +455,7 @@ class Roblox:
                 continue
         return True
 
-    def upgrade_towers(self):
+    def upgrade_towers(self, wave_stop):
         self.set_foreground()
         time.sleep(1)
         start = time.time()
@@ -417,8 +463,20 @@ class Roblox:
             if time.time() - start > 300:
                 self.anti_afk()
                 start = time.time()
+
+            if config.tower_cap == 0:
+                if self.find_death_text() is not None:
+                    self.wave_checker.stop()
+                    return False
+                time.sleep(0.5)
+
             for x, y in self.placed_towers:
                 if self.find_death_text() is not None:
+                    self.wave_checker.stop()
+                    return False
+                if self.current_wave[0] >= wave_stop:
+                    self.wave_checker.stop()
+                    time.sleep(3)
                     return False
                 autoit.mouse_click("left", x, y)
                 screen = self.screenshot()
@@ -427,13 +485,20 @@ class Roblox:
                 while time.time() - start2 < 1:
                     if upgrade_info is not None:
                         current_money = ocr.read_current_money(screen)
-                        if current_money >= upgrade_info[0]:
+                        if current_money is not None and current_money >= upgrade_info[0]:
                             autoit.mouse_click("left", upgrade_info[1], upgrade_info[2])
                             self.logger.debug(f"Upgraded tower at {x}, {y}")
                             break
                     screen = self.screenshot()
                     upgrade_info = ocr.read_upgrade_cost(screen)
                     time.sleep(0.1)
+
+    def check_wave(self):
+        screen = self.screenshot()
+        wave = ocr.read_current_wave(screen)
+        if wave is not None and wave != self.current_wave[0]:
+            self.current_wave[0] = wave
+            self.logger.info(f"Detected wave: {wave}")
 
     def anti_afk(self):
         for instance in self.roblox_instances:
@@ -447,11 +512,27 @@ class Roblox:
     def find_death_text(self):
         return ocr.find_text(self.screenshot(), "backtolobby")
 
-    def leave_story(self):
+    def leave_story_death(self):
         self.set_foreground()
         time.sleep(1)
         x, y = self.find_death_text()
         autoit.mouse_click("left", x, y)
+
+    def leave_story_wave(self):
+        self.set_foreground()
+        time.sleep(1)
+        self.click_nav_rect(coords.settings_sequence, "Could not find settings button", restart=False)
+        time.sleep(0.25)
+        text = "leavegame"
+        fast_travel_coords = ocr.find_fast_travel(self.screenshot(), text)
+        if fast_travel_coords is None:
+            fast_travel_coords = ocr.find_fast_travel(self.screenshot(), text, ratio=4)
+            if fast_travel_coords is None:
+                self.logger.warning(f"Could not find leavegame button")
+                return False
+        autoit.mouse_click("left", fast_travel_coords[0], fast_travel_coords[1])
+        time.sleep(0.5)
+        self.click_text("leave")
 
     def close_announcement(self):
         self.set_foreground()

@@ -2,6 +2,7 @@ import pytesseract
 import cv2
 import numpy as np
 import difflib
+import re
 
 import coords
 import config
@@ -28,7 +29,7 @@ def find_text(image_input: np.ndarray, text):
 
 def find_fast_travel(image_input: np.ndarray, location, tolerance=50, ratio=3):
     image = image_input.copy()
-    crop = image[:image.shape[0] // 3, :image.shape[1] // 3]
+    crop = image[:image.shape[0] // ratio, :image.shape[1] // ratio]
     color = (255, 255, 255)
     lower = np.array([color[0] - tolerance, color[1] - tolerance, color[2] - tolerance])
     upper = np.array([color[0], color[1], color[2]])
@@ -39,11 +40,10 @@ def find_fast_travel(image_input: np.ndarray, location, tolerance=50, ratio=3):
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
-        if len(line) == 12 and difflib.SequenceMatcher(None, location, line[11].lower()).ratio() > 0.8:
+        if len(line) == 12 and difflib.SequenceMatcher(None, location, line[11].lower()).ratio() > 0.6:
             x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
             return x + w // 2, y + h // 2
-    cv2.imwrite("test.png", crop)
-    print([line.split('\t') for line in result])
+    cv2.imwrite("crop.png", crop)
     return None
 
 
@@ -109,3 +109,25 @@ def read_current_money(image_input: np.ndarray):
         return int(text)
     except SystemError:
         return None
+
+
+def read_current_wave(image_input: np.ndarray):
+    image = image_input.copy()
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
+    kernel = np.ones((3, 3), np.uint8)
+    thresh = cv2.erode(thresh, kernel, iterations=1)
+    result = pytesseract.image_to_string(thresh, config=f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
+    result = result.split('\n')
+    for line in result:
+        line = line.lower()
+        if line.startswith("wave"):
+            try:
+                number = int(re.search(r'wave(\d+)', line).group(1))
+                if "completed" in line:
+                    return number + 1
+                elif "started" in line:
+                    return number
+            except AttributeError:
+                return None
+    return None
