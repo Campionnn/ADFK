@@ -11,7 +11,7 @@ if config.port == 0000:
     import config_personal as config
 
 def kill_thread():
-    keyboard.wait("esc")
+    keyboard.wait(config.kill_key)
     os._exit(0)
 threading.Thread(target=kill_thread).start()
 
