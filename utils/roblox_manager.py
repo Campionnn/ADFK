@@ -111,19 +111,31 @@ class RobloxManager:
             while True:
                 self.main_instance.play_story()
                 if not self.main_instance.place_towers(config.tower_hotkey, config.tower_cap, config.tower_cost, 0):
-                    if self.main_instance.find_text("playnext") is None:
-                        break
-                    else:
-                        self.main_instance.click_text("playagain")
+                    time.sleep(0.5)
+                    if self.main_instance.find_text("playnext") is not None:
+                        self.all_play_next()
                         continue
+                    else:
+                        if self.main_instance.find_text("victory") is not None:
+                            self.all_leave_story_death()
+                            break
+                        elif self.main_instance.find_text("defeat") is not None:
+                            self.all_play_again()
+                            continue
                 self.logger.debug(f"Finished placing towers")
                 self.logger.debug(f"Upgrading towers")
                 if not self.main_instance.upgrade_towers(0, config.tower_cap):
-                    if self.main_instance.find_text("playnext") is None:
-                        break
-                    else:
-                        self.main_instance.click_text("playagain")
+                    time.sleep(0.5)
+                    if self.main_instance.find_text("playnext") is not None:
+                        self.all_play_next()
                         continue
+                    else:
+                        if self.main_instance.find_text("victory") is not None:
+                            self.all_leave_story_death()
+                            break
+                        elif self.main_instance.find_text("defeat") is not None:
+                            self.all_play_again()
+                            continue
 
     def all_leave_story_death(self):
         for instance in self.roblox_instances:
@@ -136,3 +148,11 @@ class RobloxManager:
             instance.leave_story_wave()
         for instance in self.roblox_instances:
             instance.close_announcement()
+
+    def all_play_next(self):
+        for instance in self.roblox_instances:
+            instance.play_next()
+
+    def all_play_again(self):
+        for instance in self.roblox_instances:
+            instance.play_again()

@@ -26,7 +26,14 @@ def find_text(image_input: np.ndarray, text, numbers=False):
         line = line.split('\t')
         if len(line) == 12 and difflib.SequenceMatcher(None, text, line[11].lower()).ratio() > 0.8:
             x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
-            return x + w // 2, y + h // 2
+            return x+w//2, y+h//2
+        elif text == "playagain" or text == "backtolobby":
+            if len(line) == 12 and difflib.SequenceMatcher(None, "playagainbacktolobby", line[11].lower()).ratio() > 0.8:
+                x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
+                if text == "playagain":
+                    return (x+w//4), y+h//2
+                else:
+                    return x+(w//4*3), y+h//2
     return None
 
 

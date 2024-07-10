@@ -415,7 +415,7 @@ class Roblox:
             self.logger.warning("Could not teleport to story")
             return False
         time.sleep(0.5)
-        if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_play_pos[0], coords.story_play_pos[1], coords.story_play_pos_tolerance, 10):
+        if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_play_pos[0], coords.story_play_pos[1], coords.story_play_pos_tolerance, 10, precise=True):
             return self.teleport_story()
         return True
 
@@ -438,7 +438,7 @@ class Roblox:
         if self.mode == 1:
             self.click_text("infinitemode")
         elif self.mode == 2:
-            self.click_text(f"chapter{self.level}")
+            self.click_nav_rect("s"*self.level*2, "Could not find selected chapter", restart=False)
         time.sleep(0.5)
         self.click_text("confirm")
 
@@ -490,7 +490,7 @@ class Roblox:
             while current_money is None or current_money < tower_cost:
                 screen = self.screenshot()
                 current_money = ocr.read_current_money(screen)
-                time.sleep(0.25)
+                time.sleep(0.1)
 
             rect = self.get_window_rect()
             window_width = rect[2]
@@ -604,6 +604,18 @@ class Roblox:
         time.sleep(1)
         x, y = self.find_text("backtolobby")
         autoit.mouse_click("left", x, y)
+
+    def play_next(self):
+        self.set_foreground()
+        time.sleep(1)
+        while not self.click_text("playnext"):
+            time.sleep(0.5)
+
+    def play_again(self):
+        self.set_foreground()
+        time.sleep(1)
+        while not self.click_text("playagain"):
+            time.sleep(0.5)
 
     def leave_story_wave(self):
         self.set_foreground()
