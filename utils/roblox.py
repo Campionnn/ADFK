@@ -8,6 +8,7 @@ import keyboard
 import pyautogui
 import psutil
 import pywinauto
+import requests
 
 import config
 if config.port == 0000:
@@ -101,18 +102,18 @@ class Roblox:
         self.pid = None
         self.y_addrs = None
 
-        # params = {
-        #     "Account": self.username,
-        #     "PlaceId": self.place_id,
-        #     # "JobId": config.private_server_code,
-        # }
-        # if config.password != "":
-        #     params["Password"] = config.password
-        # result = requests.get(f"http://localhost:{config.port}/LaunchAccount", params=params)
-        # return result.status_code
-        self.logger.info(f"Join private server with account {self.username} from Roblox Account Manager")
-        self.logger.info(f"This will automatically start once I fix the bug with RAM")
+        params = {
+            "Account": self.username,
+            "PlaceId": self.place_id,
+            "JobId": config.private_server_link,
+        }
+        if config.password != "":
+            params["Password"] = config.password
+        result = requests.get(f"http://localhost:{config.port}/LaunchAccount", params=params)
         self.logger.debug(f"Waiting for Roblox instance for {self.username} to start")
+        if result.status_code != 200:
+            self.logger.warning(f"Failed to start Roblox instance for {self.username}")
+            return
 
         unique_pids = []
         while len(unique_pids) == 0:

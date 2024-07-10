@@ -25,6 +25,6 @@ port = 0000
 password = ""
 # List of usernames in RAM ex: ["username1", "username2"] first username in list is main account
 usernames = []
-# Code to private server ex: "12345678901234567890123456789012"
-# If code is not all numbers, open private server link in a browser and copy the code from the link once it changes
-private_server_code = ""
+# link to private server ex: "https://www.roblox.com/games/17017769292/Anime-Defenders?privateServerLinkCode=12345678901234567890123456789012"
+# if it does not end in all numbers, open private server link in a browser and copy the code from the url once it changes
+private_server_link = ""
