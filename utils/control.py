@@ -1,15 +1,22 @@
+import os
 import time
 import math
 import keyboard
 import vgamepad as vg
 import logging
+import random
 from utils import memory
 
 
 class Control:
     def __init__(self, logger: logging.Logger):
         self.logger = logger
-        self.gamepad = vg.VX360Gamepad()
+        try:
+            self.gamepad = vg.VX360Gamepad()
+        except AssertionError:
+            self.logger.error("No controller detected. Try relaunching the script")
+            self.logger.error("If that doesn't work reinstall ViGEmBus from https://github.com/nefarius/ViGEmBus/releases")
+            os._exit(0)
 
     def reset(self):
         self.gamepad.reset()
@@ -100,14 +107,15 @@ class Control:
     def calculate_distance(self, x1, z1, x2, z2):
         return math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2)
 
-    def go_to_pos(self, pid, y_addrs, final_x, final_z, tolerance, turn_tolerance=5, jump=False, min_speed=0.4, max_speed=1.0, min_turn=0.4, precise=False):
+    def go_to_pos(self, pid, y_addrs, final_x, final_z, tolerance, turn_tolerance=5, jump=False, min_speed=0.4, max_speed=1.0, min_turn=0.4, precise=False, timeout=10):
         current_pos = memory.get_current_pos(pid, y_addrs)
         init_distance = self.calculate_distance(current_pos[0], current_pos[2], final_x, final_z)
         self.logger.debug(f"Going to {final_x}, {final_z} from {current_pos[0]}, {current_pos[2]}")
         self.logger.debug(f"Distance to target: {init_distance}")
         final_rot = self.calculate_degree_pos(current_pos[0], current_pos[2], final_x, final_z)
         self.turn_towards_yaw(pid, y_addrs, final_rot, 5, min_turn, precise)
-        while True:
+        start = time.time()
+        while time.time() - start < timeout:
             current_x = current_pos[0]
             current_z = current_pos[2]
             if abs(current_x - final_x) < tolerance and abs(current_z - final_z) < tolerance:
@@ -124,3 +132,24 @@ class Control:
             if precise:
                 self.reset_move()
             current_pos = memory.get_current_info(pid, y_addrs)
+        self.logger.warning("Timed out while moving to position")
+        self.reset_move()
+        return False
+
+    def unstuck(self, pid, y_addrs, jump=True):
+        self.logger.debug("Unstucking player")
+        init_pos = memory.get_current_pos(pid, y_addrs)
+        for _ in range(5):
+            final_rot = random.randint(0, 360)
+            self.turn_towards_yaw(pid, y_addrs, final_rot, 10, 0.5)
+            if jump:
+                self.jump()
+            self.move_forward(1.0)
+            time.sleep(1)
+            self.reset_move()
+            self.reset_look()
+            time.sleep(0.1)
+        pos = memory.get_current_pos(pid, y_addrs)
+        if self.calculate_distance(init_pos[0], init_pos[2], pos[0], pos[2]) > 5:
+            return True
+        return False

@@ -13,11 +13,14 @@ if config.port == 0000:
 pytesseract.pytesseract.tesseract_cmd = config.tesseract_path
 
 
-def find_text(image_input: np.ndarray, text):
+def find_text(image_input: np.ndarray, text, numbers=False):
     image = image_input.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
-    result = pytesseract.image_to_data(thresh, config=f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    if numbers:
+        tesseract_config += '0123456789'
+    result = pytesseract.image_to_data(thresh, config=tesseract_config)
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -43,13 +46,13 @@ def find_fast_travel(image_input: np.ndarray, location, tolerance=50, ratio=3):
         if len(line) == 12 and difflib.SequenceMatcher(None, location, line[11].lower()).ratio() > 0.6:
             x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
             return x + w // 2, y + h // 2
-    cv2.imwrite("crop.png", crop)
     return None
 
 
 def read_upgrade_cost(image_input: np.ndarray):
     image = image_input.copy()
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    crop = image[image.shape[0] // 2:, :image.shape[1] // 2]
+    gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
     kernel = np.ones((3, 3), np.uint8)
     thresh = cv2.erode(thresh, kernel, iterations=1)
@@ -70,7 +73,7 @@ def read_upgrade_cost(image_input: np.ndarray):
         text = str(pytesseract.image_to_string(crop, config=f'--psm 8 -c tessedit_char_whitelist=0123456789')).strip()
         if text == "":
             return None
-        return [int(text), x + w // 2, y + h // 2]
+        return [int(text), x+w//2, (y+h//2)+(image.shape[0]//2)]
     except SystemError:
         return None
 

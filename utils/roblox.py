@@ -10,6 +10,8 @@ import psutil
 import pywinauto
 
 import config
+if config.port == 0000:
+    import config_personal as config
 import coords
 from utils import ocr
 from utils import memory
@@ -30,10 +32,70 @@ class Roblox:
         self.roblox_exe = "RobloxPlayerBeta.exe"
         self.place_id = "17017769292"
 
+        self.mode = None
+        self.level = None
+        self.world_sequence = None
+        self.story_place_pos = None
+        self.story_place_pos_tolerance = None
+        self.story_place_rot = None
+        self.story_place_rot_tolerance = None
+
         self.placed_towers = []
         self.invalid_towers = []
         self.current_wave = [0]
         self.wave_checker = None
+
+    def set_mode(self, mode, world, level):
+        self.mode = mode
+        self.level = level
+        if world == 1:
+            self.world_sequence = coords.windmill_sequence
+            self.story_place_pos = coords.windmill_place_pos
+            self.story_place_pos_tolerance = coords.windmill_place_pos_tolerance
+            self.story_place_rot = coords.windmill_place_rot
+            self.story_place_rot_tolerance = coords.windmill_place_rot_tolerance
+        elif world == 2:
+            self.world_sequence = coords.haunted_sequence
+            self.story_place_pos = coords.haunted_place_pos
+            self.story_place_pos_tolerance = coords.haunted_place_pos_tolerance
+            self.story_place_rot = coords.haunted_place_rot
+            self.story_place_rot_tolerance = coords.haunted_place_rot_tolerance
+        elif world == 3:
+            self.world_sequence = coords.cursed_sequence
+            self.story_place_pos = coords.cursed_place_pos
+            self.story_place_pos_tolerance = coords.cursed_place_pos_tolerance
+            self.story_place_rot = coords.cursed_place_rot
+            self.story_place_rot_tolerance = coords.cursed_place_rot_tolerance
+        elif world == 4:
+            self.world_sequence = coords.blue_sequence
+            self.story_place_pos = coords.blue_place_pos
+            self.story_place_pos_tolerance = coords.blue_place_pos_tolerance
+            self.story_place_rot = coords.blue_place_rot
+            self.story_place_rot_tolerance = coords.blue_place_rot_tolerance
+        elif world == 5:
+            self.world_sequence = coords.underwater_sequence
+            self.story_place_pos = coords.underwater_place_pos
+            self.story_place_pos_tolerance = coords.underwater_place_pos_tolerance
+            self.story_place_rot = coords.underwater_place_rot
+            self.story_place_rot_tolerance = coords.underwater_place_rot_tolerance
+        elif world == 6:
+            self.world_sequence = coords.swordsman_sequence
+            self.story_place_pos = coords.swordsman_place_pos
+            self.story_place_pos_tolerance = coords.swordsman_place_pos_tolerance
+            self.story_place_rot = coords.swordsman_place_rot
+            self.story_place_rot_tolerance = coords.swordsman_place_rot_tolerance
+        elif world == 7:
+            self.world_sequence = coords.snowy_sequence
+            self.story_place_pos = coords.snowy_place_pos
+            self.story_place_pos_tolerance = coords.snowy_place_pos_tolerance
+            self.story_place_rot = coords.snowy_place_rot
+            self.story_place_rot_tolerance = coords.snowy_place_rot_tolerance
+        elif world == 8:
+            self.world_sequence = coords.crystal_sequence
+            self.story_place_pos = coords.crystal_place_pos
+            self.story_place_pos_tolerance = coords.crystal_place_pos_tolerance
+            self.story_place_rot = coords.crystal_place_rot
+            self.story_place_rot_tolerance = coords.crystal_place_rot_tolerance
 
     def start_account(self):
         self.pid = None
@@ -161,9 +223,9 @@ class Roblox:
             autoit.mouse_click("left", x, y)
         return rect
 
-    def click_text(self, text):
+    def click_text(self, text, numbers=False):
         self.logger.debug(f"Clicking text {text} for {self.username}")
-        text_coords = ocr.find_text(self.screenshot(), text)
+        text_coords = ocr.find_text(self.screenshot(), text, numbers)
         if text_coords is None:
             return False
         autoit.mouse_click("left", text_coords[0], text_coords[1])
@@ -265,7 +327,7 @@ class Roblox:
 
         init_addresses = []
         attempts = 0
-        min_addresses = 900
+        min_addresses = 800
         max_addresses = 7000
         while len(init_addresses) < min_addresses or len(init_addresses) > max_addresses:
             time.sleep(0.5)
@@ -334,70 +396,91 @@ class Roblox:
 
     def teleport_story(self):
         self.set_foreground()
+        time.sleep(0.5)
+        self.click_text("x")
         pos = memory.get_current_pos(self.pid, self.y_addrs)
         attempts = 0
         while self.controller.calculate_distance(pos[0], pos[2], coords.story_play_pos[0], coords.story_play_pos[1]) > 50 and attempts < 5:
             time.sleep(0.5)
-            if not self.fast_travel("story"):
-                return False
+            self.fast_travel("story")
+            if self.click_text("leave"):
+                time.sleep(0.1)
+                pos = memory.get_current_pos(self.pid, self.y_addrs)
+                continue
             time.sleep(0.5)
             pos = memory.get_current_pos(self.pid, self.y_addrs)
+            attempts += 1
+        if attempts >= 5:
+            self.logger.warning("Could not teleport to story")
+            return False
         time.sleep(0.5)
-        if not self.click_text("leave"):
-            time.sleep(0.5)
-        self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_play_pos[0], coords.story_play_pos[1],coords.story_play_pos_tolerance, 10)
+        if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_play_pos[0], coords.story_play_pos[1], coords.story_play_pos_tolerance, 10):
+            return self.teleport_story()
         return True
 
     def enter_story(self):
         self.logger.debug(f"Entering story for {self.username}")
         self.set_foreground()
         time.sleep(1)
-        self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_enter_pos[0], coords.story_enter_pos[1],
-                                  coords.story_enter_pos_tolerance, 20)
-        if self.username == self.roblox_instances[0].username:
+        if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_enter_pos[0], coords.story_enter_pos[1], coords.story_enter_pos_tolerance, 20):
+            self.teleport_story()
+            return self.enter_story()
+        if self.username == config.usernames[0]:
             self.controller.zoom_in()
             self.controller.zoom_out(0.25)
             self.select_story()
+        return True
 
     def select_story(self):
-        self.click_nav_rect(coords.world_sequence, "Could not find world button")
+        self.click_nav_rect(self.world_sequence, "Could not find world button")
         time.sleep(0.5)
-        self.click_text("infinitemode")
+        if self.mode == 1:
+            self.click_text("infinitemode")
+        elif self.mode == 2:
+            self.click_text(f"chapter{self.level}")
         time.sleep(0.5)
         self.click_text("confirm")
 
     def start_story(self):
-        self.placed_towers = []
-        self.invalid_towers = []
-        self.current_wave = [0]
         self.set_foreground()
         time.sleep(0.5)
         self.click_text("start")
 
     def play_story(self):
+        self.placed_towers = []
+        self.invalid_towers = []
+        self.current_wave = [0]
         self.set_foreground()
         time.sleep(1)
         self.wait_game_load("story")
-        self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_place_pos[0], coords.story_place_pos[1], coords.story_place_pos_tolerance, 10, True)
+        if not self.controller.go_to_pos(self.pid, self.y_addrs, self.story_place_pos[0], self.story_place_pos[1], self.story_place_pos_tolerance, 10, True):
+            self.controller.unstuck(self.pid, self.y_addrs)
+            if not self.controller.go_to_pos(self.pid, self.y_addrs, self.story_place_pos[0], self.story_place_pos[1], self.story_place_pos_tolerance, 10, True):
+                self.logger.warning("Could not go to place position")
+                return False
         self.controller.reset()
         time.sleep(0.1)
-        self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_place_pos[0], coords.story_place_pos[1], coords.story_place_pos_tolerance / 10, 10, min_speed=0.2, max_speed=0.3, min_turn=0.5, precise=True)
+        if not self.controller.go_to_pos(self.pid, self.y_addrs, self.story_place_pos[0], self.story_place_pos[1], self.story_place_pos_tolerance/10, 10, min_speed=0.2, max_speed=0.3, min_turn=0.5, precise=True):
+            self.controller.unstuck(self.pid, self.y_addrs)
+            if not self.controller.go_to_pos(self.pid, self.y_addrs, self.story_place_pos[0], self.story_place_pos[1], self.story_place_pos_tolerance/10, 10, min_speed=0.2, max_speed=0.3, min_turn=0.5, precise=True):
+                self.logger.warning("Could not go to place position")
+                return False
         self.controller.reset()
-        self.controller.turn_towards_yaw(self.pid, self.y_addrs, coords.story_place_rot, coords.story_place_rot_tolerance, 0.2)
+        self.controller.turn_towards_yaw(self.pid, self.y_addrs, self.story_place_rot, self.story_place_rot_tolerance, 0.2)
         self.controller.look_down(1.0)
         time.sleep(1)
         self.controller.reset_look()
         self.controller.zoom_out()
 
-    def place_towers(self, tower_key, num_towers, tower_cost, wave_stop):
+    def place_towers(self, tower_key, tower_cap, tower_cost, wave_stop):
         self.set_foreground()
         self.wave_checker = RepeatedTimer(1, self.check_wave)
-        for i in range(num_towers):
-            if self.find_death_text() is not None:
+        for i in range(tower_cap):
+            if self.find_text("backtolobby") is not None:
                 self.wave_checker.stop()
                 return False
 
-            if self.current_wave[0] >= wave_stop:
+            if self.mode == 1 and self.current_wave[0] >= wave_stop:
                 self.wave_checker.stop()
                 time.sleep(3)
                 return False
@@ -421,11 +504,11 @@ class Roblox:
             change_direction_after_steps = 1
 
             while 0 <= x < window_width and 0 <= y < window_height:
-                if self.find_death_text() is not None:
+                if self.find_text("backtolobby") is not None:
                     self.wave_checker.stop()
                     return False
 
-                if self.current_wave[0] >= wave_stop:
+                if self.mode == 1 and self.current_wave[0] >= wave_stop:
                     self.wave_checker.stop()
                     time.sleep(3)
                     return False
@@ -433,8 +516,10 @@ class Roblox:
                 if not self.check_high_color_percentage("R", 150, 30):
                     keyboard.send(tower_key)
                 if (x, y) not in self.placed_towers and (x, y) not in self.invalid_towers:
+                    autoit.mouse_move(x + rect[0], y + rect[1])
+                    time.sleep(0.1)
                     autoit.mouse_click("left", x + rect[0], y + rect[1])
-                    time.sleep(0.25)
+                    time.sleep(0.15)
                     if not self.check_high_color_percentage("R", 150, 30):
                         self.logger.debug(f"Placed tower at {x}, {y}")
                         self.placed_towers.append((x, y))
@@ -455,7 +540,7 @@ class Roblox:
                 continue
         return True
 
-    def upgrade_towers(self, wave_stop):
+    def upgrade_towers(self, wave_stop, tower_cap):
         self.set_foreground()
         time.sleep(1)
         start = time.time()
@@ -464,25 +549,26 @@ class Roblox:
                 self.anti_afk()
                 start = time.time()
 
-            if config.tower_cap == 0:
-                if self.find_death_text() is not None:
+            if tower_cap == 0:
+                if self.find_text("backtolobby") is not None:
                     self.wave_checker.stop()
                     return False
                 time.sleep(0.5)
 
             for x, y in self.placed_towers:
-                if self.find_death_text() is not None:
+                if self.find_text("backtolobby") is not None:
                     self.wave_checker.stop()
                     return False
-                if self.current_wave[0] >= wave_stop:
+                if self.mode == 1 and self.current_wave[0] >= wave_stop:
                     self.wave_checker.stop()
                     time.sleep(3)
                     return False
                 autoit.mouse_click("left", x, y)
+                time.sleep(0.1)
                 screen = self.screenshot()
                 upgrade_info = ocr.read_upgrade_cost(screen)
                 start2 = time.time()
-                while time.time() - start2 < 1:
+                while time.time() - start2 < 0.5:
                     if upgrade_info is not None:
                         current_money = ocr.read_current_money(screen)
                         if current_money is not None and current_money >= upgrade_info[0]:
@@ -498,7 +584,7 @@ class Roblox:
         wave = ocr.read_current_wave(screen)
         if wave is not None and wave != self.current_wave[0]:
             self.current_wave[0] = wave
-            self.logger.info(f"Detected wave: {wave}")
+            self.logger.debug(f"Detected wave: {wave}")
 
     def anti_afk(self):
         for instance in self.roblox_instances:
@@ -509,13 +595,13 @@ class Roblox:
             time.sleep(0.5)
         self.set_foreground()
 
-    def find_death_text(self):
-        return ocr.find_text(self.screenshot(), "backtolobby")
+    def find_text(self, text):
+        return ocr.find_text(self.screenshot(), text)
 
     def leave_story_death(self):
         self.set_foreground()
         time.sleep(1)
-        x, y = self.find_death_text()
+        x, y = self.find_text("backtolobby")
         autoit.mouse_click("left", x, y)
 
     def leave_story_wave(self):
