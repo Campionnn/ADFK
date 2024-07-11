@@ -3,7 +3,7 @@ import time
 import cv2
 import numpy as np
 import logging
-import win32api
+import subprocess
 import autoit
 import keyboard
 import pyautogui
@@ -15,6 +15,7 @@ import config
 if config.port == 0000:
     import config_personal as config
 import coords
+from utils.exceptions import *
 from utils import ocr
 from utils import memory
 from utils import control
@@ -111,11 +112,10 @@ class Roblox:
         if config.password != "":
             params["Password"] = config.password
         result = requests.get(f"http://localhost:{config.port}/LaunchAccount", params=params)
-        self.logger.debug(f"Waiting for Roblox instance for {self.username} to start")
         if result.status_code != 200:
-            self.logger.warning(f"Failed to start Roblox instance for {self.username}")
-            return
+            raise StartupException(f"Failed to launch Roblox instance for {self.username}")
 
+        self.logger.debug(f"Waiting for Roblox instance for {self.username} to start")
         unique_pids = []
         while len(unique_pids) == 0:
             pids = get_pids_by_name(self.roblox_exe)
@@ -128,43 +128,46 @@ class Roblox:
             try:
                 self.set_foreground()
                 break
-            except RuntimeError:
+            except StartupException:
                 time.sleep(1)
-        time.sleep(2)
-        self.logger.debug(f"Getting memory address for {self.username}")
-        self.get_address()
-        if self.y_addrs is not None:
-            for instance in self.roblox_instances:
-                if instance.username == self.username:
-                    self.roblox_instances.remove(instance)
-            self.roblox_instances.append(self)
-            self.logger.debug(f"Memory address for {self.username} is {hex(self.y_addrs)}")
+        time.sleep(3)
+
+        if not self.wait_game_load("main"):
+            return
+        time.sleep(0.5)
+        self.click_text("x")
+        if not self.fast_travel("leaderboards"):
+            raise StartupException("Could not fast travel to leaderboards")
+        time.sleep(0.5)
+        self.controller.look_down(1.0)
+        time.sleep(1.0)
+        self.controller.reset_look()
+        self.y_addrs = memory.search_new(self.pid, coords.init_pos_x, coords.init_pos_y, coords.init_pos_z, coords.init_pos_tolerance, coords.init_pitch, coords.init_pitch_tolerance)
+        if self.y_addrs is None:
+            raise StartupException("Could not find memory address")
         return
 
     def close_instance(self):
-        self.logger.debug(f"Closing Roblox instance for {self.username}")
+        self.logger.debug(f"Killing Roblox instance for {self.username}")
         try:
             os.kill(self.pid, 15)
-        except Exception as e:
-            self.logger.warning(f"Failed to close Roblox instance: {e}")
+        except OSError:
+            pass
         while True:
+            self.logger.debug("Waiting for Roblox instance to close")
             if self.pid not in get_pids_by_name(self.roblox_exe):
                 break
             time.sleep(1)
         return True
 
-    def set_foreground(self, start=False):
+    def set_foreground(self):
         try:
             app = pywinauto.Application().connect(process=self.pid)
             app.top_window().set_focus()
             self.logger.debug(f"Set foreground window to {self.pid}")
             return True
         except pywinauto.application.ProcessNotFoundError or OSError:
-            if self.check_crash():
-                self.logger.warning("Roblox instance crashed")
-                if start:
-                    self.start_account()
-                return False
+            raise StartupException("Could not set foreground window")
 
     def get_window_rect(self):
         app = pywinauto.Application().connect(process=self.pid)
@@ -176,48 +179,40 @@ class Roblox:
         screen_np = np.array(screen)
         return cv2.cvtColor(screen_np, cv2.COLOR_RGB2BGR)
 
-    def wait_game_load(self, during, restart=True):
+    def wait_game_load(self, during):
         self.logger.debug(f"Waiting for game to load for {self.username}")
         start = time.time()
         while time.time() - start < 45:
-            if self.check_crash():
-                self.logger.warning("Roblox instance crashed")
-                break
+            self.check_crash()
             screen = self.screenshot()
-            if during == "main":
-                if ocr.find_text(screen, "units") is not None:
-                    return True
-            elif during == "story":
-                if ocr.read_current_money(screen) is not None:
-                    return True
-            elif during == "afk":
-                if ocr.find_text(screen, "leaveclaimreward") is not None:
-                    return True
-        self.logger.warning("Could not detect game start")
-        if restart:
-            self.logger.warning(f"Restarting account {self.username}")
-            self.close_instance()
-            time.sleep(3)
-            self.start_account()
-        return False
+            match during:
+                case "main":
+                    if ocr.find_text(screen, "units") is not None:
+                        return True
+                case "story":
+                    money = ocr.read_current_money(screen)
+                    if money is not None and money > 0:
+                        return True
+        match during:
+            case "main":
+                raise StartupException("Could not detect main screen load")
+            case "story":
+                raise StartupException("Could not detect story load")
 
-    def click_nav_rect(self, sequence, error_message, click=True, restart=True):
+    def click_nav_rect(self, sequence, error_message, click=True, restart=True, chapter=False):
         if click:
             self.logger.debug(f"Clicking button with sequence {sequence} for {self.username}")
         else:
             self.logger.debug(f"Finding button with sequence {sequence} for {self.username}")
         keyboard.send("\\")
         time.sleep(0.1)
-        rect = self.find_nav_rect(sequence)
+        rect = self.find_nav_rect(sequence, chapter)
         keyboard.send("\\")
         if rect is None:
             if error_message != "":
                 self.logger.warning(error_message)
             if restart:
-                self.logger.warning(f"Restarting account {self.username}")
-                self.close_instance()
-                time.sleep(3)
-                self.start_account()
+                raise StartupException("Could not find navigation button")
             return False
         if click:
             x = rect[0] + rect[2] // 2
@@ -233,14 +228,19 @@ class Roblox:
         autoit.mouse_click("left", text_coords[0], text_coords[1])
         return True
 
-    def find_nav_rect(self, sequence):
+    def find_nav_rect(self, sequence="", chapter=False):
         for key in list(sequence):
             time.sleep(0.05)
             keyboard.send(key)
         time.sleep(0.5)
         screen = pyautogui.screenshot()
         screen_np = np.array(screen)
-        image = cv2.cvtColor(screen_np, cv2.COLOR_RGB2BGR)
+
+        screen_crop = screen_np
+        if chapter:
+            screen_crop = screen_np[:, screen_np.shape[1] // 3:]
+
+        image = cv2.cvtColor(screen_crop, cv2.COLOR_RGB2BGR)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
         contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -251,6 +251,8 @@ class Roblox:
                 area = cv2.contourArea(contour)
                 x, y, w, h = cv2.boundingRect(contour)
                 if 0.8 * (w * h) <= area <= 1.2 * (w * h):
+                    if chapter:
+                        return x + screen_np.shape[1] // 3, y, w, h
                     return x, y, w, h
         return None
 
@@ -286,7 +288,12 @@ class Roblox:
         return high_percentage >= percentage
 
     def check_crash(self):
-        return not psutil.pid_exists(self.pid)
+        if not psutil.pid_exists(self.pid):
+            raise StartupException("Roblox instance crashed")
+        cmd = 'tasklist /FI "PID eq %d" /FI "STATUS eq running"' % self.pid
+        status = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout.read()
+        if not str(self.pid) in str(status):
+            raise StartupException("Roblox instance crashed")
 
     def fast_travel(self, location):
         self.logger.debug(f"Fast traveling to {location} for {self.username}")
@@ -321,64 +328,32 @@ class Roblox:
             return False
         return True
 
-    def get_address(self):
-        if not self.wait_game_load("main"):
-            return
-        time.sleep(1)
-        self.click_text("x")
-
-        if not self.fast_travel("leaderboards"):
-            return
-        time.sleep(0.5)
-        self.controller.look_down(1.0)
-        time.sleep(1.0)
-        self.controller.reset_look()
-        self.y_addrs = memory.search_new(self.pid, coords.init_pos_x, coords.init_pos_y, coords.init_pos_z, coords.init_pos_tolerance, coords.init_pitch, coords.init_pitch_tolerance)
-        if self.y_addrs is None:
-            self.logger.warning("Could not find memory address")
-            self.logger.warning(f"Restarting account {self.username}")
-            self.close_instance()
-            time.sleep(3)
-            self.start_account()
-            return
-        self.logger.debug(f"Final address found: {hex(self.y_addrs)}")
-
-        info = win32api.GetSystemInfo()
-        start = info[2]
-        end = info[3]
-        end_adjusted = round(end*0.05)
-        ratio = self.y_addrs/end
-        ratio_adjusted = self.y_addrs/end_adjusted
-        self.logger.debug(f"start: {start}")
-        self.logger.debug(f"end: {end}")
-        self.logger.debug(f"end adjusted: {end_adjusted}")
-        self.logger.debug(f"final: {self.y_addrs}")
-        self.logger.debug(f"ratio: {ratio}")
-        self.logger.debug(f"ratio adjusted: {ratio_adjusted}")
-
     def teleport_story(self):
-        self.set_foreground(True)
+        self.set_foreground()
         time.sleep(0.5)
         self.click_text("x")
-        pos = memory.get_current_pos(self.pid, self.y_addrs)
-        attempts = 0
-        while self.controller.calculate_distance(pos[0], pos[2], coords.story_play_pos[0], coords.story_play_pos[1]) > 50 and attempts < 5:
-            time.sleep(0.5)
-            self.fast_travel("story")
-            if self.click_text("leave"):
-                time.sleep(0.1)
-                pos = memory.get_current_pos(self.pid, self.y_addrs)
-                continue
-            time.sleep(0.5)
+        try:
             pos = memory.get_current_pos(self.pid, self.y_addrs)
-            attempts += 1
-        if attempts >= 5:
-            self.logger.warning("Could not teleport to story")
-            return False
-        time.sleep(0.5)
-        if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_play_pos[0], coords.story_play_pos[1], coords.story_play_pos_tolerance, 10, precise=True):
-            return self.teleport_story()
-        return True
+            attempts = 0
+            while self.controller.calculate_distance(pos[0], pos[2], coords.story_play_pos[0], coords.story_play_pos[1]) > 50 and attempts < 5:
+                time.sleep(0.25)
+                self.fast_travel("story")
+                time.sleep(0.25)
+                if self.click_text("leave"):
+                    time.sleep(0.1)
+                    pos = memory.get_current_pos(self.pid, self.y_addrs)
+                    continue
+                time.sleep(0.25)
+                pos = memory.get_current_pos(self.pid, self.y_addrs)
+                attempts += 1
+            if attempts >= 5:
+                raise StartupException("Could not teleport to story")
+            time.sleep(0.25)
+            if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_play_pos[0], coords.story_play_pos[1], coords.story_play_pos_tolerance, 10, precise=True):
+                return self.teleport_story()
+            return True
+        except MemoryException:
+            raise StartupException("Could not teleport to story")
 
     def enter_story(self):
         self.logger.debug(f"Entering story for {self.username}")
@@ -390,18 +365,15 @@ class Roblox:
         if self.username == config.usernames[0]:
             self.controller.zoom_in()
             self.controller.zoom_out(0.25)
-            self.select_story()
+            self.click_nav_rect(self.world_sequence, "Could not find world button")
+            time.sleep(0.5)
+            if self.mode == 1:
+                self.click_text("infinitemode")
+            elif self.mode == 2:
+                self.click_nav_rect("s" * self.level * 2, "Could not find selected chapter", restart=False, chapter=True)
+            time.sleep(0.5)
+            self.click_text("confirm")
         return True
-
-    def select_story(self):
-        self.click_nav_rect(self.world_sequence, "Could not find world button")
-        time.sleep(0.5)
-        if self.mode == 1:
-            self.click_text("infinitemode")
-        elif self.mode == 2:
-            self.click_nav_rect("s"*self.level*2, "Could not find selected chapter", restart=False)
-        time.sleep(0.5)
-        self.click_text("confirm")
 
     def start_story(self):
         self.set_foreground()
@@ -415,18 +387,26 @@ class Roblox:
         self.set_foreground()
         time.sleep(1)
         self.wait_game_load("story")
-        if not self.controller.go_to_pos(self.pid, self.y_addrs, self.story_place_pos[0], self.story_place_pos[1], self.story_place_pos_tolerance, 10, True):
-            self.controller.unstuck(self.pid, self.y_addrs)
+        attempts = 0
+        while attempts < 5:
             if not self.controller.go_to_pos(self.pid, self.y_addrs, self.story_place_pos[0], self.story_place_pos[1], self.story_place_pos_tolerance, 10, True):
-                self.logger.warning("Could not go to place position")
-                return False
+                self.controller.unstuck(self.pid, self.y_addrs)
+                attempts += 1
+            else:
+                break
+        if attempts >= 5:
+            raise PlayException("Could not go to place position")
         self.controller.reset()
         time.sleep(0.1)
-        if not self.controller.go_to_pos(self.pid, self.y_addrs, self.story_place_pos[0], self.story_place_pos[1], self.story_place_pos_tolerance/10, 10, min_speed=0.2, max_speed=0.3, min_turn=0.5, precise=True):
-            self.controller.unstuck(self.pid, self.y_addrs)
+        attempts = 0
+        while attempts < 5:
             if not self.controller.go_to_pos(self.pid, self.y_addrs, self.story_place_pos[0], self.story_place_pos[1], self.story_place_pos_tolerance/10, 10, min_speed=0.2, max_speed=0.3, min_turn=0.5, precise=True):
-                self.logger.warning("Could not go to place position")
-                return False
+                self.controller.unstuck(self.pid, self.y_addrs)
+                attempts += 1
+            else:
+                break
+        if attempts >= 5:
+            raise PlayException("Could not go to place position")
         self.controller.reset()
         self.controller.turn_towards_yaw(self.pid, self.y_addrs, self.story_place_rot, self.story_place_rot_tolerance, 0.2)
         self.controller.look_down(1.0)
@@ -441,7 +421,6 @@ class Roblox:
             if self.find_text("backtolobby") is not None:
                 self.wave_checker.stop()
                 return False
-
             if self.mode == 1 and self.current_wave[0] >= wave_stop:
                 self.wave_checker.stop()
                 time.sleep(3)
@@ -469,7 +448,6 @@ class Roblox:
                 if self.find_text("backtolobby") is not None:
                     self.wave_checker.stop()
                     return False
-
                 if self.mode == 1 and self.current_wave[0] >= wave_stop:
                     self.wave_checker.stop()
                     time.sleep(3)
@@ -525,6 +503,7 @@ class Roblox:
                     self.wave_checker.stop()
                     time.sleep(3)
                     return False
+
                 autoit.mouse_click("left", x, y)
                 time.sleep(0.1)
                 screen = self.screenshot()
@@ -563,21 +542,23 @@ class Roblox:
     def leave_story_death(self):
         self.set_foreground()
         time.sleep(1)
-        x, y = self.find_text("backtolobby")
-        autoit.mouse_click("left", x, y)
+        text_coords = self.find_text("backtolobby")
+        if text_coords is None:
+            self.leave_story_wave()
+        autoit.mouse_click("left", text_coords[0], text_coords[1])
 
     def play_next(self):
         self.set_foreground()
         time.sleep(1)
         start = time.time()
-        while not self.click_text("playnext") and time.time() - start < 10:
+        while not self.click_text("playnext") and time.time() - start < 5:
             time.sleep(0.5)
 
     def play_again(self):
         self.set_foreground()
         time.sleep(1)
         start = time.time()
-        while not self.click_text("playagain") and time.time() - start < 10:
+        while not self.click_text("playagain") and time.time() - start < 5:
             time.sleep(0.5)
 
     def leave_story_wave(self):
@@ -601,5 +582,5 @@ class Roblox:
         self.set_foreground()
         time.sleep(1)
         self.wait_game_load("main")
-        time.sleep(1)
+        time.sleep(0.5)
         self.click_text("x")

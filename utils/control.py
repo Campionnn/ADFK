@@ -51,9 +51,9 @@ class Control:
         self.gamepad.left_joystick_float(x_value_float=0, y_value_float=value)
         self.gamepad.update()
 
-    # def move_backward(self, value):
-    #     self.gamepad.left_joystick_float(x_value_float=0, y_value_float=-value)
-    #     self.gamepad.update()
+    def move(self, value_x, value_y):
+        self.gamepad.left_joystick_float(x_value_float=value_x, y_value_float=-value_y)
+        self.gamepad.update()
 
     def jump(self):
         self.gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
@@ -140,12 +140,10 @@ class Control:
         self.logger.debug("Unstucking player")
         init_pos = memory.get_current_pos(pid, y_addrs)
         for _ in range(5):
-            final_rot = random.randint(0, 360)
-            self.turn_towards_yaw(pid, y_addrs, final_rot, 10, 0.5)
             if jump:
                 self.jump()
-            self.move_forward(1.0)
-            time.sleep(1)
+            self.move(random.uniform(-1, 1), random.uniform(-1, 1))
+            time.sleep(0.5)
             self.reset_move()
             self.reset_look()
             time.sleep(0.1)

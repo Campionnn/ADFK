@@ -7,8 +7,8 @@ init_pos_x = -100.8087
 init_pos_y = 13.1508
 init_pos_z = -462.4467
 init_pos_tolerance = 0.0005
-init_pitch = -0.98
-init_pitch_tolerance = 0.01
+init_pitch = -0.9848
+init_pitch_tolerance = 0.0001
 
 
 # OCR color and tolerance in BGR
