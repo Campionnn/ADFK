@@ -112,30 +112,30 @@ class RobloxManager:
                 self.main_instance.play_story()
                 if not self.main_instance.place_towers(config.tower_hotkey, config.tower_cap, config.tower_cost, 0):
                     time.sleep(0.5)
-                    if self.main_instance.find_text("playnext") is not None:
-                        self.all_play_next()
-                        continue
-                    else:
-                        if self.main_instance.find_text("victory") is not None:
+                    if self.main_instance.find_text("victory") is not None:
+                        if self.main_instance.find_text("playnext"):
+                            self.all_play_next()
+                            continue
+                        else:
                             self.all_leave_story_death()
                             break
-                        elif self.main_instance.find_text("defeat") is not None:
-                            self.all_play_again()
-                            continue
+                    elif self.main_instance.find_text("defeat") is not None:
+                        self.all_play_again()
+                        continue
                 self.logger.debug(f"Finished placing towers")
                 self.logger.debug(f"Upgrading towers")
                 if not self.main_instance.upgrade_towers(0, config.tower_cap):
                     time.sleep(0.5)
-                    if self.main_instance.find_text("playnext") is not None:
-                        self.all_play_next()
-                        continue
-                    else:
-                        if self.main_instance.find_text("victory") is not None:
+                    if self.main_instance.find_text("victory") is not None:
+                        if self.main_instance.find_text("playnext"):
+                            self.all_play_next()
+                            continue
+                        else:
                             self.all_leave_story_death()
                             break
-                        elif self.main_instance.find_text("defeat") is not None:
-                            self.all_play_again()
-                            continue
+                    elif self.main_instance.find_text("defeat") is not None:
+                        self.all_play_again()
+                        continue
 
     def all_leave_story_death(self):
         for instance in self.roblox_instances:

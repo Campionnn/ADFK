@@ -3,11 +3,13 @@
 
 # Roblox in game coordinates to search for memory address
 # y coord at leaderboard fast travel
-init_pos1 = 13.1508
-init_tolerance1 = 0.0005
-# y coord inside afk area
-init_pos2 = -10.0
-init_tolerance2 = 8.0
+init_pos_x = -100.8087
+init_pos_y = 13.1508
+init_pos_z = -462.4467
+init_pos_tolerance = 0.0005
+init_pitch = -0.98
+init_pitch_tolerance = 0.01
+
 
 # OCR color and tolerance in BGR
 # Money text while in game

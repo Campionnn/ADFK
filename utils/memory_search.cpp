@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <cstdint>
 
+std::vector<float> ReadPlayerInfo(DWORD pid, uint64_t int_address);
+
 bool ReadMemory(HANDLE hProcess, LPCVOID address, LPVOID buffer, SIZE_T size) {
     SIZE_T bytesRead;
     return ReadProcessMemory(hProcess, address, buffer, size, &bytesRead) && bytesRead == size;
@@ -16,11 +18,15 @@ std::vector<LPCVOID> SearchMemoryForFloat(DWORD pid, float targetValue, float to
 
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
-    LPCVOID startAddress = sysInfo.lpMinimumApplicationAddress;
+    // LPCVOID endAddress = sysInfo.lpMaximumApplicationAddress;
+    // LPCVOID startAddress = reinterpret_cast<LPCVOID>(static_cast<uintptr_t>(reinterpret_cast<SIZE_T>(endAddress) * 0.5));
+    // LPCVOID startAddress = sysInfo.lpMinimumApplicationAddress;
     LPCVOID endAddress = sysInfo.lpMaximumApplicationAddress;
+    endAddress = reinterpret_cast<LPCVOID>(static_cast<uintptr_t>(reinterpret_cast<SIZE_T>(endAddress) * 0.05));
+    LPCVOID startAddress = reinterpret_cast<LPCVOID>(static_cast<uintptr_t>(reinterpret_cast<SIZE_T>(endAddress) * 0.01));
 
     MEMORY_BASIC_INFORMATION memInfo;
-    int bufferSize = 4096;
+    int bufferSize = 64;
     std::vector<char> buffer(bufferSize);
 
     for (LPCVOID address = startAddress; address < endAddress;) {
@@ -74,6 +80,62 @@ std::vector<uint64_t> SearchMemoryForFloatInAddresses(DWORD pid, std::vector<LPC
 
     CloseHandle(hProcess);
     return foundAddresses;
+}
+
+uint64_t SearchMemoryNew(DWORD pid, float targetValueX, float targetValueY, float targetValueZ, float posTolerance, float targetPitch, float pitchTolerance) {
+    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+
+    SYSTEM_INFO sysInfo;
+    GetSystemInfo(&sysInfo);
+    LPCVOID endAddress = sysInfo.lpMaximumApplicationAddress;
+    endAddress = reinterpret_cast<LPCVOID>(static_cast<uintptr_t>(reinterpret_cast<SIZE_T>(endAddress) * 0.05));
+    LPCVOID startAddress = reinterpret_cast<LPCVOID>(static_cast<uintptr_t>(reinterpret_cast<SIZE_T>(endAddress) * 0.01));
+
+    MEMORY_BASIC_INFORMATION memInfo;
+    int bufferSize = 1024;
+    std::vector<char> buffer(bufferSize);
+    std::vector<float> values;
+    LPCVOID addressBuffer;
+
+    for (LPCVOID address = startAddress; address < endAddress;) {
+        if (VirtualQueryEx(hProcess, address, &memInfo, sizeof(memInfo)) == 0) {
+            address = reinterpret_cast<LPCVOID>(reinterpret_cast<SIZE_T>(address) + bufferSize);
+            continue;
+        }
+
+        if (memInfo.State == MEM_COMMIT && (memInfo.Protect == PAGE_READWRITE)) {
+            SIZE_T regionSize = memInfo.RegionSize;
+            LPCVOID regionBase = memInfo.BaseAddress;
+
+            SIZE_T bytesRead = 0;
+            while (bytesRead < regionSize) {
+                SIZE_T bytesToRead = std::min(buffer.size(), regionSize - bytesRead);
+                if (ReadMemory(hProcess, reinterpret_cast<LPCVOID>(reinterpret_cast<SIZE_T>(regionBase) + bytesRead), buffer.data(), bytesToRead)) {
+                    SIZE_T numFloats = bytesToRead / sizeof(float);
+                    float* floatBuffer = reinterpret_cast<float*>(buffer.data());
+                    for (SIZE_T i = 0; i < numFloats; ++i) {
+                        float value = floatBuffer[i];
+                        if (std::abs(value - targetValueY) <= posTolerance) {
+                            addressBuffer = reinterpret_cast<LPCVOID>(reinterpret_cast<SIZE_T>(regionBase) + bytesRead + i * sizeof(float));
+                            values = ReadPlayerInfo(pid, reinterpret_cast<uint64_t>(addressBuffer));
+                            if (std::abs(values[0] - targetValueX) <= posTolerance && std::abs(values[2] - targetValueZ) <= posTolerance && abs(values[3] - targetPitch) <= pitchTolerance && std::abs(values[4]) <= 1 && std::abs(values[5]) <= 1) {
+                                CloseHandle(hProcess);
+                                return reinterpret_cast<uint64_t>(addressBuffer);
+                            }
+                        }
+                    }
+                } else {
+                    break;
+                }
+                bytesRead += bytesToRead;
+            }
+        }
+
+        address = reinterpret_cast<LPCVOID>(reinterpret_cast<SIZE_T>(address) + memInfo.RegionSize);
+    }
+
+    CloseHandle(hProcess);
+    return 0;
 }
 
 std::vector<float> ReadPlayerInfo(DWORD pid, uint64_t int_address) {
@@ -153,4 +215,5 @@ PYBIND11_MODULE(memory_search, m) {
     m.def("read_player_info", &ReadPlayerInfo);
     m.def("read_player_pos", &ReadPlayerPos);
     m.def("read_player_rot", &ReadPlayerRot);
+    m.def("search_memory_new", &SearchMemoryNew);
 }

@@ -3,6 +3,7 @@ import time
 import cv2
 import numpy as np
 import logging
+import win32api
 import autoit
 import keyboard
 import pyautogui
@@ -178,7 +179,7 @@ class Roblox:
     def wait_game_load(self, during, restart=True):
         self.logger.debug(f"Waiting for game to load for {self.username}")
         start = time.time()
-        while time.time() - start < 30:
+        while time.time() - start < 45:
             if self.check_crash():
                 self.logger.warning("Roblox instance crashed")
                 break
@@ -326,56 +327,15 @@ class Roblox:
         time.sleep(1)
         self.click_text("x")
 
-        init_addresses = []
-        attempts = 0
-        min_addresses = 800
-        max_addresses = 7000
-        while len(init_addresses) < min_addresses or len(init_addresses) > max_addresses:
-            time.sleep(0.5)
-            if not self.fast_travel("leaderboards"):
-                return
-            time.sleep(1.0)
-
-            self.logger.debug(f"Searching for initial addresses for {self.username}")
-            init_addresses = memory.search_init_pos(self.pid, coords.init_pos1, coords.init_tolerance1)
-            self.logger.debug(f"Initial addresses found: {len(init_addresses)}")
-            if attempts > 5:
-                self.logger.warning("Could not find initial addresses")
-                self.logger.warning(f"Restarting account {self.username}")
-                self.close_instance()
-                time.sleep(3)
-                self.start_account()
-                return
-            if len(init_addresses) < min_addresses or len(init_addresses) > max_addresses:
-                self.logger.warning("Initial addresses not in desired range. Trying again")
-                attempts += 1
-
-        time.sleep(2)
-        if not self.fast_travel("trading"):
+        if not self.fast_travel("leaderboards"):
             return
-
-        self.logger.info(f"Go into the AFK zone for {self.username}. Type 'crash' and press enter if the game crashes or is frozen")
-        self.logger.info(f"This will be done automatically once devs fix fast travel locations")
-        response = input()
-        if response == "crash":
-            self.close_instance()
-            time.sleep(3)
-            self.start_account()
-            return
-
-        self.set_foreground(True)
-        if not self.wait_game_load("afk"):
-            return
-        time.sleep(2)
-        self.logger.debug(f"Refining addresses to find final address for {self.username}...")
-        final_addresses = memory.search_final_pos(self.pid, init_addresses, coords.init_pos2, coords.init_tolerance2)
-        for address in final_addresses:
-            rot = memory.get_current_rot(self.pid, address)
-            if rot[1] == 270.0 and abs(rot[0] + 0.6) < 0.1:
-                self.y_addrs = address
-                break
+        time.sleep(0.5)
+        self.controller.look_down(1.0)
+        time.sleep(1.0)
+        self.controller.reset_look()
+        self.y_addrs = memory.search_new(self.pid, coords.init_pos_x, coords.init_pos_y, coords.init_pos_z, coords.init_pos_tolerance, coords.init_pitch, coords.init_pitch_tolerance)
         if self.y_addrs is None:
-            self.logger.warning("Could not find final address")
+            self.logger.warning("Could not find memory address")
             self.logger.warning(f"Restarting account {self.username}")
             self.close_instance()
             time.sleep(3)
@@ -383,20 +343,21 @@ class Roblox:
             return
         self.logger.debug(f"Final address found: {hex(self.y_addrs)}")
 
-        self.set_foreground(True)
-        time.sleep(1)
-        self.click_text("leaveclaimreward")
-        time.sleep(1)
-        self.click_text("claim")
-        time.sleep(5)
-
-        if not self.wait_game_load("main"):
-            return
-        time.sleep(2)
-        self.click_text("x")
+        info = win32api.GetSystemInfo()
+        start = info[2]
+        end = info[3]
+        end_adjusted = round(end*0.05)
+        ratio = self.y_addrs/end
+        ratio_adjusted = self.y_addrs/end_adjusted
+        self.logger.debug(f"start: {start}")
+        self.logger.debug(f"end: {end}")
+        self.logger.debug(f"end adjusted: {end_adjusted}")
+        self.logger.debug(f"final: {self.y_addrs}")
+        self.logger.debug(f"ratio: {ratio}")
+        self.logger.debug(f"ratio adjusted: {ratio_adjusted}")
 
     def teleport_story(self):
-        self.set_foreground()
+        self.set_foreground(True)
         time.sleep(0.5)
         self.click_text("x")
         pos = memory.get_current_pos(self.pid, self.y_addrs)
@@ -608,13 +569,15 @@ class Roblox:
     def play_next(self):
         self.set_foreground()
         time.sleep(1)
-        while not self.click_text("playnext"):
+        start = time.time()
+        while not self.click_text("playnext") and time.time() - start < 10:
             time.sleep(0.5)
 
     def play_again(self):
         self.set_foreground()
         time.sleep(1)
-        while not self.click_text("playagain"):
+        start = time.time()
+        while not self.click_text("playagain") and time.time() - start < 10:
             time.sleep(0.5)
 
     def leave_story_wave(self):
@@ -623,9 +586,10 @@ class Roblox:
         self.click_nav_rect(coords.settings_sequence, "Could not find settings button", restart=False)
         time.sleep(0.25)
         text = "leavegame"
-        fast_travel_coords = ocr.find_fast_travel(self.screenshot(), text)
+        screen = self.screenshot()
+        fast_travel_coords = ocr.find_fast_travel(screen, text)
         if fast_travel_coords is None:
-            fast_travel_coords = ocr.find_fast_travel(self.screenshot(), text, ratio=4)
+            fast_travel_coords = ocr.find_fast_travel(screen, text, ratio=4)
             if fast_travel_coords is None:
                 self.logger.warning(f"Could not find leavegame button")
                 return False

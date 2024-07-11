@@ -23,17 +23,23 @@ def get_pids_by_name(process_name):
     return pids
 
 
+def search_new(pid, value_x, value_y, value_z, pos_tolerance, value_pitch, pitch_tolerance):
+    # suspend_process(pid)
+    addresses = memory_search.search_memory_new(pid, value_x, value_y, value_z, pos_tolerance, value_pitch, pitch_tolerance)
+    # resume_process(pid)
+    return addresses
+
 def search_init_pos(pid, value, tolerance):
-    suspend_process(pid)
+    # suspend_process(pid)
     addresses = memory_search.search_memory_for_float(pid, value, tolerance)
-    resume_process(pid)
+    # resume_process(pid)
     return addresses
 
 
 def search_final_pos(pid, addresses, value, tolerance):
-    suspend_process(pid)
+    # suspend_process(pid)
     addresses = memory_search.search_memory_for_float_in_addresses(pid, addresses, value, tolerance)
-    resume_process(pid)
+    # resume_process(pid)
     return addresses
 
 
