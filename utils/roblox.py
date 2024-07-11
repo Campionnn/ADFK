@@ -124,13 +124,16 @@ class Roblox:
             time.sleep(1)
         self.pid = unique_pids[0]
         self.logger.debug(f"Roblox instance for {self.username} started. Waiting for window to appear")
-        while True:
+        start = time.time()
+        while time.time() - start < 60:
             self.check_crash(False)
             try:
                 self.set_foreground()
                 break
             except StartupException:
                 time.sleep(1)
+        if time.time() - start >= 60:
+            raise StartupException("Could not set foreground window")
         time.sleep(3)
 
         if not self.wait_game_load("main"):
@@ -262,36 +265,21 @@ class Roblox:
                     return x, y, w, h
         return None
 
-    def check_high_color_percentage(self, color_channel, threshold, percentage, sequence=None, click=False):
-        if color_channel == "B":
-            color_channel = 0
-        elif color_channel == "G":
-            color_channel = 1
-        elif color_channel == "R":
-            color_channel = 2
+    def check_placement(self):
+        image = pyautogui.screenshot()
+        image_np = np.array(image)
+        image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
 
-        rect = None
-        if sequence:
-            rect = self.click_nav_rect(sequence, "", False, False)
-            if not rect:
-                return False
-        if rect:
-            screen = pyautogui.screenshot(region=rect)
-        else:
-            screen = pyautogui.screenshot()
-        image = np.array(screen)
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        total_pixels = image.shape[0] * image.shape[1]
-        channel = image[:, :, color_channel]
-        high_pixels = cv2.inRange(channel, threshold, 255)
-        count_high_pixels = cv2.countNonZero(high_pixels)
-        high_percentage = (count_high_pixels / total_pixels) * 100
-        if high_percentage >= percentage and click:
-            x = rect[0] + rect[2] // 2
-            y = rect[1] + rect[3] // 2
-            autoit.mouse_click("left", x, y)
-            return True
-        return high_percentage >= percentage
+        blue_channel = image_np[:, :, 0]
+        green_channel = image_np[:, :, 1]
+        red_channel = image_np[:, :, 2]
+        mask = (red_channel > 160) & (green_channel < 20) & (blue_channel < 20)
+
+        total_pixels = image_np.shape[0] * image_np.shape[1]
+        matching_pixels = np.sum(mask)
+        matching_percentage = (matching_pixels / total_pixels) * 100
+
+        return matching_percentage > 10
 
     def check_crash(self, responsive=True):
         if not psutil.pid_exists(self.pid):
@@ -465,14 +453,14 @@ class Roblox:
                     time.sleep(3)
                     return False
 
-                if not self.check_high_color_percentage("R", 150, 30):
+                if not self.check_placement():
                     keyboard.send(tower_key)
                 if (x, y) not in self.placed_towers and (x, y) not in self.invalid_towers:
                     autoit.mouse_move(x + rect[0], y + rect[1])
                     time.sleep(0.1)
                     autoit.mouse_click("left", x + rect[0], y + rect[1])
                     time.sleep(0.15)
-                    if not self.check_high_color_percentage("R", 150, 30):
+                    if not self.check_placement():
                         self.logger.debug(f"Placed tower at {x}, {y}")
                         self.placed_towers.append((x, y))
                         break
