@@ -1,6 +1,7 @@
 import os
 import math
 import psutil
+from utils.exceptions import *
 try:
     import memory_search
 except ImportError:
@@ -23,38 +24,30 @@ def get_pids_by_name(process_name):
     return pids
 
 
-def search_init_pos(pid, value, tolerance):
+def search_new(pid, value_x, value_y, value_z, pos_tolerance, value_pitch, pitch_tolerance):
     suspend_process(pid)
-    addresses = memory_search.search_memory_for_float(pid, value, tolerance)
+    addresses = memory_search.search_memory(pid, value_x, value_y, value_z, pos_tolerance, value_pitch, pitch_tolerance)
     resume_process(pid)
     return addresses
-
-
-def search_final_pos(pid, addresses, value, tolerance):
-    suspend_process(pid)
-    addresses = memory_search.search_memory_for_float_in_addresses(pid, addresses, value, tolerance)
-    resume_process(pid)
-    return addresses
-
 
 def get_current_info(pid, y_address):
     pos = memory_search.read_player_info(pid, y_address)
     if len(pos) != 6:
-        raise Exception("Could not read memory")
+        raise MemoryException("Could not read play info")
     return [pos[0], pos[1], pos[2], pos[3], floats_to_degree(pos[4], pos[5])]
 
 
 def get_current_pos(pid, y_address):
     pos = memory_search.read_player_pos(pid, y_address)
     if len(pos) != 3:
-        raise Exception("Could not read memory")
+        raise MemoryException("Could not read player pos")
     return [pos[0], pos[1], pos[2]]
 
 
 def get_current_rot(pid, y_address):
     pos = memory_search.read_player_rot(pid, y_address)
     if len(pos) != 3:
-        raise Exception("Could not read memory")
+        raise MemoryException("Could not read player rot")
     return [pos[0], floats_to_degree(pos[1], pos[2])]
 
 
