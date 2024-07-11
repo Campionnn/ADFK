@@ -34,23 +34,8 @@ class RobloxManager:
     def all_start_instance(self):
         for username in config.usernames:
             self.start_instance(username)
-
         time.sleep(5)
-
         self.ensure_all_instance()
-
-        # sort instances by username
-        roblox_instances = []
-        for username in config.usernames:
-            for instance in self.roblox_instances:
-                if instance.username == username:
-                    roblox_instances.append(instance)
-                    break
-        self.roblox_instances = roblox_instances
-
-        pids = {instance.pid: instance.y_addrs for instance in self.roblox_instances}
-        self.logger.info(f"Roblox PIDs: {pids}")
-        self.main_instance = [instance for instance in self.roblox_instances if instance.username == config.usernames[0]][0]
 
     def start_instance(self, username):
         self.logger.debug(f"Creating instance for {username}")
@@ -72,14 +57,30 @@ class RobloxManager:
                 break
             time.sleep(5)
 
+        roblox_instances = []
+        for username in config.usernames:
+            for instance in self.roblox_instances:
+                if instance.username == username:
+                    roblox_instances.append(instance)
+                    break
+        self.roblox_instances = roblox_instances
+
+        pids = {instance.pid: instance.y_addrs for instance in self.roblox_instances}
+        self.logger.info(f"Roblox PIDs: {pids}")
+        self.main_instance = [instance for instance in self.roblox_instances if instance.username == config.usernames[0]][0]
+        time.sleep(5)
+
+        if not self.check_all_crash():
+            self.ensure_all_instance()
+
     def check_all_crash(self):
         for instance in self.roblox_instances:
             try:
                 instance.check_crash()
             except StartupException:
+                self.logger.warning(f"Instance for {instance.username} crashed")
                 instance.close_instance()
                 self.roblox_instances.remove(instance)
-                self.logger.warning(f"Instance for {instance.username} crashed")
                 username = instance.username
                 del instance
                 self.start_instance(username)
@@ -88,7 +89,7 @@ class RobloxManager:
 
     def all_enter_infinite(self):
         self.logger.debug(f"Entering infinite for all accounts. World: {self.world} Level: {self.level}")
-        self.main_instance.set_mode(self.mode, self.world, self.level)
+        self.all_set_mode()
         for instance in self.roblox_instances:
             try:
                 instance.teleport_story()
@@ -96,13 +97,17 @@ class RobloxManager:
                 instance.close_instance()
                 self.ensure_all_instance()
         for instance in self.roblox_instances:
-            instance.enter_story()
+            try:
+                instance.enter_story()
+            except StartupException:
+                instance.close_instance()
+                self.ensure_all_instance()
         self.logger.debug(f"Starting story")
         self.main_instance.start_story()
         time.sleep(2)
         try:
             self.main_instance.play_story()
-        except PlayException:
+        except PlayException or StartupException:
             self.all_leave_story_wave()
             return
         if not self.main_instance.place_towers(config.tower_hotkey, config.tower_cap, config.tower_cost, config.wave_stop):
@@ -125,7 +130,7 @@ class RobloxManager:
     def all_enter_story(self):
         for world in range(self.world, 9):
             self.world = world
-            self.main_instance.set_mode(self.mode, self.world, self.level)
+            self.all_set_mode()
             self.logger.debug(f"Entering story for all accounts. World: {self.world} Level: {self.level}")
             self.level = 1
             for instance in self.roblox_instances:
@@ -142,7 +147,7 @@ class RobloxManager:
             while True:
                 try:
                     self.main_instance.play_story()
-                except PlayException:
+                except PlayException or StartupException:
                     self.all_leave_story_wave()
                     return
                 if not self.main_instance.place_towers(config.tower_hotkey, config.tower_cap, config.tower_cost, 0):
@@ -172,17 +177,17 @@ class RobloxManager:
                         self.all_play_again()
                         continue
 
+    def all_set_mode(self):
+        for instance in self.roblox_instances:
+            instance.set_mode(self.mode, self.world, self.level)
+
     def all_leave_story_death(self):
         for instance in self.roblox_instances:
             instance.leave_story_death()
-        for instance in self.roblox_instances:
-            instance.close_announcement()
 
     def all_leave_story_wave(self):
         for instance in self.roblox_instances:
             instance.leave_story_wave()
-        for instance in self.roblox_instances:
-            instance.close_announcement()
 
     def all_play_next(self):
         for instance in self.roblox_instances:

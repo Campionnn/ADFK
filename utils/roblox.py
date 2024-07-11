@@ -125,6 +125,7 @@ class Roblox:
         self.pid = unique_pids[0]
         self.logger.debug(f"Roblox instance for {self.username} started. Waiting for window to appear")
         while True:
+            self.check_crash(False)
             try:
                 self.set_foreground()
                 break
@@ -137,7 +138,11 @@ class Roblox:
         time.sleep(0.5)
         self.click_text("x")
         if not self.fast_travel("leaderboards"):
-            raise StartupException("Could not fast travel to leaderboards")
+            self.controller.look_down(1.0)
+            time.sleep(1)
+            self.controller.reset_look()
+            if not self.fast_travel("leaderboards"):
+                raise StartupException("Could not fast travel to leaderboards")
         time.sleep(0.5)
         self.controller.look_down(1.0)
         time.sleep(1.0)
@@ -158,6 +163,7 @@ class Roblox:
             if self.pid not in get_pids_by_name(self.roblox_exe):
                 break
             time.sleep(1)
+        time.sleep(3)
         return True
 
     def set_foreground(self):
@@ -166,7 +172,7 @@ class Roblox:
             app.top_window().set_focus()
             self.logger.debug(f"Set foreground window to {self.pid}")
             return True
-        except pywinauto.application.ProcessNotFoundError or OSError:
+        except pywinauto.application.ProcessNotFoundError or OSError or RuntimeError:
             raise StartupException("Could not set foreground window")
 
     def get_window_rect(self):
@@ -287,13 +293,14 @@ class Roblox:
             return True
         return high_percentage >= percentage
 
-    def check_crash(self):
+    def check_crash(self, responsive=True):
         if not psutil.pid_exists(self.pid):
             raise StartupException("Roblox instance crashed")
-        cmd = 'tasklist /FI "PID eq %d" /FI "STATUS eq running"' % self.pid
-        status = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout.read()
-        if not str(self.pid) in str(status):
-            raise StartupException("Roblox instance crashed")
+        if responsive:
+            cmd = 'tasklist /FI "PID eq %d" /FI "STATUS eq running"' % self.pid
+            status = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout.read()
+            if not str(self.pid) in str(status):
+                raise StartupException("Roblox instance crashed")
 
     def fast_travel(self, location):
         self.logger.debug(f"Fast traveling to {location} for {self.username}")
@@ -337,7 +344,12 @@ class Roblox:
             attempts = 0
             while self.controller.calculate_distance(pos[0], pos[2], coords.story_play_pos[0], coords.story_play_pos[1]) > 50 and attempts < 5:
                 time.sleep(0.25)
-                self.fast_travel("story")
+                if not self.fast_travel("story"):
+                    self.controller.look_down(1.0)
+                    time.sleep(1)
+                    self.controller.reset_look()
+                    if not self.fast_travel("story"):
+                        raise StartupException("Could not fast travel to story")
                 time.sleep(0.25)
                 if self.click_text("leave"):
                     time.sleep(0.1)
@@ -370,7 +382,7 @@ class Roblox:
             if self.mode == 1:
                 self.click_text("infinitemode")
             elif self.mode == 2:
-                self.click_nav_rect("s" * self.level * 2, "Could not find selected chapter", restart=False, chapter=True)
+                self.click_nav_rect("d"*10 + "a"*4 + "s" * (self.level-1) * 2, "Could not find selected chapter", restart=False, chapter=True)
             time.sleep(0.5)
             self.click_text("confirm")
         return True
