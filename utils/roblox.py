@@ -158,6 +158,8 @@ class Roblox:
         self.logger.debug(f"Memory address found for {self.username}. {self.pid}: {self.y_addrs}")
         return
 
+
+
     def close_instance(self):
         self.logger.debug(f"Killing Roblox instance for {self.username}")
         try:
