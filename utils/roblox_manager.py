@@ -68,6 +68,7 @@ class RobloxManager:
         pids = {instance.pid: instance.y_addrs for instance in self.roblox_instances}
         self.logger.info(f"Roblox PIDs: {pids}")
         self.main_instance = [instance for instance in self.roblox_instances if instance.username == config.usernames[0]][0]
+        self.main_instance.set_mode(self.mode, self.world, self.level)
         time.sleep(5)
 
         if not self.check_all_crash():
@@ -89,7 +90,7 @@ class RobloxManager:
 
     def all_enter_infinite(self):
         self.logger.debug(f"Entering infinite for all accounts. World: {self.world} Level: {self.level}")
-        self.all_set_mode()
+        self.main_instance.set_mode(self.mode, self.world, self.level)
         for instance in self.roblox_instances:
             try:
                 instance.teleport_story()
@@ -99,9 +100,11 @@ class RobloxManager:
         for instance in self.roblox_instances:
             try:
                 instance.enter_story()
-            except StartupException:
+            except (StartupException, MemoryException):
                 instance.close_instance()
                 self.ensure_all_instance()
+                self.all_click_leave()
+                return
         self.logger.debug(f"Starting story")
         self.main_instance.start_story()
         time.sleep(2)
@@ -130,7 +133,7 @@ class RobloxManager:
     def all_enter_story(self):
         for world in range(self.world, 9):
             self.world = world
-            self.all_set_mode()
+            self.main_instance.set_mode(self.mode, self.world, self.level)
             self.logger.debug(f"Entering story for all accounts. World: {self.world} Level: {self.level}")
             self.level = 1
             for instance in self.roblox_instances:
@@ -140,7 +143,13 @@ class RobloxManager:
                     instance.close_instance()
                     self.ensure_all_instance()
             for instance in self.roblox_instances:
-                instance.enter_story()
+                try:
+                    instance.enter_story()
+                except (StartupException, MemoryException):
+                    instance.close_instance()
+                    self.ensure_all_instance()
+                    self.all_click_leave()
+                    return
             self.logger.debug(f"Starting story")
             self.main_instance.start_story()
             time.sleep(2)
@@ -177,13 +186,20 @@ class RobloxManager:
                         self.all_play_again()
                         continue
 
-    def all_set_mode(self):
+    def all_click_leave(self):
         for instance in self.roblox_instances:
-            instance.set_mode(self.mode, self.world, self.level)
+            try:
+                instance.set_foreground()
+                time.sleep(0.5)
+                instance.click_text("leave")
+                time.sleep(0.5)
+            except StartupException:
+                pass
 
     def all_leave_story_death(self):
         for instance in self.roblox_instances:
-            instance.leave_story_death()
+            if not instance.leave_story_death():
+                instance.leave_story_wave()
 
     def all_leave_story_wave(self):
         for instance in self.roblox_instances:

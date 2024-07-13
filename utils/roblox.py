@@ -141,6 +141,8 @@ class Roblox:
         time.sleep(0.5)
         self.click_text("x")
         if not self.fast_travel("leaderboards"):
+            self.controller.jump()
+            time.sleep(0.5)
             self.controller.look_down(1.0)
             time.sleep(1)
             self.controller.reset_look()
@@ -159,6 +161,10 @@ class Roblox:
         self.logger.debug(f"Killing Roblox instance for {self.username}")
         try:
             os.kill(self.pid, 15)
+            try:
+                self.wave_checker.stop()
+            except AttributeError:
+                pass
         except OSError:
             pass
         while True:
@@ -175,7 +181,7 @@ class Roblox:
             app.top_window().set_focus()
             self.logger.debug(f"Set foreground window to {self.pid}")
             return True
-        except pywinauto.application.ProcessNotFoundError or OSError or RuntimeError:
+        except (pywinauto.application.ProcessNotFoundError, OSError, RuntimeError):
             raise StartupException("Could not set foreground window")
 
     def get_window_rect(self):
@@ -273,13 +279,13 @@ class Roblox:
         blue_channel = image_np[:, :, 0]
         green_channel = image_np[:, :, 1]
         red_channel = image_np[:, :, 2]
-        mask = (red_channel > 160) & (green_channel < 20) & (blue_channel < 20)
+        mask = (blue_channel < 150) & (green_channel < 150) & (red_channel > 200)
 
         total_pixels = image_np.shape[0] * image_np.shape[1]
         matching_pixels = np.sum(mask)
         matching_percentage = (matching_pixels / total_pixels) * 100
 
-        return matching_percentage > 10
+        return matching_percentage > 20
 
     def check_crash(self, responsive=True):
         if not psutil.pid_exists(self.pid):
@@ -298,29 +304,35 @@ class Roblox:
         while rect is None or not self.check_fast_travel(self.screenshot()):
             if attempts > 5:
                 return False
+            self.check_crash()
             rect = self.click_nav_rect(coords.fast_travel_sequence, "", restart=False)
             attempts += 1
             time.sleep(0.1)
         time.sleep(0.25)
         screen = self.screenshot()
-        fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=2)
+        fast_travel_coords = None
+        for i in range(2, 5):
+            fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=i)
+            if fast_travel_coords is not None:
+                break
+            else:
+                fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=i, use_mask=True)
+                if fast_travel_coords is not None:
+                    break
         if fast_travel_coords is None:
-            fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=3)
-            if fast_travel_coords is None:
-                fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=4)
-                if fast_travel_coords is None:
-                    self.logger.warning(f"Could not find fast travel location: {location}")
-                    return False
+            self.logger.warning(f"Could not find fast travel location: {location}")
+            return False
         autoit.mouse_click("left", fast_travel_coords[0], fast_travel_coords[1])
         return True
 
     def check_fast_travel(self, screen):
-        self.logger.debug(f"Checking if afk fast travel on screen for {self.username}")
+        self.logger.debug(f"Checking if fast travel is open for {self.username}")
         location = "afk"
         fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=4)
         if fast_travel_coords is None:
-            self.logger.warning(f"Could not find afk fast travel location")
-            return False
+            fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=4, use_mask=True)
+            if fast_travel_coords is None:
+                return False
         return True
 
     def teleport_story(self):
@@ -330,9 +342,11 @@ class Roblox:
         try:
             pos = memory.get_current_pos(self.pid, self.y_addrs)
             attempts = 0
-            while self.controller.calculate_distance(pos[0], pos[2], coords.story_play_pos[0], coords.story_play_pos[1]) > 50 and attempts < 5:
+            while self.controller.calculate_distance(pos[0], pos[2], coords.story_play_pos[0], coords.story_play_pos[1]) > 50 and attempts < 2:
                 time.sleep(0.25)
                 if not self.fast_travel("story"):
+                    self.controller.jump()
+                    time.sleep(0.5)
                     self.controller.look_down(1.0)
                     time.sleep(1)
                     self.controller.reset_look()
@@ -346,7 +360,7 @@ class Roblox:
                 time.sleep(0.25)
                 pos = memory.get_current_pos(self.pid, self.y_addrs)
                 attempts += 1
-            if attempts >= 5:
+            if attempts >= 2:
                 raise StartupException("Could not teleport to story")
             time.sleep(0.25)
             if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_play_pos[0], coords.story_play_pos[1], coords.story_play_pos_tolerance, 10, precise=True):
@@ -355,13 +369,15 @@ class Roblox:
         except MemoryException:
             raise StartupException("Could not teleport to story")
 
-    def enter_story(self):
+    def enter_story(self, depth=0):
         self.logger.debug(f"Entering story for {self.username}")
         self.set_foreground()
         time.sleep(1)
         if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_enter_pos[0], coords.story_enter_pos[1], coords.story_enter_pos_tolerance, 20):
             self.teleport_story()
-            return self.enter_story()
+            if depth >= 5:
+                raise StartupException("Could not go to story enter position")
+            return self.enter_story(depth + 1)
         if self.username == config.usernames[0]:
             self.controller.zoom_in()
             self.controller.zoom_out(0.25)
@@ -545,20 +561,21 @@ class Roblox:
         text_coords = self.find_text("backtolobby")
         if text_coords is None:
             self.leave_story_wave()
+            return False
         autoit.mouse_click("left", text_coords[0], text_coords[1])
 
     def play_next(self):
         self.set_foreground()
         time.sleep(1)
         start = time.time()
-        while not self.click_text("playnext") and time.time() - start < 5:
+        while not self.click_text("playnext") and time.time() - start < 7:
             time.sleep(0.5)
 
     def play_again(self):
         self.set_foreground()
         time.sleep(1)
         start = time.time()
-        while not self.click_text("playagain") and time.time() - start < 5:
+        while not self.click_text("playagain") and time.time() - start < 7:
             time.sleep(0.5)
 
     def leave_story_wave(self):
@@ -577,10 +594,3 @@ class Roblox:
         autoit.mouse_click("left", fast_travel_coords[0], fast_travel_coords[1])
         time.sleep(0.5)
         self.click_text("leave")
-
-    def close_announcement(self):
-        self.set_foreground()
-        time.sleep(1)
-        self.wait_game_load("main")
-        time.sleep(0.5)
-        self.click_text("x")
