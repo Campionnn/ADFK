@@ -342,7 +342,9 @@ class Roblox:
         try:
             pos = memory.get_current_pos(self.pid, self.y_addrs)
             attempts = 0
-            while self.controller.calculate_distance(pos[0], pos[2], coords.story_play_pos[0], coords.story_play_pos[1]) > 50 and attempts < 2:
+            while self.controller.calculate_distance(pos[0], pos[2], coords.story_play_pos[0], coords.story_play_pos[1]) > 50:
+                if attempts > 2:
+                    raise StartupException("Could not teleport to story")
                 time.sleep(0.25)
                 if not self.fast_travel("story"):
                     self.controller.jump()
@@ -360,8 +362,6 @@ class Roblox:
                 time.sleep(0.25)
                 pos = memory.get_current_pos(self.pid, self.y_addrs)
                 attempts += 1
-            if attempts >= 2:
-                raise StartupException("Could not teleport to story")
             time.sleep(0.25)
             if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_play_pos[0], coords.story_play_pos[1], coords.story_play_pos_tolerance, 10, precise=True):
                 return self.teleport_story()
@@ -374,9 +374,9 @@ class Roblox:
         self.set_foreground()
         time.sleep(1)
         if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_enter_pos[0], coords.story_enter_pos[1], coords.story_enter_pos_tolerance, 20):
-            self.teleport_story()
-            if depth >= 5:
+            if depth >= 3:
                 raise StartupException("Could not go to story enter position")
+            self.teleport_story()
             return self.enter_story(depth + 1)
         if self.username == config.usernames[0]:
             self.controller.zoom_in()
@@ -404,25 +404,25 @@ class Roblox:
         time.sleep(1)
         self.wait_game_load("story")
         attempts = 0
-        while attempts < 5:
+        while True:
+            if attempts > 5:
+                raise PlayException("Could not go to place position")
             if not self.controller.go_to_pos(self.pid, self.y_addrs, self.story_place_pos[0], self.story_place_pos[1], self.story_place_pos_tolerance, 10, True):
                 self.controller.unstuck(self.pid, self.y_addrs)
                 attempts += 1
             else:
                 break
-        if attempts >= 5:
-            raise PlayException("Could not go to place position")
         self.controller.reset()
         time.sleep(0.1)
         attempts = 0
-        while attempts < 5:
+        while True:
+            if attempts > 5:
+                raise PlayException("Could not go to place position")
             if not self.controller.go_to_pos(self.pid, self.y_addrs, self.story_place_pos[0], self.story_place_pos[1], self.story_place_pos_tolerance/10, 10, min_speed=0.2, max_speed=0.3, min_turn=0.5, precise=True):
                 self.controller.unstuck(self.pid, self.y_addrs)
                 attempts += 1
             else:
                 break
-        if attempts >= 5:
-            raise PlayException("Could not go to place position")
         self.controller.reset()
         self.controller.turn_towards_yaw(self.pid, self.y_addrs, self.story_place_rot, self.story_place_rot_tolerance, 0.2)
         self.controller.look_down(1.0)

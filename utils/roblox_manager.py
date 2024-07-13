@@ -97,6 +97,7 @@ class RobloxManager:
             except StartupException:
                 instance.close_instance()
                 self.ensure_all_instance()
+                return
         for instance in self.roblox_instances:
             try:
                 instance.enter_story()
@@ -142,6 +143,7 @@ class RobloxManager:
                 except StartupException:
                     instance.close_instance()
                     self.ensure_all_instance()
+                    return
             for instance in self.roblox_instances:
                 try:
                     instance.enter_story()
