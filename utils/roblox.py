@@ -282,7 +282,7 @@ class Roblox:
         blue_channel = image_np[:, :, 0]
         green_channel = image_np[:, :, 1]
         red_channel = image_np[:, :, 2]
-        mask = (blue_channel < 20) & (green_channel < 20) & (red_channel > 200)
+        mask = (blue_channel < 160) & (green_channel < 50) & (red_channel > 150)
 
         total_pixels = image_np.shape[0] * image_np.shape[1]
         matching_pixels = np.sum(mask)
