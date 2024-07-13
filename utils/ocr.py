@@ -37,7 +37,7 @@ def find_text(image_input: np.ndarray, text, numbers=False):
     return None
 
 
-def find_fast_travel(image_input: np.ndarray, location, tolerance=50, ratio=3):
+def find_fast_travel(image_input: np.ndarray, location, tolerance=50, ratio=3, use_mask=False):
     image = image_input.copy()
     crop = image[:image.shape[0] // ratio, :image.shape[1] // ratio]
     color = (255, 255, 255)
@@ -46,6 +46,14 @@ def find_fast_travel(image_input: np.ndarray, location, tolerance=50, ratio=3):
     mask = cv2.inRange(crop, lower, upper)
     crop[mask == 255] = [255, 255, 255]
     crop[mask != 255] = [0, 0, 0]
+
+    if use_mask:
+        edges = cv2.Canny(crop, 50, 150)
+        contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        mask = np.zeros_like(crop)
+        cv2.drawContours(mask, contours, -1, (255, 255, 255), cv2.FILLED)
+        crop = cv2.bitwise_and(crop, mask)
+
     result = pytesseract.image_to_data(crop, config=f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ').lower()
     result = result.split('\n')
     for line in result:
