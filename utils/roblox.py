@@ -133,7 +133,7 @@ class Roblox:
             except StartupException:
                 time.sleep(1)
         if time.time() - start >= 60:
-            raise StartupException("Could not set foreground window")
+            raise StartupException(f"Could not set foreground window: {self.pid}")
         time.sleep(3)
 
         if not self.wait_game_load("main"):
@@ -155,6 +155,7 @@ class Roblox:
         self.y_addrs = memory.search_new(self.pid, coords.init_pos_x, coords.init_pos_y, coords.init_pos_z, coords.init_pos_tolerance, coords.init_pitch, coords.init_pitch_tolerance)
         if self.y_addrs is None:
             raise StartupException("Could not find memory address")
+        self.logger.debug(f"Memory address found for {self.username}. {self.pid}: {self.y_addrs}")
         return
 
     def close_instance(self):
@@ -182,7 +183,7 @@ class Roblox:
             self.logger.debug(f"Set foreground window to {self.pid}")
             return True
         except (pywinauto.application.ProcessNotFoundError, OSError, RuntimeError):
-            raise StartupException("Could not set foreground window")
+            raise StartupException(f"Could not set foreground window: {self.pid}")
 
     def get_window_rect(self):
         app = pywinauto.Application().connect(process=self.pid)
@@ -302,7 +303,7 @@ class Roblox:
         time.sleep(0.1)
         attempts = 0
         while rect is None or not self.check_fast_travel(self.screenshot()):
-            if attempts > 5:
+            if attempts > 3:
                 return False
             self.check_crash()
             rect = self.click_nav_rect(coords.fast_travel_sequence, "", restart=False)
