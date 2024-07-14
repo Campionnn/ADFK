@@ -282,7 +282,7 @@ class Roblox:
         blue_channel = image_np[:, :, 0]
         green_channel = image_np[:, :, 1]
         red_channel = image_np[:, :, 2]
-        mask = (blue_channel < 160) & (green_channel < 50) & (red_channel > 150)
+        mask = (blue_channel < 180) & (green_channel < 50) & (red_channel > 230)
 
         total_pixels = image_np.shape[0] * image_np.shape[1]
         matching_pixels = np.sum(mask)
@@ -548,10 +548,13 @@ class Roblox:
 
     def anti_afk(self):
         for instance in self.roblox_instances:
-            instance.set_foreground()
-            time.sleep(1)
-            for i in range(5):
-                instance.controller.jump()
+            try:
+                instance.set_foreground()
+                time.sleep(1)
+                for i in range(5):
+                    instance.controller.jump()
+            except StartupException:
+                pass
             time.sleep(0.5)
         self.set_foreground()
 
