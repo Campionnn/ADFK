@@ -67,34 +67,40 @@ def find_fast_travel(image_input: np.ndarray, location, tolerance=50, ratio=3, u
 def read_upgrade_cost(image_input: np.ndarray):
     image = image_input.copy()
     crop = image[image.shape[0] // 2:, :image.shape[1] // 2]
-    gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
-    _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
-    kernel = np.ones((3, 3), np.uint8)
-    thresh = cv2.erode(thresh, kernel, iterations=1)
-    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    lower_mask1 = np.array([86, 255, 50])
+    upper_mask1 = np.array([86, 255, 170])
+    lower_mask2 = np.array([85, 255, 50])
+    upper_mask2 = np.array([85, 255, 170])
+    mask1 = cv2.inRange(crop, lower_mask1, upper_mask1)
+    mask2 = cv2.inRange(crop, lower_mask2, upper_mask2)
+    mask = cv2.bitwise_or(mask1, mask2)
+
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     max_area = 0
     x, y, w, h = 0, 0, 0, 0
     for contour in contours:
-        epsilon = 0.04 * cv2.arcLength(contour, True)
-        approx = cv2.approxPolyDP(contour, epsilon, True)
         area = cv2.contourArea(contour)
-        if len(approx) == 3 and area > max_area:
+        if area > max_area:
             x, y, w, h = cv2.boundingRect(contour)
             max_area = area
     if max_area == 0:
         return None
     try:
-        crop = thresh[y - h:y + h * 2, x + round(w * 1.5):x + w * 9]
-        text = str(pytesseract.image_to_string(crop, config=f'--psm 8 -c tessedit_char_whitelist=0123456789')).strip()
+        crop = crop[y:y + h, x + w//4:x + w]
+        gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
+        _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
+        text = str(pytesseract.image_to_string(thresh, config=f'--psm 8 -c tessedit_char_whitelist=0123456789')).strip()
         if text == "":
             return None
-        return [int(text), x+w//2, (y+h//2)+(image.shape[0]//2)]
+        return [int(text), x + w // 2, (y + h // 2) + (image.shape[0] // 2)]
     except SystemError:
         return None
 
 
 def read_current_money(image_input: np.ndarray):
     image = image_input.copy()
+    image = image[image.shape[0] // 3 * 2:, :]
     lower = np.array(
         [coords.money_color[0] - coords.money_tolerance,
          coords.money_color[1] - coords.money_tolerance,
