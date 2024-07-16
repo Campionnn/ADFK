@@ -1,10 +1,13 @@
+import os
 import time
 import logging
+import signal
 
 import config
 from utils.exceptions import *
 from utils.control import Control
 from utils.roblox import Roblox
+from utils.memory import get_pids_by_name
 if config.port == 0000:
     import config_personal as config
 
@@ -32,8 +35,17 @@ class RobloxManager:
             self.main_instance = [instance for instance in self.roblox_instances if instance.username == config.usernames[0]][0]
 
     def all_start_instance(self):
-        for username in config.usernames:
-            self.start_instance(username)
+        try:
+            for username in config.usernames:
+                self.start_instance(username)
+        except PlayException:
+            self.logger.warning(f"Closing all Roblox instances and retrying")
+            for pid in get_pids_by_name(self.roblox_exe):
+                try:
+                    os.kill(pid, signal.SIGSTOP)
+                    self.all_start_instance()
+                except:
+                    pass
         time.sleep(5)
         self.ensure_all_instance()
 
@@ -143,7 +155,7 @@ class RobloxManager:
                 except StartupException:
                     instance.close_instance()
                     self.ensure_all_instance()
-                    return
+                    self.all_enter_story()
             for instance in self.roblox_instances:
                 try:
                     instance.enter_story()
@@ -151,7 +163,7 @@ class RobloxManager:
                     instance.close_instance()
                     self.ensure_all_instance()
                     self.all_click_leave()
-                    return
+                    self.all_enter_story()
             self.logger.debug(f"Starting story")
             self.main_instance.start_story()
             time.sleep(2)
@@ -160,7 +172,7 @@ class RobloxManager:
                     self.main_instance.play_story()
                 except PlayException or StartupException:
                     self.all_leave_story_wave()
-                    return
+                    self.all_enter_story()  # TODO rethink this
                 if not self.main_instance.place_towers(config.tower_hotkey, config.tower_cap, config.tower_cost, 0):
                     time.sleep(0.5)
                     if self.main_instance.find_text("victory") is not None:

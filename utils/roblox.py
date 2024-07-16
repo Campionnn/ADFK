@@ -134,12 +134,15 @@ class Roblox:
             raise StartupException(f"Failed to launch Roblox instance for {self.username}")
 
         self.logger.debug(f"Waiting for Roblox instance for {self.username} to start")
+        time.sleep(3)
         unique_pids = []
         while len(unique_pids) == 0:
             pids = get_pids_by_name(self.roblox_exe)
             current_pids = [instance.pid for instance in self.roblox_instances]
             unique_pids = [pid for pid in pids if pid not in current_pids]
             time.sleep(1)
+        if len(unique_pids) > 1:
+            raise StartupException(f"Multiple Roblox instances found for {self.username}")
         self.pid = unique_pids[0]
         self.logger.debug(f"Roblox instance for {self.username} started. Waiting for window to appear")
         start = time.time()
@@ -151,7 +154,7 @@ class Roblox:
             except StartupException:
                 time.sleep(1)
         if time.time() - start >= 60:
-            raise StartupException(f"Could not set foreground window: {self.pid}")
+            raise PlayException(f"Could not set foreground window: {self.pid}")
         time.sleep(3)
 
         if not self.wait_game_load("main"):
@@ -266,7 +269,7 @@ class Roblox:
 
     def find_nav_rect(self, sequence="", chapter=False):
         for key in list(sequence):
-            time.sleep(0.05)
+            time.sleep(0.1)
             keyboard.send(key)
         time.sleep(0.5)
         screen = pyautogui.screenshot()
@@ -323,7 +326,7 @@ class Roblox:
         time.sleep(0.1)
         attempts = 0
         while rect is None or not self.check_fast_travel(self.screenshot()):
-            if attempts > 3:
+            if attempts > 2:
                 return False
             self.check_crash()
             rect = self.click_nav_rect(coords.fast_travel_sequence, "", restart=False)
@@ -348,7 +351,7 @@ class Roblox:
 
     def check_fast_travel(self, screen):
         self.logger.debug(f"Checking if fast travel is open for {self.username}")
-        location = "afk"
+        location = "challenges"
         fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=4)
         if fast_travel_coords is None:
             fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=4, use_mask=True)
@@ -395,7 +398,7 @@ class Roblox:
         self.set_foreground()
         time.sleep(1)
         if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_enter_pos[0], coords.story_enter_pos[1], coords.story_enter_pos_tolerance, 20):
-            if depth >= 3:
+            if depth > 2:
                 raise StartupException("Could not go to story enter position")
             self.teleport_story()
             return self.enter_story(depth + 1)
@@ -426,7 +429,7 @@ class Roblox:
         self.wait_game_load("story")
         attempts = 0
         while True:
-            if attempts > 5:
+            if attempts > 2:
                 raise PlayException("Could not go to place position")
             if not self.controller.go_to_pos(self.pid, self.y_addrs, self.story_place_pos[0], self.story_place_pos[1], self.story_place_pos_tolerance, 10, True):
                 self.controller.unstuck(self.pid, self.y_addrs)
@@ -437,7 +440,7 @@ class Roblox:
         time.sleep(0.1)
         attempts = 0
         while True:
-            if attempts > 5:
+            if attempts > 2:
                 raise PlayException("Could not go to place position")
             if not self.controller.go_to_pos(self.pid, self.y_addrs, self.story_place_pos[0], self.story_place_pos[1], self.story_place_pos_tolerance/10, 10, min_speed=0.2, max_speed=0.3, min_turn=0.5, precise=True):
                 self.controller.unstuck(self.pid, self.y_addrs)
@@ -543,18 +546,21 @@ class Roblox:
 
                 autoit.mouse_click("left", x, y)
                 time.sleep(0.1)
-                screen = self.screenshot()
-                upgrade_info = ocr.read_upgrade_cost(screen)
                 start2 = time.time()
                 while time.time() - start2 < 0.5:
+                    screen = self.screenshot()
+                    upgrade_info = ocr.read_upgrade_cost(screen)
                     if upgrade_info is not None:
+                        # print(upgrade_info[0])
                         current_money = ocr.read_current_money(screen)
+                        # if current_money is not None:
+                        #     print(current_money)
                         if current_money is not None and current_money >= upgrade_info[0]:
                             autoit.mouse_click("left", upgrade_info[1], upgrade_info[2])
                             self.logger.debug(f"Upgraded tower at {x}, {y}")
                             break
-                    screen = self.screenshot()
-                    upgrade_info = ocr.read_upgrade_cost(screen)
+                    # else:
+                    #     cv2.imwrite("upgrade_error.png", screen)
                     time.sleep(0.1)
 
     def check_wave(self):
@@ -587,6 +593,7 @@ class Roblox:
             self.leave_story_wave()
             return False
         autoit.mouse_click("left", text_coords[0], text_coords[1])
+        return True
 
     def play_next(self):
         self.set_foreground()
