@@ -44,7 +44,8 @@ class RobloxManager:
                 try:
                     os.kill(pid, signal.SIGSTOP)
                     self.all_start_instance()
-                except:
+                    return
+                except OSError:
                     pass
         time.sleep(5)
         self.ensure_all_instance()
@@ -96,7 +97,17 @@ class RobloxManager:
                 self.roblox_instances.remove(instance)
                 username = instance.username
                 del instance
-                self.start_instance(username)
+                try:
+                    self.start_instance(username)
+                except PlayException:
+                    self.logger.warning(f"Closing all Roblox instances and retrying")
+                    for pid in get_pids_by_name(self.roblox_exe):
+                        try:
+                            os.kill(pid, signal.SIGSTOP)
+                            self.all_start_instance()
+                            return
+                        except OSError:
+                            pass
                 return False
         return True
 
@@ -172,7 +183,7 @@ class RobloxManager:
                     self.main_instance.play_story()
                 except PlayException or StartupException:
                     self.all_leave_story_wave()
-                    self.all_enter_story()  # TODO rethink this
+                    self.all_enter_story()  # TODO rethink this maybe
                 if not self.main_instance.place_towers(config.tower_hotkey, config.tower_cap, config.tower_cost, 0):
                     time.sleep(0.5)
                     if self.main_instance.find_text("victory") is not None:

@@ -86,9 +86,11 @@ class Control:
         while True:
             rot = memory.get_current_rot(pid, y_addrs)[1]
             diff = self.calculate_degree_difference(rot, degree)
-            if abs(diff) < tolerance:
+            if abs(diff) <= tolerance:
                 self.reset_look()
                 return True
+            else:
+                self.reset_move()
             amount = max(min(abs(diff/90), 1), min_amount)
             if diff > 0:
                 self.look_right(amount)

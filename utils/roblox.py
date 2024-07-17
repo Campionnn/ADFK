@@ -142,7 +142,7 @@ class Roblox:
             unique_pids = [pid for pid in pids if pid not in current_pids]
             time.sleep(1)
         if len(unique_pids) > 1:
-            raise StartupException(f"Multiple Roblox instances found for {self.username}")
+            raise PlayException(f"Too many Roblox instances found")
         self.pid = unique_pids[0]
         self.logger.debug(f"Roblox instance for {self.username} started. Waiting for window to appear")
         start = time.time()
@@ -154,7 +154,7 @@ class Roblox:
             except StartupException:
                 time.sleep(1)
         if time.time() - start >= 60:
-            raise PlayException(f"Could not set foreground window: {self.pid}")
+            raise StartupException(f"Could not set foreground window: {self.pid}")
         time.sleep(3)
 
         if not self.wait_game_load("main"):
@@ -362,6 +362,7 @@ class Roblox:
     def teleport_story(self):
         self.set_foreground()
         time.sleep(0.5)
+        self.wait_game_load("main")
         self.click_text("x")
         try:
             pos = memory.get_current_pos(self.pid, self.y_addrs)
