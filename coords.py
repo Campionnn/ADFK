@@ -105,5 +105,5 @@ tower_place_pos = [-2503.1123046875, -1237.557861328125]
 tower_place_pos_tolerance = 5.0
 tower_place_rot = 270
 tower_place_rot_tolerance = 1.0
-tower_place_color = (50, 50, 200)
+tower_place_color = (100, 50, 200)
 tower_place_color_tolerance = 1.5
