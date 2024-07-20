@@ -86,7 +86,7 @@ class App:
             if all(item in ["1", "2", "3", "4", "5", "6"] for item in hotkeys) and location in ["center", "edge", "1", "2"]:
                 place_ids = []
                 for hotkey in hotkeys:
-                    count = sum(1 for id_ in self.ids if id_[0] == hotkey)
+                    count = sum(1 for id_ in self.ids+place_ids if id_[0] == hotkey)
                     place_ids.append(f"{hotkey}{chr(ord('a') + count)}")
                 self.ids.extend(place_ids)
                 if location in ["1", "2"]:
