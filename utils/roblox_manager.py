@@ -3,22 +3,24 @@ import time
 import logging
 import signal
 
-import config
 from utils.exceptions import *
 from utils.control import Control
 from utils.roblox import Roblox
 from utils.memory import get_pids_by_name
-if config.port == 0000:
+try:
     import config_personal as config
+except ImportError:
+    import config
 
 
 class RobloxManager:
-    def __init__(self, logger: logging.Logger, roblox_pids=None, mode=1, world=1, level=None):
+    def __init__(self, logger: logging.Logger, roblox_pids=None, mode=1, world=1, level=None, custom_place=None):
         self.logger = logger
         self.controller = Control(self.logger)
         self.mode = mode
         self.world = world
         self.level = level
+        self.custom_place = custom_place
 
         self.place_id = "17017769292"
         self.roblox_exe = "RobloxPlayerBeta.exe"
@@ -81,7 +83,7 @@ class RobloxManager:
         pids = {instance.pid: instance.y_addrs for instance in self.roblox_instances}
         self.logger.info(f"Roblox PIDs: {pids}")
         self.main_instance = [instance for instance in self.roblox_instances if instance.username == config.usernames[0]][0]
-        self.main_instance.set_mode(self.mode, self.world, self.level)
+        self.main_instance.set_mode(self.mode, self.world, self.level, self.custom_place)
         time.sleep(5)
 
         if not self.check_all_crash():
@@ -113,7 +115,7 @@ class RobloxManager:
 
     def all_enter_infinite(self):
         self.logger.debug(f"Entering infinite for all accounts. World: {self.world} Level: {self.level}")
-        self.main_instance.set_mode(self.mode, self.world, self.level)
+        self.main_instance.set_mode(self.mode, self.world, self.level, self.custom_place)
         for instance in self.roblox_instances:
             try:
                 instance.teleport_story()
@@ -137,27 +139,36 @@ class RobloxManager:
         except PlayException or StartupException:
             self.all_leave_story_wave()
             return
-        if not self.main_instance.place_towers(config.tower_hotkey, config.tower_cap, config.tower_cost, config.wave_stop):
-            if self.main_instance.current_wave[0] >= config.wave_stop:
-                self.all_leave_story_wave()
-                return
-            else:
-                self.all_leave_story_death()
-                return
-        self.logger.debug(f"Finished placing towers")
-        self.logger.debug(f"Upgrading towers")
-        if not self.main_instance.upgrade_towers(config.wave_stop, config.tower_cap):
-            if self.main_instance.current_wave[0] >= config.wave_stop:
-                self.all_leave_story_wave()
-                return
-            else:
-                self.all_leave_story_death()
-                return
+        if self.main_instance.custom_place is not None:
+            if not self.main_instance.do_custom_place():
+                if self.main_instance.current_wave[0] >= config.wave_stop:
+                    self.all_leave_story_wave()
+                    return
+                else:
+                    self.all_leave_story_death()
+                    return
+        else:
+            if not self.main_instance.place_all_towers(config.tower_hotkey, config.tower_cap, config.tower_cost, config.wave_stop):
+                if self.main_instance.current_wave[0] >= config.wave_stop:
+                    self.all_leave_story_wave()
+                    return
+                else:
+                    self.all_leave_story_death()
+                    return
+            self.logger.debug(f"Finished placing towers")
+            self.logger.debug(f"Upgrading towers")
+            if not self.main_instance.upgrade_all_towers(config.wave_stop, config.tower_cap):
+                if self.main_instance.current_wave[0] >= config.wave_stop:
+                    self.all_leave_story_wave()
+                    return
+                else:
+                    self.all_leave_story_death()
+                    return
 
     def all_enter_story(self):
         for world in range(self.world, 9):
             self.world = world
-            self.main_instance.set_mode(self.mode, self.world, self.level)
+            self.main_instance.set_mode(self.mode, self.world, self.level, self.custom_place)
             self.logger.debug(f"Entering story for all accounts. World: {self.world} Level: {self.level}")
             self.level = 1
             for instance in self.roblox_instances:
@@ -184,32 +195,47 @@ class RobloxManager:
                 except PlayException or StartupException:
                     self.all_leave_story_wave()
                     self.all_enter_story()  # TODO rethink this maybe
-                if not self.main_instance.place_towers(config.tower_hotkey, config.tower_cap, config.tower_cost, 0):
-                    time.sleep(0.5)
-                    if self.main_instance.find_text("victory") is not None:
-                        if self.main_instance.find_text("playnext"):
-                            self.all_play_next()
+
+                if self.main_instance.custom_place is not None:
+                    if not self.main_instance.do_custom_place():
+                        time.sleep(0.5)
+                        if self.main_instance.find_text("victory") is not None:
+                            if self.main_instance.find_text("playnext"):
+                                self.all_play_next()
+                                continue
+                            else:
+                                self.all_leave_story_death()
+                                break
+                        elif self.main_instance.find_text("defeat") is not None:
+                            self.all_play_again()
                             continue
-                        else:
-                            self.all_leave_story_death()
-                            break
-                    elif self.main_instance.find_text("defeat") is not None:
-                        self.all_play_again()
-                        continue
-                self.logger.debug(f"Finished placing towers")
-                self.logger.debug(f"Upgrading towers")
-                if not self.main_instance.upgrade_towers(0, config.tower_cap):
-                    time.sleep(0.5)
-                    if self.main_instance.find_text("victory") is not None:
-                        if self.main_instance.find_text("playnext"):
-                            self.all_play_next()
+                else:
+                    if not self.main_instance.place_all_towers(config.tower_hotkey, config.tower_cap, config.tower_cost, 0):
+                        time.sleep(0.5)
+                        if self.main_instance.find_text("victory") is not None:
+                            if self.main_instance.find_text("playnext"):
+                                self.all_play_next()
+                                continue
+                            else:
+                                self.all_leave_story_death()
+                                break
+                        elif self.main_instance.find_text("defeat") is not None:
+                            self.all_play_again()
                             continue
-                        else:
-                            self.all_leave_story_death()
-                            break
-                    elif self.main_instance.find_text("defeat") is not None:
-                        self.all_play_again()
-                        continue
+                    self.logger.debug(f"Finished placing towers")
+                    self.logger.debug(f"Upgrading towers")
+                    if not self.main_instance.upgrade_all_towers(0, config.tower_cap):
+                        time.sleep(0.5)
+                        if self.main_instance.find_text("victory") is not None:
+                            if self.main_instance.find_text("playnext"):
+                                self.all_play_next()
+                                continue
+                            else:
+                                self.all_leave_story_death()
+                                break
+                        elif self.main_instance.find_text("defeat") is not None:
+                            self.all_play_again()
+                            continue
 
     def all_click_leave(self):
         for instance in self.roblox_instances:

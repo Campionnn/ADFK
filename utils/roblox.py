@@ -11,9 +11,10 @@ import psutil
 import pywinauto
 import requests
 
-import config
-if config.port == 0000:
+try:
     import config_personal as config
+except ImportError:
+    import config
 import coords
 from utils.exceptions import *
 from utils import ocr
@@ -35,6 +36,7 @@ class Roblox:
         self.roblox_exe = "RobloxPlayerBeta.exe"
         self.place_id = "17017769292"
 
+        self.custom_place = None
         self.mode = None
         self.level = None
         self.world_sequence = None
@@ -45,14 +47,16 @@ class Roblox:
         self.story_place_color = None
         self.story_place_color_tolerance = None
 
-        self.placed_towers = []
+        self.spiral_coords = []
+        self.placed_towers = {}
         self.invalid_towers = []
         self.current_wave = [0]
         self.wave_checker = None
 
-    def set_mode(self, mode, world, level):
+    def set_mode(self, mode, world, level, custom_place):
         self.mode = mode
         self.level = level
+        self.custom_place = custom_place
         if world == 1:
             self.world_sequence = coords.windmill_sequence
             self.story_place_pos = coords.windmill_place_pos
@@ -178,8 +182,6 @@ class Roblox:
             raise StartupException("Could not find memory address")
         self.logger.debug(f"Memory address found for {self.username}. {self.pid}: {self.y_addrs}")
         return
-
-
 
     def close_instance(self):
         self.logger.debug(f"Killing Roblox instance for {self.username}")
@@ -379,7 +381,7 @@ class Roblox:
                     self.controller.reset_look()
                     if not self.fast_travel("story"):
                         raise StartupException("Could not fast travel to story")
-                time.sleep(0.25)
+                time.sleep(0.5)
                 if self.click_text("leave"):
                     time.sleep(0.1)
                     pos = memory.get_current_pos(self.pid, self.y_addrs)
@@ -421,13 +423,42 @@ class Roblox:
         time.sleep(0.5)
         self.click_text("start")
 
+    def spiral(self):
+        spiral_coords = []
+        rect = self.get_window_rect()
+        window_width = int(rect[2] * 0.8)
+        window_height = int(rect[3] * 0.8)
+        step = int(rect[2] * 0.025)
+        x = (rect[0] + rect[2] // 2) - step
+        y = rect[1] + rect[3] // 2
+
+        directions = [(-1, 0), (0, -1), (1, 0), (0, 1)]
+        direction_index = 0
+        steps_in_current_direction = 0
+        change_direction_after_steps = 1
+
+        spiral_coords.append((x + step, y))
+        while 0 <= x < window_width and 0 <= y < window_height:
+            spiral_coords.append((x, y))
+            steps_in_current_direction += 1
+            if steps_in_current_direction == change_direction_after_steps:
+                direction_index = (direction_index + 1) % 4
+                steps_in_current_direction = 0
+                if direction_index == 0 or direction_index == 2:
+                    change_direction_after_steps += 1
+            dx, dy = directions[direction_index]
+            x += dx * step
+            y += dy * step
+        self.spiral_coords = spiral_coords
+
     def play_story(self):
-        self.placed_towers = []
+        self.placed_towers = {}
         self.invalid_towers = []
         self.current_wave = [0]
         self.set_foreground()
         time.sleep(1)
         self.wait_game_load("story")
+        self.spiral()
         attempts = 0
         while True:
             if attempts > 2:
@@ -453,9 +484,99 @@ class Roblox:
         self.controller.look_down(1.0)
         time.sleep(1)
         self.controller.reset_look()
-        self.controller.zoom_out()
+        self.controller.zoom_out(1)
 
-    def place_towers(self, tower_key, tower_cap, tower_cost, wave_stop):
+    def do_custom_place(self):
+        self.set_foreground()
+        time.sleep(0.5)
+        self.wave_checker = RepeatedTimer(1, self.check_wave)
+        start = time.time()
+        for action in self.custom_place.get('actions'):
+            if action.get('type') == 'place':
+                for tower_id in action.get("ids"):
+                    if time.time() - start > 300:
+                        self.anti_afk()
+                        start = time.time()
+                    self.logger.debug(f"Placing tower with id {tower_id} at {action.get('location')}")
+                    if not self.place_tower(tower_id, tower_id[0], action.get('location'), int(self.custom_place.get('costs').get(tower_id[0]))):
+                        return False
+            elif action.get('type') == 'upgrade':
+                if int(action.get('amount')) == 0:
+                    while True:
+                        for tower_id in action.get("ids"):
+                            if time.time() - start > 300:
+                                self.anti_afk()
+                                start = time.time()
+                            if not self.upgrade_tower(tower_id, True):
+                                return False
+                for _ in range(int(action.get('amount'))):
+                    for tower_id in action.get("ids"):
+                        if time.time() - start > 300:
+                            self.anti_afk()
+                            start = time.time()
+                        if not self.upgrade_tower(tower_id):
+                            return False
+
+    def place_tower(self, tower_id, hotkey, location, cost):
+        if location == "center":
+            spiral_coords = self.spiral_coords
+        else:
+            spiral_coords = self.spiral_coords[::-1]
+        current_money = ocr.read_current_money(self.screenshot())
+        while current_money is None or current_money < cost:  # TODO infinite loop
+            time.sleep(0.1)
+            if self.check_over():
+                return False
+            current_money = ocr.read_current_money(self.screenshot())
+
+        count = 0
+        for x, y in spiral_coords:
+            if self.check_over() and count % 5 == 0:
+                return False
+
+            if not self.check_placement():
+                keyboard.send(hotkey)
+            if (x, y) not in self.placed_towers.values() and (x, y) not in self.invalid_towers:
+                autoit.mouse_move(x, y)
+                time.sleep(0.15)
+                autoit.mouse_click("left", x, y)
+                time.sleep(0.15)
+                if not self.check_placement():
+                    self.logger.debug(f"Placed tower at {x}, {y}")
+                    self.placed_towers[tower_id] = (x, y)
+                    return True
+                self.invalid_towers.append((x, y))
+            count += 1
+
+    def upgrade_tower(self, tower_id, skip=False):
+        x, y = self.placed_towers.get(tower_id)
+        autoit.mouse_click("left", x, y)
+        time.sleep(0.1)
+        start = time.time()
+        while True:  # TODO infinite loop
+            if time.time() - start > 1 and skip:
+                return True
+            if self.check_over():
+                return False
+            screen = self.screenshot()
+            upgrade_info = ocr.read_upgrade_cost(screen)
+            if upgrade_info is not None:
+                current_money = ocr.read_current_money(screen)
+                if current_money is not None and current_money >= upgrade_info[0]:
+                    autoit.mouse_click("left", upgrade_info[1], upgrade_info[2])
+                    return True
+            time.sleep(0.1)
+
+    def check_over(self):
+        if self.find_text("backtolobby") is not None:
+            self.wave_checker.stop()
+            return True
+        if self.mode == 1 and self.current_wave[0] >= config.wave_stop:
+            self.wave_checker.stop()
+            time.sleep(3)
+            return True
+
+    def place_all_towers(self, tower_key, tower_cap, tower_cost, wave_stop):
         self.set_foreground()
         self.wave_checker = RepeatedTimer(1, self.check_wave)
         for i in range(tower_cap):
@@ -498,12 +619,12 @@ class Roblox:
                     keyboard.send(tower_key)
                 if (x, y) not in self.placed_towers and (x, y) not in self.invalid_towers:
                     autoit.mouse_move(x + rect[0], y + rect[1])
-                    time.sleep(0.1)
+                    time.sleep(0.15)
                     autoit.mouse_click("left", x + rect[0], y + rect[1])
                     time.sleep(0.15)
                     if not self.check_placement():
                         self.logger.debug(f"Placed tower at {x}, {y}")
-                        self.placed_towers.append((x, y))
+                        self.placed_towers[(x, y)] = (x, y)
                         break
                     self.invalid_towers.append((x, y))
 
@@ -521,7 +642,7 @@ class Roblox:
                 continue
         return True
 
-    def upgrade_towers(self, wave_stop, tower_cap):
+    def upgrade_all_towers(self, wave_stop, tower_cap):
         self.set_foreground()
         time.sleep(1)
         start = time.time()
@@ -552,16 +673,11 @@ class Roblox:
                     screen = self.screenshot()
                     upgrade_info = ocr.read_upgrade_cost(screen)
                     if upgrade_info is not None:
-                        # print(upgrade_info[0])
                         current_money = ocr.read_current_money(screen)
-                        # if current_money is not None:
-                        #     print(current_money)
                         if current_money is not None and current_money >= upgrade_info[0]:
                             autoit.mouse_click("left", upgrade_info[1], upgrade_info[2])
                             self.logger.debug(f"Upgraded tower at {x}, {y}")
                             break
-                    # else:
-                    #     cv2.imwrite("upgrade_error.png", screen)
                     time.sleep(0.1)
 
     def check_wave(self):
