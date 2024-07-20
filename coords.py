@@ -83,7 +83,7 @@ swordsman_place_color = (90, 80, 180)
 swordsman_place_color_tolerance = 20
 # Snowy Woods
 snowy_sequence = "a"*2 + "s"*6
-snowy_place_pos = [-112.20497131347656, -191.2308349609375]
+snowy_place_pos = [-114.13101196289062, -181.58358764648438]
 snowy_place_pos_tolerance = 5.0
 snowy_place_rot = 270
 snowy_place_rot_tolerance = 1.0
