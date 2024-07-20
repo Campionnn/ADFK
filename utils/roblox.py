@@ -524,11 +524,16 @@ class Roblox:
             spiral_coords = self.spiral_coords[::-1]
         self.logger.debug(f"Waiting for {cost} money to place tower")
         current_money = ocr.read_current_money(self.screenshot())
-        while current_money is None or current_money < cost:  # TODO infinite loop
+        start = time.time()
+        count = 0
+        while current_money is None or current_money < cost:
             time.sleep(0.1)
-            if self.check_over():
+            if time.time() - start > 60:
+                return True
+            if count % 10 == 0 and self.check_over():
                 return False
             current_money = ocr.read_current_money(self.screenshot())
+            count += 1
 
         count = 0
         for x, y in spiral_coords:
@@ -556,7 +561,7 @@ class Roblox:
         time.sleep(0.1)
         start = time.time()
         count = 0
-        while True:  # TODO infinite loop
+        while True:
             if time.time() - start > 60:
                 return True
             if time.time() - start > 1 and skip:
@@ -571,6 +576,7 @@ class Roblox:
                     autoit.mouse_click("left", upgrade_info[1], upgrade_info[2])
                     return True
             time.sleep(0.1)
+            count += 1
 
     def check_over(self):
         if self.find_text("backtolobby") is not None:
