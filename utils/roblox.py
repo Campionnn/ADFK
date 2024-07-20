@@ -122,6 +122,14 @@ class Roblox:
             self.story_place_color = coords.crystal_place_color
             self.story_place_color_tolerance = coords.crystal_place_color_tolerance
 
+        elif world == 101:
+            self.story_place_pos = coords.tower_place_pos
+            self.story_place_pos_tolerance = coords.tower_place_pos_tolerance
+            self.story_place_rot = coords.tower_place_rot
+            self.story_place_rot_tolerance = coords.tower_place_rot_tolerance
+            self.story_place_color = coords.tower_place_color
+            self.story_place_color_tolerance = coords.tower_place_color_tolerance
+
     def start_account(self):
         self.pid = None
         self.y_addrs = None
@@ -422,6 +430,35 @@ class Roblox:
         self.set_foreground()
         time.sleep(0.5)
         self.click_text("start")
+
+    def teleport_tower(self):
+        self.set_foreground()
+        time.sleep(0.5)
+        self.wait_game_load("main")
+        self.click_text("x")
+        try:
+            if not self.fast_travel("trading"):
+                self.controller.jump()
+                time.sleep(0.5)
+                self.controller.look_down(1.0)
+                time.sleep(1)
+                self.controller.reset_look()
+                if not self.fast_travel("trading"):
+                    raise StartupException("Could not fast travel to tower")
+                time.sleep(0.5)
+            time.sleep(0.25)
+            if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.tower_enter_pos[0], coords.tower_enter_pos[1], coords.tower_enter_pos_tolerance, 10, precise=True):
+                return self.teleport_tower()
+            return True
+        except MemoryException:
+            raise StartupException("Could not teleport to tower")
+
+    def start_tower(self):
+        self.set_foreground()
+        time.sleep(0.5)
+        keyboard.send('e')
+        time.sleep(1)
+        self.click_text("play")
 
     def spiral(self):
         spiral_coords = []

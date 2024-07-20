@@ -45,11 +45,12 @@ logging.getLogger().addHandler(consoleHandler)
 print("Choose between infinite farming or story progression")
 print("1: Infinite Farming")
 print("2: Story Progression")
-print("3: Create or Edit a Custom Placement")
+print("3: Tower of Eternity(only 1 account for now)")
+print("4: Create or Edit a Custom Placement")
 while True:
     try:
         choice1 = int(input("Enter choice: "))
-        if choice1 in [1, 2, 3]:
+        if choice1 in [1, 2, 3, 4]:
             break
     except ValueError:
         pass
@@ -158,6 +159,14 @@ elif choice1 == 2:
     roblox_manager.all_enter_story()
 
 elif choice1 == 3:
+    if roblox_pids is not None:
+        roblox_pids = {list(roblox_pids.keys())[0]: list(roblox_pids.values())[0]}
+    roblox_manager = RobloxManager(logger, roblox_pids=roblox_pids, mode=choice1, world=101, custom_place=custom_place)
+    if roblox_pids is None:
+        roblox_manager.all_start_instance(config.usernames[0])
+    roblox_manager.enter_tower()
+
+elif choice1 == 4:
     root = tk.Tk()
     app = App(root)
     root.attributes('-topmost', True)
@@ -165,3 +174,4 @@ elif choice1 == 3:
     root.lift()
     root.focus_force()
     root.mainloop()
+os._exit(0)

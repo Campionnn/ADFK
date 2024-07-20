@@ -97,3 +97,13 @@ crystal_place_rot = 0
 crystal_place_rot_tolerance = 1.0
 crystal_place_color = (20, 20, 80)
 crystal_place_color_tolerance = 20
+
+# Tower of Eternity
+tower_enter_pos = [8.400460243225098, -325.99554443359375]
+tower_enter_pos_tolerance = 5.0
+tower_place_pos = [-2503.1123046875, -1237.557861328125]
+tower_place_pos_tolerance = 5.0
+tower_place_rot = 270
+tower_place_rot_tolerance = 1.0
+tower_place_color = (50, 50, 200)
+tower_place_color_tolerance = 1.5

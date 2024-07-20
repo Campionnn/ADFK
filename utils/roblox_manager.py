@@ -36,9 +36,11 @@ class RobloxManager:
             self.logger.info(f"Roblox PIDs: {pids}")
             self.main_instance = [instance for instance in self.roblox_instances if instance.username == config.usernames[0]][0]
 
-    def all_start_instance(self):
+    def all_start_instance(self, usernames=None):
+        if usernames is None:
+            usernames = config.usernames
         try:
-            for username in config.usernames:
+            for username in usernames:
                 self.start_instance(username)
         except PlayException:
             self.logger.warning(f"Closing all Roblox instances and retrying")
@@ -136,7 +138,7 @@ class RobloxManager:
         time.sleep(2)
         try:
             self.main_instance.play_story()
-        except PlayException or StartupException:
+        except (PlayException, StartupException):
             self.all_leave_story_wave()
             return
         if self.main_instance.custom_sequence is not None:
@@ -192,7 +194,7 @@ class RobloxManager:
             while True:
                 try:
                     self.main_instance.play_story()
-                except PlayException or StartupException:
+                except (PlayException, StartupException):
                     self.all_leave_story_wave()
                     self.all_enter_story()  # TODO rethink this maybe
 
@@ -236,6 +238,68 @@ class RobloxManager:
                         elif self.main_instance.find_text("defeat") is not None:
                             self.all_play_again()
                             continue
+
+    def enter_tower(self):
+        self.logger.debug(f"Entering Tower of Eternity for main account")
+        self.main_instance.set_mode(self.mode, self.world, self.level, self.custom_place)
+        try:
+            self.main_instance.teleport_tower()
+        except StartupException:
+            self.main_instance.close_instance()
+            self.ensure_all_instance()
+            self.enter_tower()
+        self.logger.debug(f"Starting tower")
+        self.main_instance.start_tower()
+        time.sleep(2)
+        while True:
+            try:
+                self.main_instance.play_story()
+            except (PlayException, StartupException):
+                self.all_leave_story_wave()
+                return
+
+            if self.main_instance.custom_sequence is not None:
+                if not self.main_instance.do_custom_sequence():
+                    if self.main_instance.find_text("victory") is not None:
+                        if self.main_instance.find_text("playnext"):
+                            self.all_play_next()
+                            continue
+                        else:
+                            self.logger.debug("Won but couldn't find play next button")
+                            self.all_leave_story_death()
+                            break
+                    elif self.main_instance.find_text("defeat") is not None:
+                        self.logger.debug("Lost")
+                        self.all_leave_story_death()
+                        continue
+            else:
+                if not self.main_instance.place_all_towers(config.tower_hotkey, config.tower_cap, config.tower_cost, 0):
+                    if self.main_instance.find_text("victory") is not None:
+                        if self.main_instance.find_text("playnext"):
+                            self.all_play_next()
+                            continue
+                        else:
+                            self.logger.debug("Won but couldn't find play next button")
+                            self.all_leave_story_death()
+                            break
+                    elif self.main_instance.find_text("defeat") is not None:
+                        self.logger.debug("Lost")
+                        self.all_leave_story_death()
+                        continue
+                self.logger.debug(f"Finished placing towers")
+                self.logger.debug(f"Upgrading towers")
+                if not self.main_instance.upgrade_all_towers(0, config.tower_cap):
+                    if self.main_instance.find_text("victory") is not None:
+                        if self.main_instance.find_text("playnext"):
+                            self.all_play_next()
+                            continue
+                        else:
+                            self.logger.debug("Won but couldn't find play next button")
+                            self.all_leave_story_death()
+                            break
+                    elif self.main_instance.find_text("defeat") is not None:
+                        self.logger.debug("Lost")
+                        self.all_leave_story_death()
 
     def all_click_leave(self):
         for instance in self.roblox_instances:
