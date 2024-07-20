@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 import json
 
 class CustomDialog(tk.Toplevel):
@@ -44,9 +44,9 @@ class Action:
 
     def __str__(self):
         if self.action_type == "place":
-            return f"Place towers {self.ids} at {self.location}"
+            return f"Place {self.ids} at {self.location}"
         elif self.action_type == "upgrade":
-            return f"Upgrade towers {self.ids} by {self.amount}"
+            return f"Upgrade {self.ids} by {self.amount}"
 
 
 class App:
@@ -70,9 +70,15 @@ class App:
         tk.Button(self.root, text="Add Place Action", command=self.add_place_action).grid(row=2, column=0)
         tk.Button(self.root, text="Add Upgrade Action", command=self.add_upgrade_action).grid(row=2, column=1)
         tk.Button(self.root, text="Save", command=self.save).grid(row=2, column=2)
+        tk.Button(self.root, text="Open", command=self.open_config).grid(row=2, column=3)
 
         self.action_listbox = tk.Listbox(self.root, height=10, width=50)
         self.action_listbox.grid(row=3, column=0, columnspan=3, pady=10)
+
+        scrollbar = tk.Scrollbar(self.root, orient="vertical")
+        scrollbar.config(command=self.action_listbox.yview)
+        scrollbar.grid(row=3, column=3, sticky="ns")
+        self.action_listbox.config(yscrollcommand=scrollbar.set)
 
         tk.Button(self.root, text="Move Up", command=self.move_up).grid(row=4, column=0)
         tk.Button(self.root, text="Move Down", command=self.move_down).grid(row=4, column=1)
@@ -209,3 +215,28 @@ class App:
                 json.dump(data, f, indent=4)
 
             messagebox.showinfo("Success", f"Custom placement saved as {filename}")
+
+    def open_config(self):
+        filename = filedialog.askopenfilename(initialdir="./custom-sequence/", title="Select file", filetypes=(("JSON files", "*.json"),))
+        if filename:
+            with open(filename, "r") as f:
+                data = json.load(f)
+
+            self.name_entry.delete(0, tk.END)
+            self.name_entry.insert(0, data["name"])
+
+            self.description_entry.delete(0, tk.END)
+            self.description_entry.insert(0, data["description"])
+
+            self.actions.clear()
+            self.ids.clear()
+            for action_data in data["actions"]:
+                action = None
+                if action_data["type"] == "place":
+                    action = Action("place", action_data["ids"], location=action_data["location"])
+                    self.ids.extend(action_data["ids"])
+                elif action_data["type"] == "upgrade":
+                    action = Action("upgrade", action_data["ids"], amount=action_data["amount"])
+                self.actions.append(action)
+
+            self.update_action_listbox()

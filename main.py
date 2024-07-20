@@ -44,7 +44,7 @@ logging.getLogger().addHandler(consoleHandler)
 print("Choose between infinite farming or story progression")
 print("1: Infinite Farming")
 print("2: Story Progression")
-print("3: Create a Custom Placement")
+print("3: Create or Edit a Custom Placement")
 while True:
     try:
         choice1 = int(input("Enter choice: "))
@@ -161,8 +161,8 @@ elif choice1 == 2:
 elif choice1 == 3:
     root = tk.Tk()
     app = App(root)
-    root.lift()
-    root.focus_force()
     root.attributes('-topmost', True)
     root.after(100, lambda: root.attributes('-topmost', False))
+    root.lift()
+    root.focus_force()
     root.mainloop()
