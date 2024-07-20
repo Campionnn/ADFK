@@ -19,6 +19,7 @@ except ImportError:
 def kill_thread():
     keyboard.wait(config.kill_key)
     os._exit(0)
+threading.Thread(target=kill_thread).start()
 
 
 pathlib.Path("./logs/").mkdir(parents=True, exist_ok=True)
@@ -114,7 +115,6 @@ if choice1 == 1:
                 break
         except ValueError:
             pass
-    threading.Thread(target=kill_thread).start()
     roblox_manager = RobloxManager(logger, roblox_pids=roblox_pids, mode=choice1, world=world_input, custom_place=custom_place)
     if roblox_pids is None:
         roblox_manager.all_start_instance()
@@ -152,7 +152,6 @@ elif choice1 == 2:
                 break
         except ValueError:
             pass
-    threading.Thread(target=kill_thread).start()
     roblox_manager = RobloxManager(logger, roblox_pids=roblox_pids, mode=choice1, world=world_input, level=chapter_input, custom_place=custom_place)
     if roblox_pids is None:
         roblox_manager.all_start_instance()
