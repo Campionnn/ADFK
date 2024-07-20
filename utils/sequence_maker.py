@@ -104,7 +104,7 @@ class App:
                 messagebox.showerror("Error", "Invalid hotkeys or location")
 
     def add_upgrade_action(self):
-        dialog = CustomDialog(self.root, "Upgrade Action", ["Enter tower ids\nPut in multiple ids separated by spaces\nto cycle through upgrading each", "Enter number of times to upgrade tower"], ["", ""])
+        dialog = CustomDialog(self.root, "Upgrade Action", ["Enter tower ids\nPut in multiple ids separated by spaces\nto cycle through upgrading each", "Enter number of times to upgrade tower\nType in 0 to continuously upgrade until end of game\nNo actions will work after upgrade 0 happens"], ["", ""])
         if dialog.result:
             ids_str, amount_str = dialog.result
             ids_ = ids_str.split()
