@@ -6,7 +6,9 @@ import ast
 import pathlib
 import keyboard
 import threading
+import tkinter as tk
 
+from utils.sequence_maker import App
 from utils.roblox_manager import RobloxManager
 try:
     import config_personal as config
@@ -20,7 +22,7 @@ def kill_thread():
 
 
 pathlib.Path("./logs/").mkdir(parents=True, exist_ok=True)
-pathlib.Path("./custom-place/").mkdir(parents=True, exist_ok=True)
+pathlib.Path("custom-sequence/").mkdir(parents=True, exist_ok=True)
 if config.logging_level == "debug":
     level = logging.DEBUG
 else:
@@ -73,9 +75,9 @@ if choice1 in [1, 2]:
 
     print("Choose a custom placement to use")
     print("Leave blank and press enter if you want to use default placement")
-    custom_placements = [f for f in os.listdir("./custom-place/") if f.endswith(".json")]
+    custom_placements = [f for f in os.listdir("custom-sequence/") if f.endswith(".json")]
     for i, placement in enumerate(custom_placements):
-        with open(f"./custom-place/{placement}") as f:
+        with open(f"custom-sequence/{placement}") as f:
             data = json.load(f)
             print(f"{i + 1}: {data['name']} - {data['description']}")
     while True:
@@ -90,7 +92,7 @@ if choice1 in [1, 2]:
         except (ValueError, AssertionError):
             pass
     if custom_input:
-        with open(f"./custom-place/{custom_placements[custom_input - 1]}", "r") as f:
+        with open(f"custom-sequence/{custom_placements[custom_input - 1]}", "r") as f:
             custom_place = json.load(f)
             print(custom_place)
 
@@ -157,108 +159,10 @@ elif choice1 == 2:
     roblox_manager.all_enter_story()
 
 elif choice1 == 3:
-    print("Enter the name for custom placement")
-    while True:
-        name = input("Enter name: ")
-        if name != "":
-            break
-    print("Enter the description for custom placement")
-    while True:
-        description = input("Enter description: ")
-        if description != "":
-            break
-    actions = []
-    ids = []
-    while True:
-        next_step = False
-        while True:
-            print("Choose between placing or upgrading")
-            print("Press enter with no text to finish")
-            print("1: Place")
-            print("2: Upgrade")
-            choice5 = input("Enter choice: ")
-            if choice5 in ["1", "2"]:
-                break
-            elif choice5 == "":
-                next_step = True
-                break
-        if next_step:
-            break
-
-        if choice5 == "1":
-            place_ids = []
-            print("Enter the hotkeys for the towers to place separated by spaces")
-            hotkeys = input("Enter hotkeys: ")
-            hotkeys = hotkeys.split()
-            if all(item in ["1", "2", "3", "4", "5", "6"] for item in hotkeys):
-                for hotkey in hotkeys:
-                    count = 0
-                    for id_ in place_ids:
-                        if id_[0] == hotkey:
-                            count += 1
-                    for id_ in ids:
-                        if id_[0] == hotkey:
-                            count += 1
-                    place_ids.append(f"{hotkey}{chr(ord('a') + count)}")
-                ids = ids + place_ids
-            else:
-                print("Invalid hotkeys")
-                continue
-            while True:
-                print("Choose the location of where to place the towers")
-                print("1: Center")
-                print("2: Edge")
-                choice6 = input("Enter choice: ")
-                if choice6 in ["1", "2"]:
-                    break
-            location = ""
-            if choice6 == "1":
-                location = "center"
-            elif choice6 == "2":
-                location = "edge"
-            actions.append({"type": "place", "ids": place_ids, "location": location})
-            print("========================================")
-            print(f"Placed towers with ids {place_ids} at {location}")
-            print("========================================")
-        elif choice5 == "2":
-            upgrade_ids = []
-            print("Enter the ids of the towers you want to upgrade separated by spaces")
-            ids_ = input("Enter ids: ")
-            ids_ = ids_.split()
-            if all(item in ids for item in ids_):
-                upgrade_ids = ids_
-            else:
-                print("Invalid ids")
-                continue
-            print("Choose the amount of upgrades to perform")
-            print("Enter 0 to continuously upgrade until the end of the game")
-            while True:
-                try:
-                    amount = int(input("Enter amount: "))
-                    if amount >= 0:
-                        break
-                except ValueError:
-                    pass
-            actions.append({"type": "upgrade", "ids": upgrade_ids, "amount": amount})
-            print("========================================")
-            print(f"Upgraded towers with ids {upgrade_ids} by {amount}")
-            print("========================================")
-    hotkeys = list(set([id_[0] for id_ in ids]))
-    hotkeys.sort()
-
-    costs = {}
-    for hotkey in hotkeys:
-        while True:
-            try:
-                cost = int(input(f"Enter the cost of the tower for hotkey {hotkey}: "))
-                if cost > 0:
-                    break
-            except ValueError:
-                pass
-        costs[hotkey] = str(cost)
-
-    with open(f"./custom-place/{name.replace(' ', '-').lower()}.json", "w") as f:
-        json.dump({"name": name, "description": description, "actions": actions, "costs": costs}, f, indent=4)
-    print("========================================")
-    print(f"Custom placement saved as {name.replace(' ', '-').lower()}.json")
-    print("========================================")
+    root = tk.Tk()
+    app = App(root)
+    root.lift()
+    root.focus_force()
+    root.attributes('-topmost', True)
+    root.after(100, lambda: root.attributes('-topmost', False))
+    root.mainloop()

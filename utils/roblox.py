@@ -36,7 +36,7 @@ class Roblox:
         self.roblox_exe = "RobloxPlayerBeta.exe"
         self.place_id = "17017769292"
 
-        self.custom_place = None
+        self.custom_sequence = None
         self.mode = None
         self.level = None
         self.world_sequence = None
@@ -56,7 +56,7 @@ class Roblox:
     def set_mode(self, mode, world, level, custom_place):
         self.mode = mode
         self.level = level
-        self.custom_place = custom_place
+        self.custom_sequence = custom_place
         if world == 1:
             self.world_sequence = coords.windmill_sequence
             self.story_place_pos = coords.windmill_place_pos
@@ -486,18 +486,18 @@ class Roblox:
         self.controller.reset_look()
         self.controller.zoom_out(1)
 
-    def do_custom_place(self):
+    def do_custom_sequence(self):
         self.set_foreground()
         time.sleep(0.5)
         self.wave_checker = RepeatedTimer(1, self.check_wave)
         start = time.time()
-        for action in self.custom_place.get('actions'):
+        for action in self.custom_sequence.get('actions'):
             if action.get('type') == 'place':
                 for tower_id in action.get("ids"):
                     if time.time() - start > 300:
                         self.anti_afk()
                         start = time.time()
-                    if not self.place_tower(tower_id, tower_id[0], action.get('location'), int(self.custom_place.get('costs').get(tower_id[0]))):
+                    if not self.place_tower(tower_id, tower_id[0], action.get('location'), int(self.custom_sequence.get('costs').get(tower_id[0]))):
                         return False
             elif action.get('type') == 'upgrade':
                 if int(action.get('amount')) == 0:
@@ -515,6 +515,7 @@ class Roblox:
                             start = time.time()
                         if not self.upgrade_tower(tower_id):
                             return False
+            time.sleep(0.5)
 
     def place_tower(self, tower_id, hotkey, location, cost):
         self.logger.debug(f"Placing tower with id {tower_id} at {location}")

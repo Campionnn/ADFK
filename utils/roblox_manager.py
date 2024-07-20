@@ -139,8 +139,8 @@ class RobloxManager:
         except PlayException or StartupException:
             self.all_leave_story_wave()
             return
-        if self.main_instance.custom_place is not None:
-            if not self.main_instance.do_custom_place():
+        if self.main_instance.custom_sequence is not None:
+            if not self.main_instance.do_custom_sequence():
                 if self.main_instance.current_wave[0] >= config.wave_stop:
                     self.all_leave_story_wave()
                     return
@@ -196,8 +196,8 @@ class RobloxManager:
                     self.all_leave_story_wave()
                     self.all_enter_story()  # TODO rethink this maybe
 
-                if self.main_instance.custom_place is not None:
-                    if not self.main_instance.do_custom_place():
+                if self.main_instance.custom_sequence is not None:
+                    if not self.main_instance.do_custom_sequence():
                         time.sleep(0.5)
                         if self.main_instance.find_text("victory") is not None:
                             if self.main_instance.find_text("playnext"):

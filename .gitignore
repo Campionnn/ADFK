@@ -5,7 +5,7 @@
 /__pycache__/
 /logs/
 /images/
-/custom-place/
+/custom-sequence/
 /*.exe
 /*.zip
 /ADFK.log
