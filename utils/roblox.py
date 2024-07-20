@@ -459,6 +459,8 @@ class Roblox:
         keyboard.send('e')
         time.sleep(1)
         self.click_text("play")
+        time.sleep(2)
+        self.click_text("start")
 
     def spiral(self):
         spiral_coords = []
