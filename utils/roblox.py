@@ -319,6 +319,8 @@ class Roblox:
         matching_pixels = np.sum(mask)
         matching_percentage = (matching_pixels / total_pixels) * 100
 
+        print(matching_percentage)
+
         return matching_percentage > self.story_place_color_tolerance
 
     def check_crash(self, responsive=True):

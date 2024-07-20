@@ -106,4 +106,4 @@ tower_place_pos_tolerance = 5.0
 tower_place_rot = 270
 tower_place_rot_tolerance = 1.0
 tower_place_color = (100, 50, 200)
-tower_place_color_tolerance = 1.5
+tower_place_color_tolerance = 2
