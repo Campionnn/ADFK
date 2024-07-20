@@ -57,7 +57,7 @@ while True:
 
 roblox_pids = None
 custom_place = None
-if choice1 in [1, 2]:
+if choice1 in [1, 2, 3]:
     print("Enter Roblox PIDs from running macro previously")
     print("Skips the steps for getting memory addresses on each instance")
     print("Can be found in the logs of the previous run")
