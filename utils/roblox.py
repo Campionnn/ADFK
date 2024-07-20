@@ -319,8 +319,6 @@ class Roblox:
         matching_pixels = np.sum(mask)
         matching_percentage = (matching_pixels / total_pixels) * 100
 
-        print(matching_percentage)
-
         return matching_percentage > self.story_place_color_tolerance
 
     def check_crash(self, responsive=True):
@@ -577,13 +575,12 @@ class Roblox:
             current_money = ocr.read_current_money(self.screenshot())
             count += 1
 
+        if not self.check_placement():
+            keyboard.send(hotkey)
         count = 0
         for x, y in spiral_coords:
             if count % 10 == 0 and self.check_over():
                 return False
-
-            if not self.check_placement():
-                keyboard.send(hotkey)
             if (x, y) not in self.placed_towers.values() and (x, y) not in self.invalid_towers:
                 autoit.mouse_move(x, y)
                 time.sleep(0.15)
@@ -659,6 +656,9 @@ class Roblox:
             steps_in_current_direction = 0
             change_direction_after_steps = 1
 
+            if not self.check_placement():
+                keyboard.send(tower_key)
+
             while 0 <= x < window_width and 0 <= y < window_height:
                 if self.find_text("backtolobby") is not None:
                     self.wave_checker.stop()
@@ -668,8 +668,6 @@ class Roblox:
                     time.sleep(3)
                     return False
 
-                if not self.check_placement():
-                    keyboard.send(tower_key)
                 if (x, y) not in self.placed_towers and (x, y) not in self.invalid_towers:
                     autoit.mouse_move(x + rect[0], y + rect[1])
                     time.sleep(0.15)
