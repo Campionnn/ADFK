@@ -143,12 +143,11 @@ class Control:
         init_pos = memory.get_current_pos(pid, y_addrs)
         for _ in range(5):
             if jump:
-                self.jump()
+                for __ in range(5):
+                    self.jump()
             self.move(random.uniform(-1, 1), random.uniform(-1, 1))
             time.sleep(0.5)
-            self.reset_move()
-            self.reset_look()
-            time.sleep(0.1)
+        self.reset_move()
         pos = memory.get_current_pos(pid, y_addrs)
         if self.calculate_distance(init_pos[0], init_pos[2], pos[0], pos[2]) > 5:
             return True

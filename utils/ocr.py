@@ -5,10 +5,10 @@ import difflib
 import re
 
 import coords
-import config
-
-if config.port == 0000:
+try:
     import config_personal as config
+except ImportError:
+    import config
 
 pytesseract.pytesseract.tesseract_cmd = config.tesseract_path
 
@@ -80,9 +80,10 @@ def read_upgrade_cost(image_input: np.ndarray):
     max_area = 0
     x, y, w, h = 0, 0, 0, 0
     for contour in contours:
-        area = cv2.contourArea(contour)
+        rect = cv2.boundingRect(contour)
+        area = rect[2] * rect[3]
         if area > max_area:
-            x, y, w, h = cv2.boundingRect(contour)
+            x, y, w, h = rect
             max_area = area
     if max_area == 0:
         return None
