@@ -163,7 +163,7 @@ elif choice1 == 3:
         roblox_pids = {list(roblox_pids.keys())[0]: list(roblox_pids.values())[0]}
     roblox_manager = RobloxManager(logger, roblox_pids=roblox_pids, mode=choice1, world=101, custom_place=custom_place)
     if roblox_pids is None:
-        roblox_manager.all_start_instance(config.usernames[0])
+        roblox_manager.all_start_instance([config.usernames[0]])
     roblox_manager.enter_tower()
 
 elif choice1 == 4:
