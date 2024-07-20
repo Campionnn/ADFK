@@ -497,7 +497,6 @@ class Roblox:
                     if time.time() - start > 300:
                         self.anti_afk()
                         start = time.time()
-                    self.logger.debug(f"Placing tower with id {tower_id} at {action.get('location')}")
                     if not self.place_tower(tower_id, tower_id[0], action.get('location'), int(self.custom_place.get('costs').get(tower_id[0]))):
                         return False
             elif action.get('type') == 'upgrade':
@@ -518,10 +517,12 @@ class Roblox:
                             return False
 
     def place_tower(self, tower_id, hotkey, location, cost):
+        self.logger.debug(f"Placing tower with id {tower_id} at {location}")
         if location == "center":
             spiral_coords = self.spiral_coords
         else:
             spiral_coords = self.spiral_coords[::-1]
+        self.logger.debug(f"Waiting for {cost} money to place tower")
         current_money = ocr.read_current_money(self.screenshot())
         while current_money is None or current_money < cost:  # TODO infinite loop
             time.sleep(0.1)
@@ -531,7 +532,7 @@ class Roblox:
 
         count = 0
         for x, y in spiral_coords:
-            if self.check_over() and count % 5 == 0:
+            if count % 10 == 0 and self.check_over():
                 return False
 
             if not self.check_placement():
@@ -549,14 +550,18 @@ class Roblox:
             count += 1
 
     def upgrade_tower(self, tower_id, skip=False):
+        self.logger.debug(f"Upgrading tower with id {tower_id}")
         x, y = self.placed_towers.get(tower_id)
         autoit.mouse_click("left", x, y)
         time.sleep(0.1)
         start = time.time()
+        count = 0
         while True:  # TODO infinite loop
+            if time.time() - start > 60:
+                return True
             if time.time() - start > 1 and skip:
                 return True
-            if self.check_over():
+            if count % 10 == 0 and self.check_over():
                 return False
             screen = self.screenshot()
             upgrade_info = ocr.read_upgrade_cost(screen)
