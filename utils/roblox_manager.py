@@ -42,7 +42,7 @@ class RobloxManager:
             self.logger.warning(f"Closing all Roblox instances and retrying")
             for pid in get_pids_by_name(self.roblox_exe):
                 try:
-                    os.kill(pid, signal.SIGSTOP)
+                    os.kill(pid, 15)
                     self.all_start_instance()
                     return
                 except OSError:
@@ -103,7 +103,7 @@ class RobloxManager:
                     self.logger.warning(f"Closing all Roblox instances and retrying")
                     for pid in get_pids_by_name(self.roblox_exe):
                         try:
-                            os.kill(pid, signal.SIGSTOP)
+                            os.kill(pid, 15)
                             self.all_start_instance()
                             return
                         except OSError:
