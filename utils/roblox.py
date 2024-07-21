@@ -287,9 +287,10 @@ class Roblox:
         screen = pyautogui.screenshot()
         screen_np = np.array(screen)
 
-        screen_crop = screen_np
         if chapter:
             screen_crop = screen_np[:, screen_np.shape[1] // 3:]
+        else:
+            screen_crop = screen_np[:int(screen_np.shape[0] * 0.9), :]
 
         image = cv2.cvtColor(screen_crop, cv2.COLOR_RGB2BGR)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
