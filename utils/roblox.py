@@ -38,6 +38,7 @@ class Roblox:
 
         self.custom_sequence = None
         self.mode = None
+        self.world = None
         self.level = None
         self.world_sequence = None
         self.story_place_pos = None
@@ -55,6 +56,7 @@ class Roblox:
 
     def set_mode(self, mode, world, level, custom_place):
         self.mode = mode
+        self.world = world
         self.level = level
         self.custom_sequence = custom_place
         if world == 1:
@@ -488,6 +490,10 @@ class Roblox:
             dx, dy = directions[direction_index]
             x += dx * step
             y += dy * step
+
+        if self.world_sequence == 101:
+            spiral_coords = spiral_coords[9:]
+
         self.spiral_coords = spiral_coords
 
     def play_story(self):

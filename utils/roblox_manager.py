@@ -271,7 +271,7 @@ class RobloxManager:
                     elif self.main_instance.find_text("defeat") is not None:
                         self.logger.debug("Lost")
                         self.all_leave_story_death()
-                        continue
+                        break
             else:
                 if not self.main_instance.place_all_towers(config.tower_hotkey, config.tower_cap, config.tower_cost, 0):
                     if self.main_instance.find_text("victory") is not None:
@@ -285,7 +285,7 @@ class RobloxManager:
                     elif self.main_instance.find_text("defeat") is not None:
                         self.logger.debug("Lost")
                         self.all_leave_story_death()
-                        continue
+                        break
                 self.logger.debug(f"Finished placing towers")
                 self.logger.debug(f"Upgrading towers")
                 if not self.main_instance.upgrade_all_towers(0, config.tower_cap):
@@ -300,6 +300,7 @@ class RobloxManager:
                     elif self.main_instance.find_text("defeat") is not None:
                         self.logger.debug("Lost")
                         self.all_leave_story_death()
+                        break
 
     def all_click_leave(self):
         for instance in self.roblox_instances:
