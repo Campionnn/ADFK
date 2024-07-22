@@ -28,7 +28,7 @@ class RobloxStory(RobloxInfinite):
             self.controller.zoom_out(0.25)
             self.click_nav_rect(self.world_sequence, "Could not find world button")
             time.sleep(0.5)
-            self.click_nav_rect("d"*10 + "a"*4 + "s" * (self.level-1) * 2, "Could not find selected chapter", restart=False, chapter=True)
+            self.click_nav_rect("d"*10 + "w" + "a"*4 + "s" * self.level * 2, "Could not find selected chapter", restart=False, chapter=True)
             time.sleep(0.5)
             self.click_text("confirm")
         return True
@@ -36,3 +36,4 @@ class RobloxStory(RobloxInfinite):
     def set_world(self, world, level):
         self.world = world
         self.level = level
+        self.set_coords()
