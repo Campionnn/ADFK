@@ -158,8 +158,9 @@ class App:
             del self.actions[index]
             if self.is_valid_order():
                 self.update_action_listbox()
-                for id_ in deleted_action.ids:
-                    self.ids.remove(id_)
+                if deleted_action.action_type == "place":
+                    for id_ in deleted_action.ids:
+                        self.ids.remove(id_)
             else:
                 messagebox.showerror("Error", "Invalid order: cannot upgrade before placing")
                 self.actions.insert(index, deleted_action)
