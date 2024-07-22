@@ -1,4 +1,4 @@
-from utils.roblox_base import RobloxBase
+from utils.roblox_types.roblox_base import RobloxBase
 
 import time
 

@@ -5,10 +5,10 @@ from typing import Type
 
 from utils.exceptions import *
 from utils.control import Control
-from utils.roblox_base import RobloxBase
-from utils.roblox_infinite import RobloxInfinite
-from utils.roblox_story import RobloxStory
-from utils.roblox_tower import RobloxTower
+from utils.roblox_types.roblox_base import RobloxBase
+from utils.roblox_types.roblox_infinite import RobloxInfinite
+from utils.roblox_types.roblox_story import RobloxStory
+from utils.roblox_types.roblox_tower import RobloxTower
 from utils.memory import get_pids_by_name
 try:
     import config_personal as config
@@ -39,19 +39,15 @@ class RobloxManager:
             pids = {instance.pid: instance.y_addrs for instance in self.roblox_instances}
             self.logger.info(f"Roblox PIDs: {pids}")
             self.main_instance = [instance for instance in self.roblox_instances if instance.username == config.usernames[0]][0]
-
         else:
-            if isinstance(roblox_type, RobloxInfinite):
+            if isinstance(roblox_type, (RobloxInfinite, RobloxStory)):
                 self.all_start_instance()
-            elif isinstance(roblox_type, RobloxStory):
-                self.all_start_instance()
-                self.all_enter()
-                return
             elif isinstance(roblox_type, RobloxTower):
                 self.all_start_instance([config.usernames[0]])
 
-            while True:
-                self.all_enter()
+        while True:
+            if self.all_enter():
+                break
 
     def all_start_instance(self, usernames=None):
         if usernames is None:
@@ -133,11 +129,11 @@ class RobloxManager:
 
     def all_enter(self):
         if isinstance(self.main_instance, RobloxInfinite):
-            self.all_enter_infinite()
+            return self.all_enter_infinite()
         elif isinstance(self.main_instance, RobloxStory):
-            self.all_enter_story()
+            return self.all_enter_story()
         elif isinstance(self.main_instance, RobloxTower):
-            self.enter_tower()
+            return self.enter_tower()
 
     def all_enter_infinite(self):
         assert isinstance(self.main_instance, RobloxInfinite)
@@ -263,6 +259,7 @@ class RobloxManager:
                         elif self.main_instance.find_text("defeat") is not None:
                             self.all_play_again()
                             continue
+        return True
 
     def enter_tower(self):
         assert isinstance(self.main_instance, RobloxTower)

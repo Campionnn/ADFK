@@ -10,9 +10,9 @@ import tkinter as tk
 
 from utils.sequence_maker import App
 from utils.roblox_manager import RobloxManager
-from utils.roblox_infinite import RobloxInfinite
-from utils.roblox_story import RobloxStory
-from utils.roblox_tower import RobloxTower
+from utils.roblox_types.roblox_infinite import RobloxInfinite
+from utils.roblox_types.roblox_story import RobloxStory
+from utils.roblox_types.roblox_tower import RobloxTower
 try:
     import config_personal as config
 except ImportError:

@@ -1,4 +1,4 @@
-from utils.roblox_infinite import RobloxInfinite
+from utils.roblox_types.roblox_infinite import RobloxInfinite
 
 import time
 
