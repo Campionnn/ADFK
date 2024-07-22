@@ -10,6 +10,9 @@ import tkinter as tk
 
 from utils.sequence_maker import App
 from utils.roblox_manager import RobloxManager
+from utils.roblox_infinite import RobloxInfinite
+from utils.roblox_story import RobloxStory
+from utils.roblox_tower import RobloxTower
 try:
     import config_personal as config
 except ImportError:
@@ -116,7 +119,7 @@ if choice1 == 1:
                 break
         except ValueError:
             pass
-    roblox_manager = RobloxManager(logger, roblox_pids=roblox_pids, mode=choice1, world=world_input, custom_place=custom_place)
+    roblox_manager = RobloxManager(RobloxInfinite, logger, roblox_pids=roblox_pids, mode=choice1, world=world_input, custom_sequence=custom_place)
     if roblox_pids is None:
         roblox_manager.all_start_instance()
     while True:
@@ -153,7 +156,7 @@ elif choice1 == 2:
                 break
         except ValueError:
             pass
-    roblox_manager = RobloxManager(logger, roblox_pids=roblox_pids, mode=choice1, world=world_input, level=chapter_input, custom_place=custom_place)
+    roblox_manager = RobloxManager(RobloxStory, logger, roblox_pids=roblox_pids, mode=choice1, world=world_input, level=chapter_input, custom_sequence=custom_place)
     if roblox_pids is None:
         roblox_manager.all_start_instance()
     roblox_manager.all_enter_story()
@@ -161,7 +164,7 @@ elif choice1 == 2:
 elif choice1 == 3:
     if roblox_pids is not None:
         roblox_pids = {list(roblox_pids.keys())[0]: list(roblox_pids.values())[0]}
-    roblox_manager = RobloxManager(logger, roblox_pids=roblox_pids, mode=choice1, world=101, custom_place=custom_place)
+    roblox_manager = RobloxManager(RobloxTower, logger, roblox_pids=roblox_pids, mode=choice1, world=101, custom_sequence=custom_place)
     if roblox_pids is None:
         roblox_manager.all_start_instance([config.usernames[0]])
     while True:
