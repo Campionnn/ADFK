@@ -49,18 +49,19 @@ print("Choose between infinite farming or story progression")
 print("1: Infinite Farming")
 print("2: Story Progression")
 print("3: Tower of Eternity(only 1 account for now)")
-print("4: Create or Edit a Custom Placement")
+print("4: Auto Complete Portals")
+print("5: Create or Edit a Custom Placement")
 while True:
     try:
-        choice1 = int(input("Enter choice: "))
-        if choice1 in [1, 2, 3, 4]:
+        mode_choice = int(input("Enter choice: "))
+        if mode_choice in [1, 2, 3, 4, 5]:
             break
     except ValueError:
         pass
 
 roblox_pids = None
 custom_place = None
-if choice1 in [1, 2, 3]:
+if mode_choice in [1, 2, 3, 4]:
     print("Enter Roblox PIDs from running macro previously")
     print("Skips the steps for getting memory addresses on each instance")
     print("Can be found in the logs of the previous run")
@@ -102,7 +103,7 @@ if choice1 in [1, 2, 3]:
             print(custom_place)
 
 
-if choice1 == 1:
+if mode_choice == 1:
     print("Choose which world to farm in")
     print("1: Windmill Village")
     print("2: Haunted City")
@@ -119,13 +120,9 @@ if choice1 == 1:
                 break
         except ValueError:
             pass
-    roblox_manager = RobloxManager(RobloxInfinite, logger, roblox_pids=roblox_pids, mode=choice1, world=world_input, custom_sequence=custom_place)
-    if roblox_pids is None:
-        roblox_manager.all_start_instance()
-    while True:
-        roblox_manager.all_enter_infinite()
+    RobloxManager(RobloxInfinite, logger, roblox_pids=roblox_pids, mode=mode_choice, world=world_input, custom_sequence=custom_place)
 
-elif choice1 == 2:
+elif mode_choice == 2:
     print("Choose which world to start story progression in")
     print("1: Windmill Village")
     print("2: Haunted City")
@@ -156,21 +153,14 @@ elif choice1 == 2:
                 break
         except ValueError:
             pass
-    roblox_manager = RobloxManager(RobloxStory, logger, roblox_pids=roblox_pids, mode=choice1, world=world_input, level=chapter_input, custom_sequence=custom_place)
-    if roblox_pids is None:
-        roblox_manager.all_start_instance()
-    roblox_manager.all_enter_story()
+    RobloxManager(RobloxStory, logger, roblox_pids=roblox_pids, mode=mode_choice, world=world_input, level=chapter_input, custom_sequence=custom_place)
 
-elif choice1 == 3:
+elif mode_choice == 3:
     if roblox_pids is not None:
         roblox_pids = {list(roblox_pids.keys())[0]: list(roblox_pids.values())[0]}
-    roblox_manager = RobloxManager(RobloxTower, logger, roblox_pids=roblox_pids, mode=choice1, world=101, custom_sequence=custom_place)
-    if roblox_pids is None:
-        roblox_manager.all_start_instance([config.usernames[0]])
-    while True:
-        roblox_manager.enter_tower()
+    RobloxManager(RobloxTower, logger, roblox_pids=roblox_pids, mode=mode_choice, world=101, custom_sequence=custom_place)
 
-elif choice1 == 4:
+elif mode_choice == 5:
     root = tk.Tk()
     app = App(root)
     root.attributes('-topmost', True)

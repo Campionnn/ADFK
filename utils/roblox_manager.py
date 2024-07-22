@@ -40,6 +40,19 @@ class RobloxManager:
             self.logger.info(f"Roblox PIDs: {pids}")
             self.main_instance = [instance for instance in self.roblox_instances if instance.username == config.usernames[0]][0]
 
+        else:
+            if isinstance(roblox_type, RobloxInfinite):
+                self.all_start_instance()
+            elif isinstance(roblox_type, RobloxStory):
+                self.all_start_instance()
+                self.all_enter()
+                return
+            elif isinstance(roblox_type, RobloxTower):
+                self.all_start_instance([config.usernames[0]])
+
+            while True:
+                self.all_enter()
+
     def all_start_instance(self, usernames=None):
         if usernames is None:
             usernames = config.usernames
