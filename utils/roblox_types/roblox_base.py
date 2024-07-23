@@ -337,9 +337,6 @@ class RobloxBase(ABC):
             x += dx * step
             y += dy * step
 
-        if self.world == 101:
-            spiral_coords = spiral_coords[9:]
-
         self.spiral_coords = spiral_coords
 
     def play(self):

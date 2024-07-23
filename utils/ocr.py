@@ -13,10 +13,13 @@ except ImportError:
 pytesseract.pytesseract.tesseract_cmd = config.tesseract_path
 
 
-def find_text(image_input: np.ndarray, text, numbers=False):
+def find_text(image_input: np.ndarray, text, numbers=False, black_text=False):
     image = image_input.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
+    if black_text:
+        _, thresh = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY_INV)
+    else:
+        _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     if numbers:
         tesseract_config += '0123456789'
@@ -156,3 +159,71 @@ def read_current_wave(image_input: np.ndarray):
             except AttributeError:
                 return None
     return None
+
+
+portal_text = {
+    "demon": "demonportal",
+    "cursed": "cursedkingdomportal",
+    "ancient": "ancientdragonportal",
+    "solar": "solarportal",
+    "lunar": "lunarportal"
+}
+
+portal_numbers = {
+    1: "demon",
+    2: "cursed",
+    3: "ancient",
+    4: "solar",
+    5: "lunar"
+}
+
+rarity_numbers = {
+    1: "rare",
+    2: "epic",
+    3: "legendary",
+    4: "mythic",
+    5: "secret"
+}
+
+
+def word_in_text(word, text, threshold=0.8):
+    word_len = len(word)
+    for i in range(len(text) - word_len + 1):
+        substring = text[i:i + word_len]
+        similarity = difflib.SequenceMatcher(None, word, substring).ratio()
+        if similarity >= threshold:
+            return True
+    return False
+
+
+def find_portal(image_input, portal_type, portal_rarity):
+    portal_type = portal_numbers[portal_type]
+    portal_rarity = rarity_numbers[portal_rarity]
+    image = image_input.copy()
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
+    tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    result = pytesseract.image_to_data(thresh, config=tesseract_config)
+    result = result.split('\n')
+    for line in result:
+        line = line.split('\t')
+        if len(line) == 12 and difflib.SequenceMatcher(None, portal_type, line[11].lower()).ratio() > 0.8:
+            x, y, w, h = int(line[6]), int(line[7]), thresh.shape[0] // 9, thresh.shape[0] // 9
+            crop = thresh[y:y + h, x:x + w]
+            tesseract_config2 = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890()'
+            result2 = pytesseract.image_to_string(crop, config=tesseract_config2).lower()
+            # if "(" + rarity + ")" in result2:
+            #     count = int(re.search(r'\b([1-9]|10)x\b', result2).group(1))
+            #     return [count, x + w // 2, y + h // 2]
+            result2 = ''.join(result2.split())
+            if word_in_text(portal_text.get(portal_type), result2) and word_in_text("(" + portal_rarity + ")", result2):
+                return [x + w // 2, y + h // 2]
+    return None
+
+
+def find_all_text(image_input):
+    image = image_input.copy()
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
+    tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    return pytesseract.image_to_string(thresh, config=tesseract_config)

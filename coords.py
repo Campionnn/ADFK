@@ -31,6 +31,8 @@ story_play_pos = [-229.5482177734375, -270.2830810546875] # middle of story area
 story_play_pos_tolerance = 5.0
 story_enter_pos = [-259.55291748046875, -298.91363525390625]
 story_enter_pos_tolerance = 5.0
+portal_play_pos = [51.90908432006836, -334.33526611328125]
+portal_play_pos_tolerance = 1.0
 
 # Roblox in game coordinates for story
 # Windmill Village
@@ -83,7 +85,7 @@ swordsman_place_color = (90, 80, 180)
 swordsman_place_color_tolerance = 20
 # Snowy Woods
 snowy_sequence = "a"*2 + "s"*6
-snowy_place_pos = [-114.13101196289062, -181.58358764648438]
+snowy_place_pos = [-110.88480377197266, -181.0884552001953]
 snowy_place_pos_tolerance = 5.0
 snowy_place_rot = 270
 snowy_place_rot_tolerance = 1.0
@@ -107,3 +109,43 @@ tower_place_rot = 270
 tower_place_rot_tolerance = 1.0
 tower_place_color = (120, 80, 160)
 tower_place_color_tolerance = 2
+
+# Demon Portal
+demon_portal_place_pos = [307.4653625488281, 22.057796478271484]
+demon_portal_place_pos_tolerance = 5.0
+demon_portal_place_rot = 0
+demon_portal_place_rot_tolerance = 1.0
+demon_portal_place_color = (20, 20, 80)
+demon_portal_place_color_tolerance = 30
+
+# Cursed Kingdom Portal
+cursed_portal_place_pos = [799.6034545898438, 24.751083374023438]
+cursed_portal_place_pos_tolerance = 5.0
+cursed_portal_place_rot = 130
+cursed_portal_place_rot_tolerance = 1.0
+cursed_portal_place_color = (100, 10, 110)
+cursed_portal_place_color_tolerance = 10
+
+# Ancient Dragon Portal
+ancient_portal_place_pos = [-0.005415184888988733, -46.975921630859375]
+ancient_portal_place_pos_tolerance = 5.0
+ancient_portal_place_rot = 270
+ancient_portal_place_rot_tolerance = 1.0
+ancient_portal_place_color = (150, 150, 200)
+ancient_portal_place_color_tolerance = 30
+
+# Solar Temple Portal
+solar_portal_place_pos = [-0.03749369829893112, 10.5, -0.9848076701164246]
+solar_portal_place_pos_tolerance = 5.0
+solar_portal_place_rot = 270
+solar_portal_place_rot_tolerance = 1.0
+solar_portal_place_color = (50, 50, 150)
+solar_portal_place_color_tolerance = 5
+
+# Lunar Temple Portal
+lunar_portal_place_pos = [831.3306884765625, -63.77223205566406]
+lunar_portal_place_pos_tolerance = 5.0
+lunar_portal_place_rot = 90
+lunar_portal_place_rot_tolerance = 1.0
+lunar_portal_place_color = (150, 50, 150)
+lunar_portal_place_color_tolerance = 20

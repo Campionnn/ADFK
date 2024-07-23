@@ -9,6 +9,7 @@ from utils.roblox_types.roblox_base import RobloxBase
 from utils.roblox_types.roblox_infinite import RobloxInfinite
 from utils.roblox_types.roblox_story import RobloxStory
 from utils.roblox_types.roblox_tower import RobloxTower
+from utils.roblox_types.roblox_portal import RobloxPortal
 from utils.memory import get_pids_by_name
 try:
     import config_personal as config
@@ -40,10 +41,12 @@ class RobloxManager:
             self.logger.info(f"Roblox PIDs: {pids}")
             self.main_instance = [instance for instance in self.roblox_instances if instance.username == config.usernames[0]][0]
         else:
-            if isinstance(roblox_type, (RobloxInfinite, RobloxStory)):
+            if issubclass(roblox_type, (RobloxInfinite, RobloxStory, RobloxPortal)):
                 self.all_start_instance()
-            elif isinstance(roblox_type, RobloxTower):
+            elif issubclass(roblox_type, RobloxTower):
                 self.all_start_instance([config.usernames[0]])
+            else:
+                raise StartupException("Invalid roblox type")
 
         while True:
             if self.all_enter():
@@ -60,10 +63,9 @@ class RobloxManager:
             for pid in get_pids_by_name(self.roblox_exe):
                 try:
                     os.kill(pid, 15)
-                    self.all_start_instance()
-                    return
                 except OSError:
                     pass
+            self.all_start_instance()
         time.sleep(5)
         self.ensure_all_instance()
 
@@ -120,10 +122,9 @@ class RobloxManager:
                     for pid in get_pids_by_name(self.roblox_exe):
                         try:
                             os.kill(pid, 15)
-                            self.all_start_instance()
-                            return
                         except OSError:
                             pass
+                    self.all_start_instance()
                 return False
         return True
 
@@ -134,6 +135,10 @@ class RobloxManager:
             return self.all_enter_story()
         elif isinstance(self.main_instance, RobloxTower):
             return self.enter_tower()
+        elif isinstance(self.main_instance, RobloxPortal):
+            return self.all_enter_portal()
+        else:
+            raise StartupException("Invalid roblox type")
 
     def all_enter_infinite(self):
         assert isinstance(self.main_instance, RobloxInfinite)
@@ -323,6 +328,46 @@ class RobloxManager:
                         self.logger.debug("Lost")
                         self.all_leave_story_death()
                         break
+
+    def all_enter_portal(self):
+        assert isinstance(self.main_instance, RobloxPortal)
+        self.logger.debug(f"Entering portal for all accounts")
+        for instance in self.roblox_instances:
+            try:
+                instance.teleport()
+            except StartupException:
+                instance.close_instance()
+                self.ensure_all_instance()
+                self.all_enter_portal()
+        for instance in self.roblox_instances:
+            try:
+                instance.enter()
+            except (StartupException, MemoryException):
+                instance.close_instance()
+                self.ensure_all_instance()
+                self.all_click_leave()
+                self.all_enter_portal()
+        self.logger.debug(f"Starting portal")
+        self.main_instance.start()
+        time.sleep(2)
+        try:
+            self.main_instance.play()
+        except (PlayException, StartupException):
+            self.all_leave_story_wave()
+            return
+        if self.main_instance.custom_sequence is not None:
+            if not self.main_instance.do_custom_sequence():
+                self.all_leave_story_death()
+                return
+        else:
+            if not self.main_instance.place_all_towers(config.tower_hotkey, config.tower_cap, config.tower_cost):
+                self.all_leave_story_death()
+                return
+            self.logger.debug(f"Finished placing towers")
+            self.logger.debug(f"Upgrading towers")
+            if not self.main_instance.upgrade_all_towers(config.tower_cap):
+                self.all_leave_story_death()
+                return
 
     def all_click_leave(self):
         for instance in self.roblox_instances:
