@@ -40,10 +40,12 @@ class RobloxManager:
             self.logger.info(f"Roblox PIDs: {pids}")
             self.main_instance = [instance for instance in self.roblox_instances if instance.username == config.usernames[0]][0]
         else:
-            if isinstance(roblox_type, (RobloxInfinite, RobloxStory)):
+            if issubclass(roblox_type, (RobloxInfinite, RobloxStory)):
                 self.all_start_instance()
-            elif isinstance(roblox_type, RobloxTower):
+            elif issubclass(roblox_type, RobloxTower):
                 self.all_start_instance([config.usernames[0]])
+            else:
+                raise StartupException("Invalid roblox type")
 
         while True:
             if self.all_enter():
