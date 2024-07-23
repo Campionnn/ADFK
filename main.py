@@ -13,6 +13,7 @@ from utils.roblox_manager import RobloxManager
 from utils.roblox_types.roblox_infinite import RobloxInfinite
 from utils.roblox_types.roblox_story import RobloxStory
 from utils.roblox_types.roblox_tower import RobloxTower
+from utils.roblox_types.roblox_portal import RobloxPortal
 try:
     import config_personal as config
 except ImportError:
@@ -60,7 +61,7 @@ while True:
         pass
 
 roblox_pids = None
-custom_place = None
+custom_sequence = None
 if mode_choice in [1, 2, 3, 4]:
     print("Enter Roblox PIDs from running macro previously")
     print("Skips the steps for getting memory addresses on each instance")
@@ -81,9 +82,9 @@ if mode_choice in [1, 2, 3, 4]:
 
     print("Choose a custom placement to use")
     print("Leave blank and press enter if you want to use default placement")
-    custom_placements = [f for f in os.listdir("custom-sequence/") if f.endswith(".json")]
-    for i, placement in enumerate(custom_placements):
-        with open(f"custom-sequence/{placement}") as f:
+    custom_sequences = [f for f in os.listdir("custom-sequence/") if f.endswith(".json")]
+    for i, sequence in enumerate(custom_sequences):
+        with open(f"custom-sequence/{sequence}") as f:
             data = json.load(f)
             print(f"{i + 1}: {data['name']} - {data['description']}")
     while True:
@@ -91,16 +92,16 @@ if mode_choice in [1, 2, 3, 4]:
             custom_input = input("Enter choice: ")
             if custom_input:
                 custom_input = int(custom_input)
-                assert custom_input in range(1, len(custom_placements) + 1)
+                assert custom_input in range(1, len(custom_sequences) + 1)
                 break
             else:
                 break
         except (ValueError, AssertionError):
             pass
     if custom_input:
-        with open(f"custom-sequence/{custom_placements[custom_input - 1]}", "r") as f:
-            custom_place = json.load(f)
-            print(custom_place)
+        with open(f"custom-sequence/{custom_sequences[custom_input - 1]}", "r") as f:
+            custom_sequence = json.load(f)
+            print(custom_sequence)
 
 
 if mode_choice == 1:
@@ -120,7 +121,7 @@ if mode_choice == 1:
                 break
         except ValueError:
             pass
-    RobloxManager(RobloxInfinite, logger, roblox_pids=roblox_pids, mode=mode_choice, world=world_input, custom_sequence=custom_place)
+    RobloxManager(RobloxInfinite, logger, roblox_pids=roblox_pids, mode=mode_choice, world=world_input, custom_sequence=custom_sequence)
 
 elif mode_choice == 2:
     print("Choose which world to start story progression in")
@@ -153,12 +154,41 @@ elif mode_choice == 2:
                 break
         except ValueError:
             pass
-    RobloxManager(RobloxStory, logger, roblox_pids=roblox_pids, mode=mode_choice, world=world_input, level=chapter_input, custom_sequence=custom_place)
+    RobloxManager(RobloxStory, logger, roblox_pids=roblox_pids, mode=mode_choice, world=world_input, level=chapter_input, custom_sequence=custom_sequence)
 
 elif mode_choice == 3:
     if roblox_pids is not None:
         roblox_pids = {list(roblox_pids.keys())[0]: list(roblox_pids.values())[0]}
-    RobloxManager(RobloxTower, logger, roblox_pids=roblox_pids, mode=mode_choice, world=0, custom_sequence=custom_place)
+    RobloxManager(RobloxTower, logger, roblox_pids=roblox_pids, mode=mode_choice, world=0, custom_sequence=custom_sequence)
+
+elif mode_choice == 4:
+    print("Choose which portal to auto complete")
+    print("1: Demon Portal")
+    print("2: Cursed Kingdom Portal")
+    print("3: Ancient Dragon Portal")
+    print("4: Solar Temple Portal")
+    print("5: Lunar Temple Portal")
+    while True:
+        try:
+            portal_input = int(input("Enter choice: "))
+            if portal_input in [1, 2, 3, 4, 5]:
+                break
+        except ValueError:
+            pass
+    print("Choose which rarity to auto complete")
+    print("1: Rare")
+    print("2: Epic")
+    print("3: Legendary")
+    print("4: Mythic")
+    print("5: Secret")
+    while True:
+        try:
+            rarity_input = int(input("Enter choice: "))
+            if rarity_input in [1, 2, 3, 4, 5]:
+                break
+        except ValueError:
+            pass
+    RobloxManager(RobloxPortal, logger, roblox_pids=roblox_pids, mode=mode_choice, world=portal_input, level=rarity_input, custom_sequence=custom_sequence)
 
 elif mode_choice == 5:
     root = tk.Tk()

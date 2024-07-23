@@ -31,6 +31,8 @@ story_play_pos = [-229.5482177734375, -270.2830810546875] # middle of story area
 story_play_pos_tolerance = 5.0
 story_enter_pos = [-259.55291748046875, -298.91363525390625]
 story_enter_pos_tolerance = 5.0
+portal_play_pos = [51.90908432006836, -334.33526611328125]
+portal_play_pos_tolerance = 1.0
 
 # Roblox in game coordinates for story
 # Windmill Village
@@ -141,9 +143,9 @@ solar_portal_place_color = (50, 50, 150)
 solar_portal_place_color_tolerance = 5
 
 # Lunar Temple Portal
-# lunar_portal_place_pos
-# lunar_portal_place_pos_tolerance
-# lunar_portal_place_rot
-# lunar_portal_place_rot_tolerance
-# lunar_portal_place_color
-# lunar_portal_place_color_tolerance
+lunar_portal_place_pos = [831.3306884765625, -63.77223205566406]
+lunar_portal_place_pos_tolerance = 5.0
+lunar_portal_place_rot = 90
+lunar_portal_place_rot_tolerance = 1.0
+lunar_portal_place_color = (150, 50, 150)
+lunar_portal_place_color_tolerance = 20
