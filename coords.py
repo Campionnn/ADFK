@@ -83,7 +83,7 @@ swordsman_place_color = (90, 80, 180)
 swordsman_place_color_tolerance = 20
 # Snowy Woods
 snowy_sequence = "a"*2 + "s"*6
-snowy_place_pos = [-114.13101196289062, -181.58358764648438]
+snowy_place_pos = [-110.88480377197266, -181.0884552001953]
 snowy_place_pos_tolerance = 5.0
 snowy_place_rot = 270
 snowy_place_rot_tolerance = 1.0
@@ -107,3 +107,43 @@ tower_place_rot = 270
 tower_place_rot_tolerance = 1.0
 tower_place_color = (120, 80, 160)
 tower_place_color_tolerance = 2
+
+# Demon Portal
+demon_portal_place_pos = [307.4653625488281, 22.057796478271484]
+demon_portal_place_pos_tolerance = 5.0
+demon_portal_place_rot = 0
+demon_portal_place_rot_tolerance = 1.0
+demon_portal_place_color = (20, 20, 80)
+demon_portal_place_color_tolerance = 30
+
+# Cursed Kingdom Portal
+cursed_portal_place_pos = [799.6034545898438, 24.751083374023438]
+cursed_portal_place_pos_tolerance = 5.0
+cursed_portal_place_rot = 130
+cursed_portal_place_rot_tolerance = 1.0
+cursed_portal_place_color = (100, 10, 110)
+cursed_portal_place_color_tolerance = 10
+
+# Ancient Dragon Portal
+ancient_portal_place_pos = [-0.005415184888988733, -46.975921630859375]
+ancient_portal_place_pos_tolerance = 5.0
+ancient_portal_place_rot = 270
+ancient_portal_place_rot_tolerance = 1.0
+ancient_portal_place_color = (150, 150, 200)
+ancient_portal_place_color_tolerance = 30
+
+# Solar Temple Portal
+solar_portal_place_pos = [-0.03749369829893112, 10.5, -0.9848076701164246]
+solar_portal_place_pos_tolerance = 5.0
+solar_portal_place_rot = 270
+solar_portal_place_rot_tolerance = 1.0
+solar_portal_place_color = (50, 50, 150)
+solar_portal_place_color_tolerance = 5
+
+# Lunar Temple Portal
+# lunar_portal_place_pos
+# lunar_portal_place_pos_tolerance
+# lunar_portal_place_rot
+# lunar_portal_place_rot_tolerance
+# lunar_portal_place_color
+# lunar_portal_place_color_tolerance
