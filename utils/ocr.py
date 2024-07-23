@@ -158,6 +158,25 @@ def read_current_wave(image_input: np.ndarray):
     return None
 
 
+portal_text = {
+    "demon": "demonportal",
+    "cursed": "cursedkingdomportal",
+    "ancient": "ancientdragonportal",
+    "solar": "solarportal",
+    "lunar": "lunarportal"
+}
+
+
+def word_in_text(word, text, threshold=0.8):
+    word_len = len(word)
+    for i in range(len(text) - word_len + 1):
+        substring = text[i:i + word_len]
+        similarity = difflib.SequenceMatcher(None, word, substring).ratio()
+        if similarity >= threshold:
+            return True
+    return False
+
+
 def find_portal(image_input, type, rarity):
     image = image_input.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -175,6 +194,7 @@ def find_portal(image_input, type, rarity):
             # if "(" + rarity + ")" in result2:
             #     count = int(re.search(r'\b([1-9]|10)x\b', result2).group(1))
             #     return [count, x + w // 2, y + h // 2]
-            if "(" + rarity + ")" in result2:
+            result2 = ''.join(result2.split())
+            if word_in_text(portal_text.get(type), result2) and word_in_text("(" + rarity + ")", result2):
                 return [x + w // 2, y + h // 2]
     return None
