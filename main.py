@@ -158,7 +158,7 @@ elif mode_choice == 2:
 elif mode_choice == 3:
     if roblox_pids is not None:
         roblox_pids = {list(roblox_pids.keys())[0]: list(roblox_pids.values())[0]}
-    RobloxManager(RobloxTower, logger, roblox_pids=roblox_pids, mode=mode_choice, world=101, custom_sequence=custom_place)
+    RobloxManager(RobloxTower, logger, roblox_pids=roblox_pids, mode=mode_choice, world=0, custom_sequence=custom_place)
 
 elif mode_choice == 5:
     root = tk.Tk()
