@@ -156,3 +156,25 @@ def read_current_wave(image_input: np.ndarray):
             except AttributeError:
                 return None
     return None
+
+
+def find_portal(image_input, type, rarity):
+    image = image_input.copy()
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
+    tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    result = pytesseract.image_to_data(thresh, config=tesseract_config)
+    result = result.split('\n')
+    for line in result:
+        line = line.split('\t')
+        if len(line) == 12 and difflib.SequenceMatcher(None, type, line[11].lower()).ratio() > 0.8:
+            x, y, w, h = int(line[6]), int(line[7]), thresh.shape[0] // 9, thresh.shape[0] // 9
+            crop = thresh[y:y + h, x:x + w]
+            tesseract_config2 = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890()'
+            result2 = pytesseract.image_to_string(crop, config=tesseract_config2).lower()
+            # if "(" + rarity + ")" in result2:
+            #     count = int(re.search(r'\b([1-9]|10)x\b', result2).group(1))
+            #     return [count, x + w // 2, y + h // 2]
+            if "(" + rarity + ")" in result2:
+                return [x + w // 2, y + h // 2]
+    return None
