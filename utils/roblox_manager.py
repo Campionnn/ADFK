@@ -205,7 +205,7 @@ class RobloxManager:
                 except StartupException:
                     instance.close_instance()
                     self.ensure_all_instance()
-                    self.all_enter_story()
+                    return
             for instance in self.roblox_instances:
                 try:
                     instance.enter()
@@ -213,7 +213,7 @@ class RobloxManager:
                     instance.close_instance()
                     self.ensure_all_instance()
                     self.all_click_leave()
-                    self.all_enter_story()
+                    return
             self.logger.debug(f"Starting story")
             self.main_instance.start()
             time.sleep(2)
@@ -222,8 +222,7 @@ class RobloxManager:
                     self.main_instance.play()
                 except (PlayException, StartupException):
                     self.all_leave_story_wave()
-                    self.all_enter_story()
-
+                    return
                 if self.main_instance.custom_sequence is not None:
                     if not self.main_instance.do_custom_sequence():
                         time.sleep(0.5)
@@ -274,7 +273,7 @@ class RobloxManager:
         except StartupException:
             self.main_instance.close_instance()
             self.ensure_all_instance()
-            self.enter_tower()
+            return
         self.logger.debug(f"Starting tower")
         self.main_instance.start()
         time.sleep(2)
@@ -338,7 +337,7 @@ class RobloxManager:
             except StartupException:
                 instance.close_instance()
                 self.ensure_all_instance()
-                self.all_enter_portal()
+                return
         for instance in self.roblox_instances:
             try:
                 instance.enter()
@@ -346,9 +345,16 @@ class RobloxManager:
                 instance.close_instance()
                 self.ensure_all_instance()
                 self.all_click_leave()
-                self.all_enter_portal()
+                return
         self.logger.debug(f"Starting portal")
-        self.main_instance.start()
+        for instance in self.roblox_instances:
+            try:
+                if instance.start():
+                    break
+            except StartupException:
+                instance.close_instance()
+                self.ensure_all_instance()
+                return
         time.sleep(2)
         try:
             self.main_instance.play()

@@ -127,9 +127,9 @@ cursed_portal_place_color = (100, 10, 110)
 cursed_portal_place_color_tolerance = 10
 
 # Ancient Dragon Portal
-ancient_portal_place_pos = [-0.005415184888988733, -46.975921630859375]
+ancient_portal_place_pos = [-2.909724712371826, 30.314998626708984]
 ancient_portal_place_pos_tolerance = 5.0
-ancient_portal_place_rot = 270
+ancient_portal_place_rot = 0
 ancient_portal_place_rot_tolerance = 1.0
 ancient_portal_place_color = (150, 150, 200)
 ancient_portal_place_color_tolerance = 30

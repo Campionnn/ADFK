@@ -100,19 +100,29 @@ class RobloxPortal(RobloxBase):
         if self.username == config.usernames[0]:
             self.logger.debug(f"Looking for {self.rarity_names.get(self.level)} {self.portal_names.get(self.world)} portal to open")
             found = False
-            for instance in self.roblox_instances:
-                if instance.open_portal():
-                    found = True
-                    break
-            if not found:
-                raise StartupException("Could not find portal")
+            attempts = 0
+            while not found:
+                if attempts > 5:
+                    raise StartupException("Could not find portal to open")
+                for instance in self.roblox_instances:
+                    if instance.open_portal():
+                        found = True
+                        break
+                attempts += 1
         self.set_foreground()
+        time.sleep(0.5)
+        self.click_text("x")
         time.sleep(0.5)
         self.controller.move_forward(0.2)
         time.sleep(0.5)
         self.controller.reset()
+        time.sleep(0.5)
         keyboard.press("e")
-        time.sleep(1.5)
+        time.sleep(0.1)
+        keyboard.release("e")
+        time.sleep(0.1)
+        keyboard.press("e")
+        time.sleep(3)
         keyboard.release("e")
 
 
@@ -133,10 +143,19 @@ class RobloxPortal(RobloxBase):
             portal_coords = ocr.find_portal(self.screenshot(), self.world, self.level)
             if portal_coords is not None:
                 autoit.mouse_click("left", portal_coords[0], portal_coords[1])
+                time.sleep(0.1)
+                autoit.mouse_move(int(rect[2] // 8 * 4.8), rect[3] // 2)
                 time.sleep(0.5)
-                self.click_text("use")
+                if not self.click_text("use"):
+                    self.click_text("x")
+                    return False
                 time.sleep(0.5)
-                self.click_text("open")
+                if not self.click_text("open"):
+                    if not self.click_text("openportal"):
+                        self.click_text("back")
+                        time.sleep(0.5)
+                        self.click_text("x")
+                        return False
                 return True
             autoit.mouse_wheel("down", 4)
             new_text = ocr.find_all_text(self.screenshot())
@@ -146,4 +165,4 @@ class RobloxPortal(RobloxBase):
     def start(self):
         self.set_foreground()
         time.sleep(0.5)
-        self.click_text("start")
+        return self.click_text("start")

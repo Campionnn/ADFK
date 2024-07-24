@@ -404,6 +404,10 @@ class RobloxBase(ABC):
                         if not self.upgrade_tower(tower_id):
                             return False
             time.sleep(0.5)
+        while True:
+            if self.check_over():
+                return False
+            time.sleep(0.5)
 
     def place_tower(self, tower_id, hotkey, location, cost):
         self.logger.debug(f"Placing tower with id {tower_id} at {location}")

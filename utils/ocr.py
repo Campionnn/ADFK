@@ -23,12 +23,14 @@ def find_text(image_input: np.ndarray, text, numbers=False, black_text=False):
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     if numbers:
         tesseract_config += '0123456789'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config)
+    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
         if len(line) == 12 and difflib.SequenceMatcher(None, text, line[11].lower()).ratio() > 0.8:
             x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
+            if text == "openportal":
+                return x, y+h*2
             return x+w//2, y+h//2
         elif text == "playagain" or text == "backtolobby":
             if len(line) == 12 and difflib.SequenceMatcher(None, "playagainbacktolobby", line[11].lower()).ratio() > 0.8:
@@ -57,7 +59,7 @@ def find_fast_travel(image_input: np.ndarray, location, tolerance=50, ratio=3, u
         cv2.drawContours(mask, contours, -1, (255, 255, 255), cv2.FILLED)
         crop = cv2.bitwise_and(crop, mask)
 
-    result = pytesseract.image_to_data(crop, config=f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ').lower()
+    result = pytesseract.image_to_data(crop, config=f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', timeout=10).lower()
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -94,7 +96,7 @@ def read_upgrade_cost(image_input: np.ndarray):
         crop = crop[y:y + h, x + w//4:x + w]
         gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
         _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
-        text = str(pytesseract.image_to_string(thresh, config=f'--psm 8 -c tessedit_char_whitelist=0123456789')).strip()
+        text = str(pytesseract.image_to_string(thresh, config=f'--psm 8 -c tessedit_char_whitelist=0123456789', timeout=10)).strip()
         if text == "":
             return None
         return [int(text), x + w // 2, (y + h // 2) + (image.shape[0] // 2)]
@@ -131,7 +133,7 @@ def read_current_money(image_input: np.ndarray):
     try:
         crop = gray[y:y + h, x:x + w]
         text = str(
-            pytesseract.image_to_string(crop, config='--psm 8 --oem 3 -c tessedit_char_whitelist=0123456789')).strip()
+            pytesseract.image_to_string(crop, config='--psm 8 --oem 3 -c tessedit_char_whitelist=0123456789', timeout=10)).strip()
         if text == "":
             return None
         return int(text)
@@ -145,7 +147,7 @@ def read_current_wave(image_input: np.ndarray):
     _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
     kernel = np.ones((3, 3), np.uint8)
     thresh = cv2.erode(thresh, kernel, iterations=1)
-    result = pytesseract.image_to_string(thresh, config=f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
+    result = pytesseract.image_to_string(thresh, config=f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', timeout=10)
     result = result.split('\n')
     for line in result:
         line = line.lower()
@@ -203,7 +205,7 @@ def find_portal(image_input, portal_type, portal_rarity):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config)
+    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -211,13 +213,13 @@ def find_portal(image_input, portal_type, portal_rarity):
             x, y, w, h = int(line[6]), int(line[7]), thresh.shape[0] // 9, thresh.shape[0] // 9
             crop = thresh[y:y + h, x:x + w]
             tesseract_config2 = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890()'
-            result2 = pytesseract.image_to_string(crop, config=tesseract_config2).lower()
+            result2 = pytesseract.image_to_string(crop, config=tesseract_config2, timeout=10).lower()
             # if "(" + rarity + ")" in result2:
             #     count = int(re.search(r'\b([1-9]|10)x\b', result2).group(1))
             #     return [count, x + w // 2, y + h // 2]
             result2 = ''.join(result2.split())
             if word_in_text(portal_text.get(portal_type), result2) and word_in_text("(" + portal_rarity + ")", result2):
-                return [x + w // 2, y + h // 2]
+                return [x + w // 2, y + h // 4]
     return None
 
 
@@ -226,4 +228,4 @@ def find_all_text(image_input):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    return pytesseract.image_to_string(thresh, config=tesseract_config)
+    return pytesseract.image_to_string(thresh, config=tesseract_config, timeout=10)
