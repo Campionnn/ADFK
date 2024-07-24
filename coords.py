@@ -23,7 +23,7 @@ fast_travel_sequence = "d"
 # World you want to farm (Windmill Village)
 world_sequence = "a" + "s"
 # Settings button
-settings_sequence = "a"*2
+settings_sequence = "w"*2 + "a"*2
 
 
 # Roblox in game coordinates for lobby
