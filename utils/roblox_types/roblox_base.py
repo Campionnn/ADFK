@@ -247,6 +247,8 @@ class RobloxBase(ABC):
         return matching_percentage > self.place_color_tolerance
 
     def check_crash(self, responsive=True):
+        if self.pid is None:
+            raise StartupException("Roblox pid does not exist")
         if not psutil.pid_exists(self.pid):
             raise StartupException("Roblox instance crashed")
         if responsive:
@@ -593,6 +595,13 @@ class RobloxBase(ABC):
     def leave_wave(self):
         self.set_foreground()
         time.sleep(1)
+        if self.username == config.usernames[0]:
+            if len(self.invalid_towers) > 0:
+                autoit.mouse_click("left", self.invalid_towers[0][0], self.invalid_towers[0][1])
+            else:
+                rect = self.get_window_rect()
+                autoit.mouse_click("left", rect[0] + rect[2] // 2, rect[1] + rect[3] // 2)
+            time.sleep(0.5)
         self.click_nav_rect(coords.settings_sequence, "Could not find settings button", restart=False)
         time.sleep(0.25)
         text = "leavegame"
