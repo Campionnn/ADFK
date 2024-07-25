@@ -27,6 +27,13 @@ def find_text(image_input: np.ndarray, text, numbers=False, black_text=False):
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
+        if text == "units":
+            if len(line) == 12:
+                keywords = ["units", "items", "quests", "guilds"]
+                for keyword in keywords:
+                    if difflib.SequenceMatcher(None, keyword, line[11].lower()).ratio() > 0.8:
+                        x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
+                        return x + w // 2, y + h // 2
         if len(line) == 12 and difflib.SequenceMatcher(None, text, line[11].lower()).ratio() > 0.8:
             x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
             if text == "openportal":
