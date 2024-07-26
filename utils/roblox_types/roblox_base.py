@@ -351,7 +351,7 @@ class RobloxBase(ABC):
     def play(self):
         self.placed_towers = {}
         self.invalid_towers = []
-        self.current_wave = [0]
+        self.current_wave = [0, 0.0]
         self.set_foreground()
         time.sleep(1)
         self.wait_game_load("story")
