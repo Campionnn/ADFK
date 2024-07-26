@@ -132,7 +132,7 @@ ancient_portal_place_pos_tolerance = 5.0
 ancient_portal_place_rot = 0
 ancient_portal_place_rot_tolerance = 1.0
 ancient_portal_place_color = (150, 150, 200)
-ancient_portal_place_color_tolerance = 30
+ancient_portal_place_color_tolerance = 20
 
 # Solar Temple Portal
 solar_portal_place_pos = [-0.03749369829893112, 10.5, -0.9848076701164246]
