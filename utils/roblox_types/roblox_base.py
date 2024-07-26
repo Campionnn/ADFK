@@ -486,7 +486,7 @@ class RobloxBase(ABC):
         if self.find_text("backtolobby") is not None:
             self.wave_checker.stop()
             return True
-        if time.time() - self.current_wave[1] > 300:
+        if self.current_wave[1] != 0 and time.time() - self.current_wave[1] > 300:
             self.logger.warning("Wave lasted for over 5 minutes. Manually leaving")
             self.wave_checker.stop()
             return True
