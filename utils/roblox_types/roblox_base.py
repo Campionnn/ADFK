@@ -424,6 +424,7 @@ class RobloxBase(ABC):
         while current_money is None or current_money < cost:
             time.sleep(0.1)
             if time.time() - start > 60:
+                self.logger.debug(f"Timed out placing tower: {tower_id}")
                 return True
             if count % 10 == 0 and self.check_over():
                 return False
@@ -452,8 +453,11 @@ class RobloxBase(ABC):
 
     def upgrade_tower(self, tower_id, skip=False):
         self.logger.debug(f"Upgrading tower with id {tower_id}")
-        x, y = self.placed_towers.get(tower_id)
-        autoit.mouse_click("left", x, y)
+        tower_coords = self.placed_towers.get(tower_id)
+        if tower_coords is None:
+            self.logger.warning(f"Failed to find tower with id: {tower_id}")
+            return False
+        autoit.mouse_click("left", tower_coords[0], tower_coords[1])
         time.sleep(0.1)
         start = time.time()
         count = 0
