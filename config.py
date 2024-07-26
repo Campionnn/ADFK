@@ -6,8 +6,10 @@ kill_key = "del"
 logging_level = "debug"
 # Tesseract OCR Path. Default Location: r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 tesseract_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-# Which wave to stop at and leave the game ex: 31
+# Which wave to stop at and leave the game during infinite ex: 31
 wave_stop = 31
+
+# Next 3 settings are only used when not using a custom sequence
 # Tower hotkey that you want main account to use ex: "1"
 tower_hotkey = "1"
 # Tower cap for the tower above ex: 3

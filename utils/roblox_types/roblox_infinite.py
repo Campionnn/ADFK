@@ -146,9 +146,7 @@ class RobloxInfinite(RobloxBase):
         self.click_text("start")
 
     def check_over(self):
-        if self.find_text("backtolobby") is not None:
-            self.wave_checker.stop()
-            return True
+        super().check_over()
         if self.current_wave[0] >= config.wave_stop:
             self.wave_checker.stop()
             time.sleep(3)

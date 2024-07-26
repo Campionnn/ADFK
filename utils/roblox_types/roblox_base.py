@@ -28,6 +28,7 @@ from utils.repeated_timer import RepeatedTimer
 ROBLOX_EXE = "RobloxPlayerBeta.exe"
 PLACE_ID = "17017769292"
 
+
 class RobloxBase(ABC):
     def __init__(self, roblox_instances, logger: logging.Logger, controller: control.Control, username, world, level, custom_sequence, pid=None, y_addrs=None):
         self.roblox_instances = roblox_instances
@@ -51,7 +52,8 @@ class RobloxBase(ABC):
         self.spiral_coords = []
         self.placed_towers = {}
         self.invalid_towers = []
-        self.current_wave = [0]
+        self.current_wave = [0, 0.0]
+        self.afk_time = 0.0
         self.wave_checker = None
 
     def start_account(self):
@@ -341,6 +343,11 @@ class RobloxBase(ABC):
 
         self.spiral_coords = spiral_coords
 
+    def check_afk(self):
+        if time.time() - self.afk_time > 300:
+            self.anti_afk()
+            self.afk_time = time.time()
+
     def play(self):
         self.placed_towers = {}
         self.invalid_towers = []
@@ -380,29 +387,23 @@ class RobloxBase(ABC):
         self.set_foreground()
         time.sleep(0.5)
         self.wave_checker = RepeatedTimer(1, self.check_wave)
-        start = time.time()
+        self.afk_time = time.time()
         for action in self.custom_sequence.get('actions'):
             if action.get('type') == 'place':
                 for tower_id in action.get("ids"):
-                    if time.time() - start > 300:
-                        self.anti_afk()
-                        start = time.time()
+                    self.check_afk()
                     if not self.place_tower(tower_id, tower_id[0], action.get('location'), int(self.custom_sequence.get('costs').get(tower_id[0]))):
                         return False
             elif action.get('type') == 'upgrade':
                 if int(action.get('amount')) == 0:
                     while True:
                         for tower_id in action.get("ids"):
-                            if time.time() - start > 300:
-                                self.anti_afk()
-                                start = time.time()
+                            self.check_afk()
                             if not self.upgrade_tower(tower_id, True):
                                 return False
                 for _ in range(int(action.get('amount'))):
                     for tower_id in action.get("ids"):
-                        if time.time() - start > 300:
-                            self.anti_afk()
-                            start = time.time()
+                        self.check_afk()
                         if not self.upgrade_tower(tower_id):
                             return False
             time.sleep(0.5)
@@ -423,8 +424,9 @@ class RobloxBase(ABC):
         count = 0
         while current_money is None or current_money < cost:
             time.sleep(0.1)
+            self.check_afk()
             if time.time() - start > 60:
-                self.logger.debug(f"Timed out placing tower: {tower_id}")
+                self.logger.warning(f"Timed out placing tower: {tower_id}")
                 return True
             if count % 10 == 0 and self.check_over():
                 return False
@@ -462,7 +464,9 @@ class RobloxBase(ABC):
         start = time.time()
         count = 0
         while True:
+            self.check_afk()
             if time.time() - start > 60:
+                self.logger.warning(f"Timed out upgrading tower: {tower_id}")
                 return True
             if time.time() - start > 1 and skip:
                 return True
@@ -480,6 +484,10 @@ class RobloxBase(ABC):
 
     def check_over(self):
         if self.find_text("backtolobby") is not None:
+            self.wave_checker.stop()
+            return True
+        if time.time() - self.current_wave[1] > 300:
+            self.logger.warning("Wave lasted for over 5 minutes. Manually leaving")
             self.wave_checker.stop()
             return True
 
@@ -523,9 +531,7 @@ class RobloxBase(ABC):
         time.sleep(1)
         start = time.time()
         while True:
-            if time.time() - start > 300:
-                self.anti_afk()
-                start = time.time()
+            self.check_afk()
 
             if tower_cap == 0:
                 if self.check_over():
@@ -555,6 +561,7 @@ class RobloxBase(ABC):
         wave = ocr.read_current_wave(screen)
         if wave is not None and wave != self.current_wave[0]:
             self.current_wave[0] = wave
+            self.current_wave[1] = time.time()
             self.logger.debug(f"Detected wave: {wave}")
 
     def anti_afk(self):

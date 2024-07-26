@@ -112,11 +112,11 @@ class RobloxPortal(RobloxBase):
         self.set_foreground()
         time.sleep(0.5)
         self.click_text("x")
-        time.sleep(0.5)
+        time.sleep(0.1)
         self.controller.move_forward(0.2)
         time.sleep(0.5)
         self.controller.reset()
-        time.sleep(0.5)
+        time.sleep(0.1)
         keyboard.press("e")
         time.sleep(0.1)
         keyboard.release("e")
@@ -124,7 +124,6 @@ class RobloxPortal(RobloxBase):
         keyboard.press("e")
         time.sleep(3)
         keyboard.release("e")
-
 
     def open_portal(self):
         self.set_foreground()
