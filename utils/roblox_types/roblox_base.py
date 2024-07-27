@@ -67,7 +67,11 @@ class RobloxBase(ABC):
         }
         if config.password != "":
             params["Password"] = config.password
-        result = requests.get(f"http://localhost:{config.port}/LaunchAccount", params=params)
+        try:
+            result = requests.get(f"http://localhost:{config.port}/LaunchAccount", params=params)
+        except requests.exceptions.ConnectionError:
+            self.logger.error("Could not connect to Roblox Account Manager. Make sure it is running and all settings are correct")
+            os._exit(0)
         if result.status_code != 200:
             raise StartupException(f"Failed to launch Roblox instance for {self.username}")
 
