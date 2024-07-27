@@ -99,24 +99,19 @@ class RobloxPortal(RobloxBase):
     def enter(self, depth=0):
         if self.username == config.usernames[0]:
             if self.level == 6:
-                # look for portals in descending rarity starting at mythic
-                # on every enter should look for mythic again
                 rarity = 4
-                while rarity > 0:
-                    self.logger.debug(f"Looking for {self.rarity_names.get(rarity)} {self.portal_names.get(self.world)} portal to open")
-                    found = False
-                    attempts = 0
-                    while not found:
-                        if attempts > 5:
-                            raise StartupException("Could not find portal to open")
-                        for instance in self.roblox_instances:
-                            if instance.open_portal(rarity):
-                                found = True
-                                break
-                        attempts += 1
+                found = False
+                while rarity > 0 and not found:
+                    self.logger.debug(f"Looking for {self.rarity_names.get(rarity)} {self.portal_names.get(self.world)} to open")
+                    for instance in self.roblox_instances:
+                        if instance.open_portal(rarity):
+                            found = True
+                            break
                     rarity -= 1
+                if not found:
+                    raise StartupException("Could not find portal to open")
             else:
-                self.logger.debug(f"Looking for {self.rarity_names.get(self.level)} {self.portal_names.get(self.world)} portal to open")
+                self.logger.debug(f"Looking for {self.rarity_names.get(self.level)} {self.portal_names.get(self.world)} to open")
                 found = False
                 attempts = 0
                 while not found:
@@ -179,6 +174,7 @@ class RobloxPortal(RobloxBase):
             autoit.mouse_wheel("down", 4)
             new_text = ocr.find_all_text(self.screenshot())
         self.logger.debug(f"Could not find portal for {self.username}")
+        self.click_text("x")
         return False
 
     def start(self):

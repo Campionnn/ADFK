@@ -72,6 +72,7 @@ class RobloxBase(ABC):
         except requests.exceptions.ConnectionError:
             self.logger.error("Could not connect to Roblox Account Manager. Make sure it is running and all settings are correct")
             os._exit(0)
+            return
         if result.status_code != 200:
             raise StartupException(f"Failed to launch Roblox instance for {self.username}")
 
