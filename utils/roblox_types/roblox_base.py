@@ -447,10 +447,12 @@ class RobloxBase(ABC):
                 if not self.check_placement():
                     self.logger.debug(f"Placed tower at {x}, {y}")
                     self.placed_towers[tower_id] = (x, y)
+                    keyboard.send("c")
                     return True
                 self.invalid_towers.append((x, y))
             count += 1
         self.logger.warning("Could not place tower")
+        keyboard.send("c")
         return False
 
     def upgrade_tower(self, tower_id, skip=False):
@@ -521,15 +523,16 @@ class RobloxBase(ABC):
                     if not self.check_placement():
                         self.logger.debug(f"Placed tower at {x}, {y}")
                         self.placed_towers[(x, y)] = (x, y)
+                        keyboard.send("c")
                         break
                     self.invalid_towers.append((x, y))
                 count += 1
+        keyboard.send("c")
         return True
 
     def upgrade_all_towers(self, tower_cap):
         self.set_foreground()
         time.sleep(1)
-        start = time.time()
         while True:
             self.check_afk()
 
