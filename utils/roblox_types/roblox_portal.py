@@ -65,13 +65,13 @@ class RobloxPortal(RobloxBase):
                 self.place_rot_tolerance = coords.solar_portal_place_rot_tolerance
                 self.place_color = coords.solar_portal_place_color
                 self.place_color_tolerance = coords.solar_portal_place_color_tolerance
-            # case 5:
-            #     self.place_pos = coords.lunar_portal_place_pos
-            #     self.place_pos_tolerance = coords.lunar_portal_place_pos_tolerance
-            #     self.place_rot = coords.lunar_portal_place_rot
-            #     self.place_rot_tolerance = coords.lunar_portal_place_rot_tolerance
-            #     self.place_color = coords.lunar_portal_place_color
-            #     self.place_color_tolerance = coords.lunar_portal_place_color_tolerance
+            case 5:
+                self.place_pos = coords.lunar_portal_place_pos
+                self.place_pos_tolerance = coords.lunar_portal_place_pos_tolerance
+                self.place_rot = coords.lunar_portal_place_rot
+                self.place_rot_tolerance = coords.lunar_portal_place_rot_tolerance
+                self.place_color = coords.lunar_portal_place_color
+                self.place_color_tolerance = coords.lunar_portal_place_color_tolerance
             case _:
                 raise ValueError("Invalid portal choice")
 
@@ -98,17 +98,35 @@ class RobloxPortal(RobloxBase):
 
     def enter(self, depth=0):
         if self.username == config.usernames[0]:
-            self.logger.debug(f"Looking for {self.rarity_names.get(self.level)} {self.portal_names.get(self.world)} portal to open")
-            found = False
-            attempts = 0
-            while not found:
-                if attempts > 5:
-                    raise StartupException("Could not find portal to open")
-                for instance in self.roblox_instances:
-                    if instance.open_portal():
-                        found = True
-                        break
-                attempts += 1
+            if self.level == 6:
+                # look for portals in descending rarity starting at mythic
+                # on every enter should look for mythic again
+                rarity = 4
+                while rarity > 0:
+                    self.logger.debug(f"Looking for {self.rarity_names.get(rarity)} {self.portal_names.get(self.world)} portal to open")
+                    found = False
+                    attempts = 0
+                    while not found:
+                        if attempts > 5:
+                            raise StartupException("Could not find portal to open")
+                        for instance in self.roblox_instances:
+                            if instance.open_portal(rarity):
+                                found = True
+                                break
+                        attempts += 1
+                    rarity -= 1
+            else:
+                self.logger.debug(f"Looking for {self.rarity_names.get(self.level)} {self.portal_names.get(self.world)} portal to open")
+                found = False
+                attempts = 0
+                while not found:
+                    if attempts > 5:
+                        raise StartupException("Could not find portal to open")
+                    for instance in self.roblox_instances:
+                        if instance.open_portal():
+                            found = True
+                            break
+                    attempts += 1
         self.set_foreground()
         time.sleep(0.5)
         self.click_text("x")
@@ -125,7 +143,9 @@ class RobloxPortal(RobloxBase):
         time.sleep(3)
         keyboard.release("e")
 
-    def open_portal(self):
+    def open_portal(self, level=None):
+        if level is None:
+            level = self.level
         self.set_foreground()
         time.sleep(0.5)
         self.controller.zoom_in()
@@ -139,7 +159,7 @@ class RobloxPortal(RobloxBase):
         new_text = "o.o"
         while difflib.SequenceMatcher(None, previous_text, new_text).ratio() < 0.9:
             previous_text = new_text
-            portal_coords = ocr.find_portal(self.screenshot(), self.world, self.level)
+            portal_coords = ocr.find_portal(self.screenshot(), self.world, level)
             if portal_coords is not None:
                 autoit.mouse_click("left", portal_coords[0], portal_coords[1])
                 time.sleep(0.1)

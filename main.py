@@ -181,10 +181,11 @@ elif mode_choice == 4:
     print("3: Legendary")
     print("4: Mythic")
     print("5: Secret")
+    print("6: All in Descending Order (except secret)")
     while True:
         try:
             rarity_input = int(input("Enter choice: "))
-            if rarity_input in [1, 2, 3, 4, 5]:
+            if rarity_input in [1, 2, 3, 4, 5, 6]:
                 break
         except ValueError:
             pass
