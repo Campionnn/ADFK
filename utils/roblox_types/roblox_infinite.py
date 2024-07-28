@@ -66,7 +66,7 @@ class RobloxInfinite(RobloxBase):
                 self.place_rot = coords.swordsman_place_rot
                 self.place_rot_tolerance = coords.swordsman_place_rot_tolerance
                 self.place_color = coords.swordsman_place_color
-                self.place_color_tolerance = coords.swordsman_place_color
+                self.place_color_tolerance = coords.swordsman_place_color_tolerance
             case 7:
                 self.world_sequence = coords.snowy_sequence
                 self.place_pos = coords.snowy_place_pos
