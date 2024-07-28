@@ -475,7 +475,7 @@ class RobloxBase(ABC):
             if time.time() - start > 60:
                 self.logger.warning(f"Timed out upgrading tower: {tower_id}")
                 return True
-            if time.time() - start > 1 and skip:
+            if skip and time.time() - start > 1:
                 return True
             if count % 10 == 0 and self.check_over():
                 return False
