@@ -199,7 +199,7 @@ class RobloxPortal(RobloxBase):
             previous_text = new_text
             rarity = ocr.find_best_portal(self.screenshot(), self.world)
             if rarity is not None:
-                if rarity > best_portal and rarity != 5:
+                if rarity != 5 and rarity > best_portal:
                     best_portal = rarity
                     if best_portal == 4:
                         break
@@ -208,7 +208,6 @@ class RobloxPortal(RobloxBase):
         self.logger.debug(f"Best portal for {self.username} is {self.rarity_names.get(best_portal)}")
         self.click_text("x")
         return best_portal
-
 
     def start(self):
         self.set_foreground()
