@@ -150,6 +150,7 @@ class RobloxPortal(RobloxBase):
         time.sleep(1)
         rect = self.get_window_rect()
         autoit.mouse_move(int(rect[2]//8*4.8), rect[3]//2)
+        time.sleep(0.2)
         previous_text = ""
         new_text = "o.o"
         while difflib.SequenceMatcher(None, previous_text, new_text).ratio() < 0.9:
@@ -171,7 +172,7 @@ class RobloxPortal(RobloxBase):
                         self.click_text("x")
                         return False
                 return True
-            autoit.mouse_wheel("down", 4)
+            autoit.mouse_wheel("down", 3)
             new_text = ocr.find_all_text(self.screenshot())
         self.logger.debug(f"Could not find portal for {self.username}")
         self.click_text("x")
