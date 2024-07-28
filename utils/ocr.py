@@ -194,6 +194,8 @@ rarity_numbers = {
     5: "secret"
 }
 
+split_lines = [5.106, 3.609, 2.795, 2.278, 1.922, 1.664]
+
 
 def word_in_text(word, text, threshold=0.8):
     word_len = len(word)
@@ -211,26 +213,27 @@ def find_portal(image_input, portal_type, portal_rarity):
     image = image_input.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
-    tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
-    result = result.split('\n')
-    for line in result:
-        line = line.split('\t')
-        if len(line) == 12 and difflib.SequenceMatcher(None, portal_type, line[11].lower()).ratio() > 0.8:
-            x, y, w, h = int(line[6]), int(line[7]), thresh.shape[0] // 9, thresh.shape[0] // 9
-            crop = thresh[y:y + h, x:x + w]
-            tesseract_config2 = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890()'
-            result2 = pytesseract.image_to_string(crop, config=tesseract_config2, timeout=10).lower()
-            # if "(" + rarity + ")" in result2:
-            #     count = int(re.search(r'\b([1-9]|10)x\b', result2).group(1))
-            #     return [count, x + w // 2, y + h // 2]
-            result2 = ''.join(result2.split())
-            if word_in_text(portal_text.get(portal_type), result2) and word_in_text("("+portal_rarity+")", result2):
-                return [x + w // 2, y + h // 4]
-    return None
+    for i in range(5):
+        crop = thresh[:, int(thresh.shape[1]//split_lines[i]):int(thresh.shape[1]//split_lines[i+1])]
+        tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        result = pytesseract.image_to_data(crop, config=tesseract_config, timeout=10)
+        result = result.split('\n')
+        for line in result:
+            line = line.split('\t')
+            if len(line) == 12 and difflib.SequenceMatcher(None, portal_type, line[11].lower()).ratio() > 0.8:
+                x, y, w, h = int(line[6]), int(line[7]), crop.shape[0]//9, crop.shape[0]//9
+                crop2 = crop[y:y + h, x:x + w]
+                tesseract_config2 = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890()'
+                result2 = pytesseract.image_to_string(crop2, config=tesseract_config2, timeout=10).lower()
+                result2 = ''.join(result2.split())
+                # if "(" + rarity + ")" in result2:
+                #     count = int(re.search(r'\b([1-9]|10)x\b', result2).group(1))
+                #     return [count, x + w // 2, y + h // 2]
+                if word_in_text(portal_text.get(portal_type), result2) and word_in_text("("+portal_rarity+")", result2):
+                    return [x + w // 2, y + h // 4]
+
 
 def find_best_portal(image_input, portal_type):
-    split_lines = [5.106, 3.609, 2.795, 2.278, 1.922, 1.664]
     portal_type = portal_numbers[portal_type]
     image = image_input.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
