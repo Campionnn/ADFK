@@ -230,7 +230,7 @@ def find_portal(image_input, portal_type, portal_rarity):
                 #     count = int(re.search(r'\b([1-9]|10)x\b', result2).group(1))
                 #     return [count, x + w // 2, y + h // 2]
                 if word_in_text(portal_text.get(portal_type), result2) and word_in_text("("+portal_rarity+")", result2):
-                    return [x + w // 2, y + h // 4]
+                    return (x + w // 2) + thresh.shape[1]//split_lines[i], y + h // 2
 
 
 def find_best_portal(image_input, portal_type):
