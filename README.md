@@ -27,6 +27,7 @@ Anime Defenders Settings
 
 Miscellaneous
 * All instances of Roblox must be on the primary monitor or only have 1 monitor turned on
+* This has only been extensively tested on 1920x1080 and 2560x1440 resolutions and may not work on other resolutions
 
 ### Running from source
 1. Install Python 3.8 or higher
