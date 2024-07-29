@@ -107,7 +107,7 @@ class RobloxPortal(RobloxBase):
                 found = False
                 attempts = 0
                 while not found:
-                    if attempts > 5:
+                    if attempts > 3:
                         raise StartupException("Could not find portal to open")
                     for instance in self.roblox_instances:
                         if instance.open_portal():
@@ -158,7 +158,7 @@ class RobloxPortal(RobloxBase):
                 autoit.mouse_click("left", portal_coords[0], portal_coords[1])
                 time.sleep(0.1)
                 autoit.mouse_move(int(rect[2]//8*4.8), rect[3]//2)
-                time.sleep(0.2)
+                time.sleep(0.5)
                 if not self.click_text("use"):
                     self.click_text("x")
                     return False
@@ -187,7 +187,13 @@ class RobloxPortal(RobloxBase):
                 if best_portal == 4:
                     break
         if best_instance is not None:
-            return best_instance.open_portal(best_portal)
+            attempts = 0
+            while True:
+                if attempts > 3:
+                    return False
+                if best_instance.open_portal(best_portal):
+                    return True
+                attempts += 1
         return False
 
     def get_best_portal(self):
@@ -205,7 +211,10 @@ class RobloxPortal(RobloxBase):
                         break
             autoit.mouse_wheel("down", 3)
             new_text = ocr.find_all_text(self.screenshot())
-        self.logger.debug(f"Best portal for {self.username} is {self.rarity_names.get(best_portal)}")
+        if best_portal == 0:
+            self.logger.debug(f"Could not find portal for {self.username}")
+        else:
+            self.logger.debug(f"Best portal for {self.username} is {self.rarity_names.get(best_portal)}")
         self.click_text("x")
         return best_portal
 

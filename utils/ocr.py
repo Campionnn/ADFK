@@ -253,7 +253,7 @@ def find_best_portal(image_input, portal_type):
                 result2 = pytesseract.image_to_string(crop2, config=tesseract_config2, timeout=10).lower()
                 result2 = ''.join(result2.split())
                 if word_in_text(portal_text.get(portal_type), result2):
-                    for rarity_num in rarity_numbers:
+                    for rarity_num in rarity_numbers[:-1]:
                         if rarity_num > rarity and word_in_text("("+rarity_numbers.get(rarity_num)+")", result2):
                             rarity = rarity_num
                             if rarity == 4:
