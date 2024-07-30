@@ -413,6 +413,7 @@ class RobloxBase(ABC):
                             return False
             time.sleep(0.5)
         while True:
+            self.check_afk()
             if self.check_over():
                 return False
             time.sleep(0.5)
@@ -472,7 +473,7 @@ class RobloxBase(ABC):
         count = 0
         while True:
             self.check_afk()
-            if time.time() - start > 60:
+            if time.time() - start > 150:
                 self.logger.warning(f"Timed out upgrading tower: {tower_id}")
                 return True
             if skip and time.time() - start > 1:

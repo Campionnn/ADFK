@@ -11,6 +11,7 @@ except ImportError:
     import config
 import coords
 from utils import ocr
+from utils import memory
 from utils.exceptions import *
 
 
@@ -81,18 +82,27 @@ class RobloxPortal(RobloxBase):
         self.wait_game_load("main")
         self.click_text("x")
         try:
-            time.sleep(0.25)
-            if not self.fast_travel("trading"):
-                self.controller.jump()
-                time.sleep(0.5)
-                self.controller.look_down(1.0)
-                time.sleep(1)
-                self.controller.reset_look()
+            pos = memory.get_current_pos(self.pid, self.y_addrs)
+            attempts = 0
+            while self.controller.calculate_distance(pos[0], pos[2], coords.portal_play_pos[0], coords.portal_play_pos[1]) > 15:
+                if attempts > 2:
+                    raise StartupException("Could not find portal")
+                time.sleep(0.25)
                 if not self.fast_travel("trading"):
-                    raise StartupException("Could not fast travel to trading")
-            time.sleep(0.5)
+                    self.controller.jump()
+                    time.sleep(0.5)
+                    self.controller.look_down(1.0)
+                    time.sleep(1)
+                    self.controller.reset_look()
+                    if not self.fast_travel("trading"):
+                        raise StartupException("Could not fast travel to trading")
+                time.sleep(0.25)
+                pos = memory.get_current_pos(self.pid, self.y_addrs)
+                attempts += 1
+            time.sleep(0.25)
             if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.portal_play_pos[0], coords.portal_play_pos[1], coords.portal_play_pos_tolerance, 10, precise=True):
                 return self.teleport()
+            self.controller.turn_towards_yaw(self.pid, self.y_addrs, 290, 1.0, 0.2)
         except MemoryException:
             raise StartupException("Could not find portal")
 

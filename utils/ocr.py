@@ -21,7 +21,7 @@ def find_text(image_input: np.ndarray, text, numbers=False, black_text=False):
     else:
         _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
     if text in ["units", "items", "quests", "guilds"]:
-        thresh = thresh[:, :thresh.shape[1]//4]
+        thresh = thresh[:, :thresh.shape[1]//5]
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     if numbers:
         tesseract_config += '0123456789'
