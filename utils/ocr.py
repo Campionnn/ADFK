@@ -20,6 +20,8 @@ def find_text(image_input: np.ndarray, text, numbers=False, black_text=False):
         _, thresh = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY_INV)
     else:
         _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
+    if text in ["units", "items", "quests", "guilds"]:
+        thresh = thresh[:, :thresh.shape[1]//4]
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     if numbers:
         tesseract_config += '0123456789'
@@ -253,7 +255,7 @@ def find_best_portal(image_input, portal_type):
                 result2 = pytesseract.image_to_string(crop2, config=tesseract_config2, timeout=10).lower()
                 result2 = ''.join(result2.split())
                 if word_in_text(portal_text.get(portal_type), result2):
-                    for rarity_num in list(rarity_numbers.keys())[:-1]:
+                    for rarity_num in list(rarity_numbers)[:-1]:
                         if rarity_num > rarity and word_in_text("("+rarity_numbers.get(rarity_num)+")", result2):
                             rarity = rarity_num
                             if rarity == 4:
