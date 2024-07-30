@@ -170,28 +170,28 @@ def read_current_wave(image_input: np.ndarray):
     return None
 
 
-portal_text = {
-    "demon": "demonportal",
-    "cursed": "cursedkingdomportal",
-    "ancient": "ancientdragonportal",
-    "solar": "solarportal",
-    "lunar": "lunarportal"
-}
-
-portal_numbers = {
-    1: "demon",
-    2: "cursed",
-    3: "ancient",
-    4: "solar",
-    5: "lunar"
-}
-
 rarity_numbers = {
     1: "rare",
     2: "epic",
     3: "legendary",
     4: "mythic",
     5: "secret"
+}
+
+portal_numbers = {
+    1: "demon",
+    2: "cursed",
+    3: "ancient",
+    4: "solarportal",
+    5: "lunarportal"
+}
+
+portal_text = {
+    "demon": "demonportal",
+    "cursed": "cursedkingdomportal",
+    "ancient": "ancientdragonportal",
+    "solarportal": "solarportal",
+    "lunarportal": "lunarportal"
 }
 
 split_lines = [5.106, 3.609, 2.795, 2.278, 1.922, 1.664]
@@ -253,7 +253,7 @@ def find_best_portal(image_input, portal_type):
                 result2 = pytesseract.image_to_string(crop2, config=tesseract_config2, timeout=10).lower()
                 result2 = ''.join(result2.split())
                 if word_in_text(portal_text.get(portal_type), result2):
-                    for rarity_num in rarity_numbers[:-1]:
+                    for rarity_num in list(rarity_numbers.keys())[:-1]:
                         if rarity_num > rarity and word_in_text("("+rarity_numbers.get(rarity_num)+")", result2):
                             rarity = rarity_num
                             if rarity == 4:
