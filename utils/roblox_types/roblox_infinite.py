@@ -133,7 +133,8 @@ class RobloxInfinite(RobloxBase):
         if self.username == config.usernames[0]:
             self.controller.zoom_in()
             self.controller.zoom_out(0.25)
-            self.click_nav_rect(self.world_sequence, "Could not find world button")
+            if not self.click_nav_rect(self.world_sequence, "Could not find world button"):
+                raise StartupException("Could not find world button")
             time.sleep(0.5)
             self.click_text("infinitemode")
             time.sleep(0.5)

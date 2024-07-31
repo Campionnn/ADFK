@@ -135,7 +135,7 @@ ancient_portal_place_color = (150, 150, 200)
 ancient_portal_place_color_tolerance = 20
 
 # Solar Temple Portal
-solar_portal_place_pos = [-0.03749369829893112, 10.5, -0.9848076701164246]
+solar_portal_place_pos = [-3.2865376472473145, 29.219539642333984]
 solar_portal_place_pos_tolerance = 5.0
 solar_portal_place_rot = 270
 solar_portal_place_rot_tolerance = 1.0
@@ -143,9 +143,9 @@ solar_portal_place_color = (50, 50, 150)
 solar_portal_place_color_tolerance = 5
 
 # Lunar Temple Portal
-lunar_portal_place_pos = [831.3306884765625, -63.77223205566406]
+lunar_portal_place_pos = [827.1364135742188, -66.6644287109375]
 lunar_portal_place_pos_tolerance = 5.0
-lunar_portal_place_rot = 90
+lunar_portal_place_rot = 120
 lunar_portal_place_rot_tolerance = 1.0
 lunar_portal_place_color = (150, 50, 150)
 lunar_portal_place_color_tolerance = 20

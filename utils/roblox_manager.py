@@ -80,8 +80,6 @@ class RobloxManager:
             except StartupException:
                 self.logger.warning(f"Failed to start {username} instance")
                 instance.close_instance()
-                time.sleep(3)
-            self.roblox_instances.append(instance)
 
     def ensure_all_instance(self):
         while True:
