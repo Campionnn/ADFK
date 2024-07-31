@@ -416,7 +416,7 @@ class RobloxBase(ABC):
                 return False
             time.sleep(0.5)
 
-    def place_tower(self, tower_id, hotkey, location, cost):
+    def place_tower(self, tower_id, hotkey, location, cost, depth=0):
         self.logger.debug(f"Placing tower with id {tower_id} at {location}")
         if location == "center":
             spiral_coords = self.spiral_coords
@@ -432,7 +432,7 @@ class RobloxBase(ABC):
             if time.time() - start > 60:
                 self.logger.warning(f"Timed out placing tower: {tower_id}")
                 return True
-            if count % 10 == 0 and self.check_over():
+            if count % 5 == 0 and self.check_over():
                 return False
             current_money = ocr.read_current_money(self.screenshot())
             count += 1
@@ -441,9 +441,17 @@ class RobloxBase(ABC):
             keyboard.send(hotkey)
         count = 0
         for x, y in spiral_coords:
-            if count % 10 == 0 and self.check_over():
-                return False
-            if (x, y) not in self.placed_towers.values() and (x, y) not in self.invalid_towers:
+            if count % 5 == 0:
+                if self.check_over():
+                    return False
+                current_money = ocr.read_current_money(self.screenshot())
+                if current_money is not None and current_money < cost:
+                    if depth > 2:
+                        break
+                    return self.place_tower(tower_id, hotkey, location, cost, depth + 1)
+            if (x, y) not in self.placed_towers.values():
+                if depth == 0 and (x, y) in self.invalid_towers:
+                    continue
                 autoit.mouse_move(x, y)
                 time.sleep(0.15)
                 autoit.mouse_click("left", x, y)
@@ -476,7 +484,7 @@ class RobloxBase(ABC):
                 return True
             if skip and time.time() - start > 1:
                 return True
-            if count % 10 == 0 and self.check_over():
+            if count % 5 == 0 and self.check_over():
                 return False
             screen = self.screenshot()
             upgrade_info = ocr.read_upgrade_cost(screen)
@@ -508,7 +516,7 @@ class RobloxBase(ABC):
             count = 0
             while current_money is None or current_money < cost:
                 time.sleep(0.1)
-                if count % 10 == 0 and self.check_over():
+                if count % 5 == 0 and self.check_over():
                     return False
                 current_money = ocr.read_current_money(self.screenshot())
                 count += 1
@@ -517,7 +525,7 @@ class RobloxBase(ABC):
                 keyboard.send(hotkey)
             count = 0
             for x, y in self.spiral_coords:
-                if count % 10 == 0 and self.check_over():
+                if count % 5 == 0 and self.check_over():
                     return False
                 if (x, y) not in self.placed_towers.values() and (x, y) not in self.invalid_towers:
                     autoit.mouse_move(x, y)

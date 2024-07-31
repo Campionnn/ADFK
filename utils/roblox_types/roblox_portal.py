@@ -161,7 +161,7 @@ class RobloxPortal(RobloxBase):
         rect = self.get_window_rect()
         previous_text = ""
         new_text = "o.o"
-        while difflib.SequenceMatcher(None, previous_text, new_text).ratio() < 0.9:
+        while difflib.SequenceMatcher(None, previous_text, new_text).ratio() < 0.8:
             previous_text = new_text
             portal_coords = ocr.find_portal(self.screenshot(), self.world, level)
             if portal_coords is not None:
@@ -211,7 +211,7 @@ class RobloxPortal(RobloxBase):
         previous_text = ""
         new_text = "o.o"
         best_portal = 0
-        while difflib.SequenceMatcher(None, previous_text, new_text).ratio() < 0.9:
+        while difflib.SequenceMatcher(None, previous_text, new_text).ratio() < 0.8:
             previous_text = new_text
             rarity = ocr.find_best_portal(self.screenshot(), self.world)
             if rarity is not None:
