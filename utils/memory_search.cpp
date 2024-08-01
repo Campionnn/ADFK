@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <cstdint>
 
+int rotOffset = 0x170;
+
 std::vector<float> ReadPlayerInfoInternal(DWORD pid, uint64_t int_address, HANDLE hProcess = NULL);
 
 bool ReadMemory(HANDLE hProcess, LPCVOID address, LPVOID buffer, SIZE_T size) {
@@ -71,7 +73,7 @@ uint64_t SearchMemory(DWORD pid, float targetValueX, float targetValueY, float t
 std::vector<float> ReadPlayerInfoInternal(DWORD pid, uint64_t intAddress, HANDLE hProcess) {
     LPCVOID base_address = reinterpret_cast<LPCVOID>(intAddress);
     LPCVOID start_address = reinterpret_cast<LPCVOID>(reinterpret_cast<SIZE_T>(base_address) - 0x4);
-    SIZE_T size_to_read = 0x198;
+    SIZE_T size_to_read = rotOffset + 0x10;
 
     std::vector<BYTE> buffer(size_to_read);
     if (!ReadMemory(hProcess, start_address, buffer.data(), size_to_read)) {
@@ -81,9 +83,9 @@ std::vector<float> ReadPlayerInfoInternal(DWORD pid, uint64_t intAddress, HANDLE
     float x_addrs = *reinterpret_cast<float*>(buffer.data());
     float y_addrs = *reinterpret_cast<float*>(buffer.data() + 0x4);
     float z_addrs = *reinterpret_cast<float*>(buffer.data() + 0x8);
-    float pitch = *reinterpret_cast<float*>(buffer.data() + 0x190);
-    float yaw1 = *reinterpret_cast<float*>(buffer.data() + 0x18C);
-    float yaw2 = *reinterpret_cast<float*>(buffer.data() + 0x194);
+    float yaw1 = *reinterpret_cast<float*>(buffer.data() + rotOffset + 0x4);
+    float pitch = *reinterpret_cast<float*>(buffer.data() + rotOffset + 0x8);
+    float yaw2 = *reinterpret_cast<float*>(buffer.data() + rotOffset + 0xC);
 
     return {x_addrs, y_addrs, z_addrs, pitch, yaw1, yaw2};
 }
@@ -93,7 +95,7 @@ std::vector<float> ReadPlayerInfo(DWORD pid, uint64_t intAddress) {
 
     LPCVOID base_address = reinterpret_cast<LPCVOID>(intAddress);
     LPCVOID start_address = reinterpret_cast<LPCVOID>(reinterpret_cast<SIZE_T>(base_address) - 0x4);
-    SIZE_T size_to_read = 0x198;
+    SIZE_T size_to_read = rotOffset + 0x10;
 
     std::vector<BYTE> buffer(size_to_read);
     if (!ReadMemory(hProcess, start_address, buffer.data(), size_to_read)) {
@@ -105,9 +107,9 @@ std::vector<float> ReadPlayerInfo(DWORD pid, uint64_t intAddress) {
     float x_addrs = *reinterpret_cast<float*>(buffer.data());
     float y_addrs = *reinterpret_cast<float*>(buffer.data() + 0x4);
     float z_addrs = *reinterpret_cast<float*>(buffer.data() + 0x8);
-    float pitch = *reinterpret_cast<float*>(buffer.data() + 0x190);
-    float yaw1 = *reinterpret_cast<float*>(buffer.data() + 0x18C);
-    float yaw2 = *reinterpret_cast<float*>(buffer.data() + 0x194);
+    float pitch = *reinterpret_cast<float*>(buffer.data() + rotOffset + 0x8);
+    float yaw1 = *reinterpret_cast<float*>(buffer.data() + rotOffset + 0x4);
+    float yaw2 = *reinterpret_cast<float*>(buffer.data() + rotOffset + 0xC);
 
     return {x_addrs, y_addrs, z_addrs, pitch, yaw1, yaw2};
 }
@@ -137,7 +139,7 @@ std::vector<float> ReadPlayerRot(DWORD pid, uint64_t intAddress) {
     HANDLE hProcess = OpenProcess(PROCESS_VM_READ, FALSE, pid);
 
     LPCVOID base_address = reinterpret_cast<LPCVOID>(intAddress);
-    LPCVOID start_address = reinterpret_cast<LPCVOID>(reinterpret_cast<SIZE_T>(base_address) + 0x188);
+    LPCVOID start_address = reinterpret_cast<LPCVOID>(reinterpret_cast<SIZE_T>(base_address) + rotOffset);
     SIZE_T size_to_read = 0xC;
 
     std::vector<BYTE> buffer(size_to_read);
@@ -147,7 +149,7 @@ std::vector<float> ReadPlayerRot(DWORD pid, uint64_t intAddress) {
     }
     CloseHandle(hProcess);
 
-    float pitch = *reinterpret_cast<float*>(buffer.data()+ 0x4);
+    float pitch = *reinterpret_cast<float*>(buffer.data() + 0x4);
     float yaw1 = *reinterpret_cast<float*>(buffer.data());
     float yaw2 = *reinterpret_cast<float*>(buffer.data() + 0x8);
 
