@@ -178,12 +178,11 @@ class RobloxPortal(RobloxBase):
                     self.click_text("x")
                     return False
                 time.sleep(0.5)
-                if not self.click_text("open"):
-                    if not self.click_text("openportal"):
-                        self.click_text("back")
-                        time.sleep(0.5)
-                        self.click_text("x")
-                        return False
+                if not self.click_text("openportal"):
+                    self.click_text("back")
+                    time.sleep(0.5)
+                    self.click_text("x")
+                    return False
                 return True
             autoit.mouse_wheel("down", 3)
             new_text = ocr.find_all_text(self.screenshot())
