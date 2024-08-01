@@ -36,6 +36,10 @@ def find_text(image_input: np.ndarray, text, numbers=False, black_text=False):
                     if difflib.SequenceMatcher(None, keyword, line[11].lower()).ratio() > 0.8:
                         x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
                         return x + w // 2, y + h // 2
+        if text == "search":
+            if len(line) == 12 and difflib.SequenceMatcher(None, "all", line[11].lower()).ratio() > 0.8:
+                x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
+                return x - w * 5, y + h // 2
         if len(line) == 12 and difflib.SequenceMatcher(None, text, line[11].lower()).ratio() > 0.8:
             x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
             if text == "openportal":
@@ -237,6 +241,7 @@ def find_portal(image_input, portal_type, portal_rarity):
 
 def find_best_portal(image_input, portal_type, max_rarity):
     portal_type = portal_numbers[portal_type]
+    possible_rarities = [rarity for rarity in list(rarity_numbers.keys()) if rarity <= max_rarity]
     image = image_input.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
@@ -255,7 +260,7 @@ def find_best_portal(image_input, portal_type, max_rarity):
                 result2 = pytesseract.image_to_string(crop2, config=tesseract_config2, timeout=10).lower()
                 result2 = ''.join(result2.split())
                 if word_in_text(portal_text.get(portal_type), result2):
-                    for rarity_num in list(rarity_numbers)[:-2]:
+                    for rarity_num in possible_rarities:
                         if rarity_num > rarity and word_in_text("("+rarity_numbers.get(rarity_num)+")", result2):
                             rarity = rarity_num
                             if rarity == max_rarity:

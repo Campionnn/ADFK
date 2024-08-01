@@ -23,8 +23,8 @@ class RobloxPortal(RobloxBase):
             1: "Demon Portal",
             2: "Cursed Kingdom Portal",
             3: "Ancient Dragon Portal",
-            4: "Solar Temple Portal",
-            5: "Lunar Temple Portal"
+            4: "Solar Portal",
+            5: "Lunar Portal"
         }
         self.rarity_names = {
             1: "Rare",
@@ -140,7 +140,7 @@ class RobloxPortal(RobloxBase):
         time.sleep(3)
         keyboard.release("e")
 
-    def open_inventory(self):
+    def open_inventory(self, search=None):
         self.set_foreground()
         time.sleep(0.5)
         self.controller.zoom_in()
@@ -150,14 +150,19 @@ class RobloxPortal(RobloxBase):
         time.sleep(0.1)
         self.click_text("items")
         time.sleep(1)
+        if search is not None:
+            self.click_text("search")
+            time.sleep(0.2)
+            keyboard.write(search)
+            time.sleep(0.1)
         rect = self.get_window_rect()
-        autoit.mouse_move(int(rect[2]//8*4.8), rect[3]//2)
+        autoit.mouse_move(int(rect[2]//8*4.8), rect[3]//2)  # move mouse to scrollbar area so doesn't hover items. might not be reliable
         time.sleep(0.2)
 
     def open_portal(self, level=None):
         if level is None:
             level = self.level
-        self.open_inventory()
+        self.open_inventory(self.portal_names.get(self.world))
         rect = self.get_window_rect()
         previous_text = ""
         new_text = "o.o"
@@ -207,7 +212,7 @@ class RobloxPortal(RobloxBase):
         return False
 
     def get_best_portal(self):
-        self.open_inventory()
+        self.open_inventory(self.portal_names.get(self.world))
         previous_text = ""
         new_text = "o.o"
         best_portal = 0
@@ -220,6 +225,8 @@ class RobloxPortal(RobloxBase):
                     if best_portal == self.level - 11:
                         break
             autoit.mouse_wheel("down", 3)
+            rect = self.get_window_rect()
+            autoit.mouse_move(int(rect[2] // 8 * 4.8), rect[3] // 2)
             new_text = ocr.find_all_text(self.screenshot())
         if best_portal == 0:
             self.logger.debug(f"Could not find portal for {self.username}")
