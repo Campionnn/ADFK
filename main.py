@@ -181,7 +181,7 @@ elif mode_choice == 4:
     print("3: Legendary")
     print("4: Mythic")
     print("5: Secret")
-    print("6: All in Descending Order (except secret)")
+    print("6: In Descending Order")
     while True:
         try:
             rarity_input = int(input("Enter choice: "))
@@ -189,6 +189,22 @@ elif mode_choice == 4:
                 break
         except ValueError:
             pass
+
+    if rarity_input == 6:
+        print("What rarity to stop at (will not attempt this rarity and higher)")
+        print("1: Epic")
+        print("2: Legendary")
+        print("3: Mythic")
+        print("4: Secret")
+        print("5: Do All")
+        while True:
+            try:
+                rarity_input = int(input("Enter choice: "))
+                if rarity_input in [1, 2, 3, 4, 5]:
+                    break
+            except ValueError:
+                pass
+        rarity_input = rarity_input + 11
     RobloxManager(RobloxPortal, logger, roblox_pids=roblox_pids, mode=mode_choice, world=portal_input, level=rarity_input, custom_sequence=custom_sequence)
 
 elif mode_choice == 5:

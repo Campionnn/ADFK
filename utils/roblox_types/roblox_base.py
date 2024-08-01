@@ -117,7 +117,7 @@ class RobloxBase(ABC):
         time.sleep(1.0)
         self.controller.reset_look()
         self.y_addrs = memory.search_new(self.pid, coords.init_pos_x, coords.init_pos_y, coords.init_pos_z, coords.init_pos_tolerance, coords.init_pitch, coords.init_pitch_tolerance)
-        if self.y_addrs is None:
+        if self.y_addrs is None or self.y_addrs == 0:
             raise StartupException("Could not find memory address")
         self.logger.debug(f"Memory address found for {self.username}. {self.pid}: {self.y_addrs}")
         return
@@ -132,12 +132,12 @@ class RobloxBase(ABC):
                 pass
         except OSError:
             pass
+        self.logger.debug("Waiting for Roblox instance to close")
         while True:
-            self.logger.debug("Waiting for Roblox instance to close")
             if self.pid not in get_pids_by_name(ROBLOX_EXE):
                 break
             time.sleep(1)
-        time.sleep(3)
+        time.sleep(5)
         return True
 
     def set_foreground(self):

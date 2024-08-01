@@ -108,7 +108,7 @@ class RobloxPortal(RobloxBase):
 
     def enter(self, depth=0):
         if self.username == config.usernames[0]:
-            if self.level == 6:
+            if self.level > 10:
                 self.logger.debug(f"Looking for best {self.portal_names.get(self.world)} to open")
                 if not self.open_best_portal():
                     raise StartupException("Could not find portal to open")
@@ -194,7 +194,7 @@ class RobloxPortal(RobloxBase):
             if portal > best_portal:
                 best_portal = portal
                 best_instance = instance
-                if best_portal == 4:
+                if best_portal == self.level - 11:
                     break
         if best_instance is not None:
             attempts = 0
@@ -213,11 +213,11 @@ class RobloxPortal(RobloxBase):
         best_portal = 0
         while difflib.SequenceMatcher(None, previous_text, new_text).ratio() < 0.8:
             previous_text = new_text
-            rarity = ocr.find_best_portal(self.screenshot(), self.world)
+            rarity = ocr.find_best_portal(self.screenshot(), self.world, self.level - 11)
             if rarity is not None:
-                if rarity != 5 and rarity > best_portal:
+                if self.level - 11 >= rarity > best_portal:
                     best_portal = rarity
-                    if best_portal == 4:
+                    if best_portal == self.level - 11:
                         break
             autoit.mouse_wheel("down", 3)
             new_text = ocr.find_all_text(self.screenshot())

@@ -235,7 +235,7 @@ def find_portal(image_input, portal_type, portal_rarity):
                     return int((x + w // 2) + thresh.shape[1]//split_lines[i]), y + h // 2
 
 
-def find_best_portal(image_input, portal_type):
+def find_best_portal(image_input, portal_type, max_rarity):
     portal_type = portal_numbers[portal_type]
     image = image_input.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -255,10 +255,10 @@ def find_best_portal(image_input, portal_type):
                 result2 = pytesseract.image_to_string(crop2, config=tesseract_config2, timeout=10).lower()
                 result2 = ''.join(result2.split())
                 if word_in_text(portal_text.get(portal_type), result2):
-                    for rarity_num in list(rarity_numbers)[:-1]:
+                    for rarity_num in list(rarity_numbers)[:-2]:
                         if rarity_num > rarity and word_in_text("("+rarity_numbers.get(rarity_num)+")", result2):
                             rarity = rarity_num
-                            if rarity == 4:
+                            if rarity == max_rarity:
                                 return rarity
     if rarity > 0:
         return rarity
