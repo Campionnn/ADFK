@@ -62,22 +62,25 @@ class App:
     def create_widgets(self):
         tk.Label(self.root, text="Name").grid(row=0, column=0, sticky="e")
         self.name_entry = tk.Entry(self.root)
-        self.name_entry.grid(row=0, column=1, columnspan=3, sticky="ew")
+        self.name_entry.grid(row=0, column=1, columnspan=2, sticky="ew")
 
         tk.Label(self.root, text="Description").grid(row=1, column=0, sticky="e")
         self.description_entry = tk.Entry(self.root)
-        self.description_entry.grid(row=1, column=1, columnspan=3, sticky="ew")
+        self.description_entry.grid(row=1, column=1, columnspan=2, sticky="ew")
 
         tk.Button(self.root, text="Add Place Action", command=self.add_place_action).grid(row=2, column=0, sticky="ew")
         tk.Button(self.root, text="Add Upgrade Action", command=self.add_upgrade_action).grid(row=2, column=1, sticky="ew")
         tk.Button(self.root, text="Save", command=self.save).grid(row=2, column=2, sticky="ew")
         tk.Button(self.root, text="Open", command=self.open_config).grid(row=2, column=3, sticky="ew")
 
-        self.action_listbox = tk.Listbox(self.root, height=10)
-        self.action_listbox.grid(row=3, column=0, columnspan=3, pady=10, sticky="nsew")
+        listbox_frame = tk.Frame(self.root)
+        listbox_frame.grid(row=3, column=0, columnspan=4, pady=10, sticky="nsew")
 
-        scrollbar = tk.Scrollbar(self.root, orient="vertical", command=self.action_listbox.yview)
-        scrollbar.grid(row=3, column=3, sticky="ns")
+        self.action_listbox = tk.Listbox(listbox_frame, height=10)
+        self.action_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        scrollbar = tk.Scrollbar(listbox_frame, orient="vertical", command=self.action_listbox.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.action_listbox.config(yscrollcommand=scrollbar.set)
 
         tk.Button(self.root, text="Move Up", command=self.move_up).grid(row=4, column=0, sticky="ew")

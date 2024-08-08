@@ -209,6 +209,7 @@ elif mode_choice == 4:
 
 elif mode_choice == 5:
     root = tk.Tk()
+    root.geometry("400x500")
     app = App(root)
     root.attributes('-topmost', True)
     root.after(100, lambda: root.attributes('-topmost', False))
