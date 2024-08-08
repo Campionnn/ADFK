@@ -82,7 +82,8 @@ class App:
 
         tk.Button(self.root, text="Move Up", command=self.move_up).grid(row=4, column=0)
         tk.Button(self.root, text="Move Down", command=self.move_down).grid(row=4, column=1)
-        tk.Button(self.root, text="Delete", command=self.delete_action).grid(row=4, column=2)
+        tk.Button(self.root, text="Edit", command=self.edit_action).grid(row=4, column=2)
+        tk.Button(self.root, text="Delete", command=self.delete_action).grid(row=4, column=3)
 
     def add_place_action(self):
         dialog = CustomDialog(self.root, "Place Action", ["Enter hotkeys (1-6)\nPut in multiple hotkeys separated by\nspaces to place multiple at once", "Enter location (center/edge)\nCan also enter 1 for center and 2 for edge"], ["", ""])
@@ -119,6 +120,56 @@ class App:
             except ValueError:
                 messagebox.showerror("Error", "Invalid input format")
 
+    def edit_action(self):
+        selection = self.action_listbox.curselection()
+        if selection:
+            index = selection[0]
+            action = self.actions[index]
+            dialog = None
+            if action.action_type == "place":
+                dialog = CustomDialog(self.root, "Edit Place Action", ["Enter hotkeys (1-6)\nPut in multiple hotkeys separated by\nspaces to place multiple at once", "Enter location (center/edge)\nCan also enter 1 for center and 2 for edge"], [action.ids, action.location])
+            elif action.action_type == "upgrade":
+                dialog = CustomDialog(self.root, "Edit Upgrade Action", ["Enter tower ids\nPut in multiple ids separated by spaces\nto cycle through upgrading each", "Enter number of times to upgrade tower\nType in 0 to continuously upgrade until end of game\nNo actions will work after upgrade 0 happens"], [action.ids, str(action.amount)])
+
+            if dialog is not None and dialog.result:
+                new_action = None
+                if action.action_type == "place":
+                    hotkeys_str, location = dialog.result
+                    hotkeys = hotkeys_str.split()
+                    if all(item in ["1", "2", "3", "4", "5", "6"] for item in hotkeys) and location in ["center", "edge", "1", "2"]:
+                        place_ids = []
+                        for hotkey in hotkeys:
+                            count = sum(1 for id_ in self.ids if id_[0] == hotkey)
+                            place_ids.append(f"{hotkey}{chr(ord('a') + count)}")
+                        if location in ["1", "2"]:
+                            location = "center" if location == "1" else "edge"
+                        new_action = Action("place", place_ids, location=location)
+                    else:
+                        messagebox.showerror("Error", "Invalid hotkeys or location")
+                elif action.action_type == "upgrade":
+                    ids_str, amount_str = dialog.result
+                    ids_ = ids_str.split()
+                    try:
+                        amount = int(amount_str)
+                        if all(item in self.ids for item in ids_) and amount >= 0:
+                            new_action = Action("upgrade", ids_, amount=amount)
+                        else:
+                            messagebox.showerror("Error", "Invalid ids or amount")
+                            return
+                    except ValueError:
+                        messagebox.showerror("Error", "Invalid input format")
+                        return
+
+                if new_action is not None:
+                    old_action = self.actions[index]
+                    self.actions[index] = new_action
+                    if self.is_valid_order():
+                        self.update_action_listbox()
+                        self.action_listbox.selection_set(index)
+                    else:
+                        messagebox.showerror("Error", "Invalid order: cannot upgrade before placing")
+                        self.actions[index] = old_action
+
     def update_action_listbox(self):
         self.action_listbox.delete(0, tk.END)
         for action in self.actions:
@@ -133,6 +184,7 @@ class App:
                 if self.is_valid_order():
                     self.update_action_listbox()
                     self.action_listbox.selection_set(index-1)
+                    self.action_listbox.yview(index-1)
                 else:
                     self.actions[index], self.actions[index-1] = self.actions[index-1], self.actions[index]
                     messagebox.showerror("Error", "Invalid order: cannot upgrade before placing")
@@ -146,6 +198,7 @@ class App:
                 if self.is_valid_order():
                     self.update_action_listbox()
                     self.action_listbox.selection_set(index+1)
+                    self.action_listbox.yview(index+1)
                 else:
                     self.actions[index], self.actions[index+1] = self.actions[index+1], self.actions[index]
                     messagebox.showerror("Error", "Invalid order: cannot upgrade before placing")
