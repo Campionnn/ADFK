@@ -339,14 +339,20 @@ class RobloxManager:
                 self.all_click_leave()
                 return
         self.logger.debug(f"Starting portal")
+        found = False
         for instance in self.roblox_instances:
             try:
                 if instance.start():
+                    found = True
                     break
             except StartupException:
                 instance.close_instance()
                 self.ensure_all_instance()
                 return
+        if not found:
+            self.all_click_leave()
+            self.ensure_all_instance()
+            return
         time.sleep(2)
         try:
             self.main_instance.play()
