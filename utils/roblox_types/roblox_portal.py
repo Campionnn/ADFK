@@ -251,7 +251,7 @@ class RobloxPortal(RobloxBase):
             pos = memory.get_current_pos(self.pid, self.y_addrs)
             dist_front = self.controller.calculate_distance(pos[0], pos[2], coords.solar_portal_front_pos[0], coords.solar_portal_front_pos[1])
             dist_back = self.controller.calculate_distance(pos[0], pos[2], coords.solar_portal_place_pos[0], coords.solar_portal_place_pos[1])
-            if dist_front > dist_back:
+            if dist_front < dist_back:
                 attempts = 0
                 while True:
                     if attempts > 2:

@@ -18,12 +18,12 @@ class RobloxTower(RobloxBase):
         self.set_coords()
 
     def set_coords(self):
-        self.story_place_pos = coords.tower_place_pos
-        self.story_place_pos_tolerance = coords.tower_place_pos_tolerance
-        self.story_place_rot = coords.tower_place_rot
-        self.story_place_rot_tolerance = coords.tower_place_rot_tolerance
-        self.story_place_color = coords.tower_place_color
-        self.story_place_color_tolerance = coords.tower_place_color_tolerance
+        self.place_pos = coords.tower_place_pos
+        self.place_pos_tolerance = coords.tower_place_pos_tolerance
+        self.place_rot = coords.tower_place_rot
+        self.place_rot_tolerance = coords.tower_place_rot_tolerance
+        self.place_color = coords.tower_place_color
+        self.place_color_tolerance = coords.tower_place_color_tolerance
 
     def teleport(self):
         self.set_foreground()
