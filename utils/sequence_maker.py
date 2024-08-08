@@ -54,7 +54,7 @@ class Action:
 class App:
     def __init__(self, root):
         self.root = root
-        self.root.title("Custom Placement")
+        self.root.title("Custom Sequence")
         self.actions = []
 
         self.create_widgets()
@@ -68,8 +68,12 @@ class App:
         self.description_entry = tk.Entry(self.root)
         self.description_entry.grid(row=1, column=1, columnspan=2, sticky="ew")
 
-        tk.Button(self.root, text="Add Place Action", command=self.add_place_action).grid(row=2, column=0, sticky="ew")
-        tk.Button(self.root, text="Add Upgrade Action", command=self.add_upgrade_action).grid(row=2, column=1, sticky="ew")
+        self.action_type_var = tk.StringVar(self.root)
+        self.action_type_var.set("Select Action")
+        self.action_type_menu = tk.OptionMenu(self.root, self.action_type_var, "Place", "Upgrade")
+        self.action_type_menu.grid(row=2, column=0, sticky="ew")
+
+        tk.Button(self.root, text="Add Action", command=self.add_action).grid(row=2, column=1, sticky="ew")
         tk.Button(self.root, text="Save", command=self.save).grid(row=2, column=2, sticky="ew")
         tk.Button(self.root, text="Open", command=self.open_config).grid(row=2, column=3, sticky="ew")
 
@@ -96,6 +100,16 @@ class App:
 
     def ids(self):
         return list(set(id_ for action in self.actions for id_ in action.ids if action.action_type == "place"))
+
+    def add_action(self):
+        action_type = self.action_type_var.get()
+        if action_type == "Select Action":
+            messagebox.showerror("Error", "Please select an action type")
+            return
+        if action_type == "Place":
+            self.add_place_action()
+        elif action_type == "Upgrade":
+            self.add_upgrade_action()
 
     def add_place_action(self):
         dialog = CustomDialog(self.root, "Place Action", ["Enter tower IDs (ex. 1a 2b)\nPut in multiple ids separated by\nspaces to place multiple at once", "Enter location (center/edge)\nCan also enter 1 for center and 2 for edge"], ["", ""])
