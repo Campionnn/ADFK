@@ -128,8 +128,8 @@ class RobloxPortal(RobloxBase):
         time.sleep(0.5)
         self.click_text("x")
         time.sleep(0.1)
-        self.controller.move_forward(0.2)
-        time.sleep(0.5)
+        self.controller.move_forward(0.4)
+        time.sleep(0.25)
         self.controller.reset()
         time.sleep(0.1)
         keyboard.press("e")
@@ -137,7 +137,7 @@ class RobloxPortal(RobloxBase):
         keyboard.release("e")
         time.sleep(0.1)
         keyboard.press("e")
-        time.sleep(3)
+        time.sleep(2.5)
         keyboard.release("e")
 
     def open_inventory(self, search=None):

@@ -441,8 +441,9 @@ class RobloxBase(ABC):
         if not self.check_placement():
             keyboard.send(hotkey)
         count = 0
+        placed_towers = list(self.placed_towers.values())
         for x, y in spiral_coords:
-            if count % 5 == 0:
+            if count % 3 == 0:
                 if self.check_over():
                     return False
                 current_money = ocr.read_current_money(self.screenshot())
@@ -450,7 +451,7 @@ class RobloxBase(ABC):
                     if depth > 2:
                         break
                     return self.place_tower(tower_id, hotkey, location, cost, depth + 1)
-            if (x, y) not in self.placed_towers.values():
+            if (x, y) not in placed_towers:
                 if depth == 0 and (x, y) in self.invalid_towers:
                     continue
                 autoit.mouse_move(x, y)
@@ -463,7 +464,8 @@ class RobloxBase(ABC):
                     keyboard.send("c")
                     return True
                 self.invalid_towers.append((x, y))
-            count += 1
+            else:
+                count += 1
         self.logger.warning("Could not place tower")
         keyboard.send("c")
         return False
@@ -524,11 +526,12 @@ class RobloxBase(ABC):
 
             if not self.check_placement():
                 keyboard.send(hotkey)
+            placed_towers = list(self.placed_towers.values())
             count = 0
             for x, y in self.spiral_coords:
-                if count % 5 == 0 and self.check_over():
+                if count % 3 == 0 and self.check_over():
                     return False
-                if (x, y) not in self.placed_towers.values() and (x, y) not in self.invalid_towers:
+                if (x, y) not in placed_towers and (x, y) not in self.invalid_towers:
                     autoit.mouse_move(x, y)
                     time.sleep(0.15)
                     autoit.mouse_click("left", x, y)
@@ -539,7 +542,8 @@ class RobloxBase(ABC):
                         keyboard.send("c")
                         break
                     self.invalid_towers.append((x, y))
-                count += 1
+                else:
+                    count += 1
         keyboard.send("c")
         return True
 
