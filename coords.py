@@ -143,8 +143,8 @@ solar_portal_bridge_pos = [-24.15259552001953, -0.2981191575527191]
 solar_portal_bridge_pos_tolerance = 5.0
 solar_portal_place_rot = 270
 solar_portal_place_rot_tolerance = 1.0
-solar_portal_place_color = (50, 50, 150)
-solar_portal_place_color_tolerance = 5
+solar_portal_place_color = (60, 80, 200)
+solar_portal_place_color_tolerance = 3
 
 # Lunar Temple Portal
 lunar_portal_place_pos = [827.1364135742188, -66.6644287109375]
