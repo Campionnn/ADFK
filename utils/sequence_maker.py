@@ -13,13 +13,15 @@ class CustomDialog(tk.Toplevel):
         self.entries = []
 
         for i, label in enumerate(labels):
-            tk.Label(self, text=label).grid(row=i, column=0, padx=10, pady=5)
+            tk.Label(self, text=label).grid(row=i, column=0, padx=10, pady=5, sticky="w")
             entry = tk.Entry(self)
-            entry.grid(row=i, column=1, padx=10, pady=5)
+            entry.grid(row=i, column=1, padx=10, pady=5, sticky="ew")
             entry.insert(0, initial_values[i])
             self.entries.append(entry)
 
         tk.Button(self, text="OK", command=self.on_ok).grid(row=len(labels), column=0, columnspan=2, pady=10)
+
+        self.grid_columnconfigure(1, weight=1)
 
         self.protocol("WM_DELETE_WINDOW", self.on_cancel)
         self.lift()
@@ -54,69 +56,74 @@ class App:
         self.root = root
         self.root.title("Custom Placement")
         self.actions = []
-        self.ids = []
 
         self.create_widgets()
 
     def create_widgets(self):
         tk.Label(self.root, text="Name").grid(row=0, column=0, sticky="e")
         self.name_entry = tk.Entry(self.root)
-        self.name_entry.grid(row=0, column=1, columnspan=2, sticky="w")
+        self.name_entry.grid(row=0, column=1, columnspan=3, sticky="ew")
 
         tk.Label(self.root, text="Description").grid(row=1, column=0, sticky="e")
         self.description_entry = tk.Entry(self.root)
-        self.description_entry.grid(row=1, column=1, columnspan=2, sticky="w")
+        self.description_entry.grid(row=1, column=1, columnspan=3, sticky="ew")
 
-        tk.Button(self.root, text="Add Place Action", command=self.add_place_action).grid(row=2, column=0)
-        tk.Button(self.root, text="Add Upgrade Action", command=self.add_upgrade_action).grid(row=2, column=1)
-        tk.Button(self.root, text="Save", command=self.save).grid(row=2, column=2)
-        tk.Button(self.root, text="Open", command=self.open_config).grid(row=2, column=3)
+        tk.Button(self.root, text="Add Place Action", command=self.add_place_action).grid(row=2, column=0, sticky="ew")
+        tk.Button(self.root, text="Add Upgrade Action", command=self.add_upgrade_action).grid(row=2, column=1, sticky="ew")
+        tk.Button(self.root, text="Save", command=self.save).grid(row=2, column=2, sticky="ew")
+        tk.Button(self.root, text="Open", command=self.open_config).grid(row=2, column=3, sticky="ew")
 
-        self.action_listbox = tk.Listbox(self.root, height=10, width=50)
-        self.action_listbox.grid(row=3, column=0, columnspan=3, pady=10)
+        self.action_listbox = tk.Listbox(self.root, height=10)
+        self.action_listbox.grid(row=3, column=0, columnspan=3, pady=10, sticky="nsew")
 
-        scrollbar = tk.Scrollbar(self.root, orient="vertical")
-        scrollbar.config(command=self.action_listbox.yview)
+        scrollbar = tk.Scrollbar(self.root, orient="vertical", command=self.action_listbox.yview)
         scrollbar.grid(row=3, column=3, sticky="ns")
         self.action_listbox.config(yscrollcommand=scrollbar.set)
 
-        tk.Button(self.root, text="Move Up", command=self.move_up).grid(row=4, column=0)
-        tk.Button(self.root, text="Move Down", command=self.move_down).grid(row=4, column=1)
-        tk.Button(self.root, text="Edit", command=self.edit_action).grid(row=4, column=2)
-        tk.Button(self.root, text="Delete", command=self.delete_action).grid(row=4, column=3)
+        tk.Button(self.root, text="Move Up", command=self.move_up).grid(row=4, column=0, sticky="ew")
+        tk.Button(self.root, text="Move Down", command=self.move_down).grid(row=4, column=1, sticky="ew")
+        tk.Button(self.root, text="Edit", command=self.edit_action).grid(row=4, column=2, sticky="ew")
+        tk.Button(self.root, text="Delete", command=self.delete_action).grid(row=4, column=3, sticky="ew")
+
+        self.root.grid_columnconfigure(0, weight=1)
+        self.root.grid_columnconfigure(1, weight=1)
+        self.root.grid_columnconfigure(2, weight=1)
+        self.root.grid_columnconfigure(3, weight=1)
+        self.root.grid_rowconfigure(3, weight=1)
+
+    def ids(self):
+        return list(set(id_ for action in self.actions for id_ in action.ids if action.action_type == "place"))
 
     def add_place_action(self):
-        dialog = CustomDialog(self.root, "Place Action", ["Enter hotkeys (1-6)\nPut in multiple hotkeys separated by\nspaces to place multiple at once", "Enter location (center/edge)\nCan also enter 1 for center and 2 for edge"], ["", ""])
+        dialog = CustomDialog(self.root, "Place Action", ["Enter tower IDs (ex. 1a 2b)\nPut in multiple ids separated by\nspaces to place multiple at once", "Enter location (center/edge)\nCan also enter 1 for center and 2 for edge"], ["", ""])
         if dialog.result:
-            hotkeys_str, location = dialog.result
-            hotkeys = hotkeys_str.split()
-            if all(item in ["1", "2", "3", "4", "5", "6"] for item in hotkeys) and location in ["center", "edge", "1", "2"]:
-                place_ids = []
-                for hotkey in hotkeys:
-                    count = sum(1 for id_ in self.ids+place_ids if id_[0] == hotkey)
-                    place_ids.append(f"{hotkey}{chr(ord('a') + count)}")
-                self.ids.extend(place_ids)
+            ids_str, location = dialog.result
+            ids = ids_str.split()
+            if all(id_[0] in ["1", "2", "3", "4", "5", "6"] for id_ in ids) and location in ["center", "edge", "1", "2"]:
                 if location in ["1", "2"]:
                     location = "center" if location == "1" else "edge"
-                action = Action("place", place_ids, location=location)
+                if not self.are_ids_unique(ids):
+                    messagebox.showerror("Error", "IDs must be unique")
+                    return
+                action = Action("place", ids=ids, location=location)
                 self.actions.append(action)
                 self.update_action_listbox()
             else:
-                messagebox.showerror("Error", "Invalid hotkeys or location")
+                messagebox.showerror("Error", "Invalid IDs or location")
 
     def add_upgrade_action(self):
-        dialog = CustomDialog(self.root, "Upgrade Action", ["Enter tower ids\nPut in multiple ids separated by spaces\nto cycle through upgrading each", "Enter number of times to upgrade tower\nType in 0 to continuously upgrade until end of game\nNo actions will work after upgrade 0 happens"], ["", ""])
+        dialog = CustomDialog(self.root, "Upgrade Action", ["Enter tower IDs (ex. 1a 2b)\nPut in multiple ids separated by spaces\nto cycle through upgrading each", "Enter number of times to upgrade tower\nType in 0 to continuously upgrade until end of game\nNo actions will work after upgrade 0 happens"], ["", ""])
         if dialog.result:
             ids_str, amount_str = dialog.result
             ids_ = ids_str.split()
             try:
                 amount = int(amount_str)
-                if all(item in self.ids for item in ids_) and amount >= 0:
-                    action = Action("upgrade", ids_, amount=amount)
+                if all(id_ in self.ids() for id_ in ids_) and amount >= 0:
+                    action = Action("upgrade", ids=ids_, amount=amount)
                     self.actions.append(action)
                     self.update_action_listbox()
                 else:
-                    messagebox.showerror("Error", "Invalid ids or amount")
+                    messagebox.showerror("Error", "Invalid IDs or amount")
             except ValueError:
                 messagebox.showerror("Error", "Invalid input format")
 
@@ -127,48 +134,49 @@ class App:
             action = self.actions[index]
             dialog = None
             if action.action_type == "place":
-                dialog = CustomDialog(self.root, "Edit Place Action", ["Enter hotkeys (1-6)\nPut in multiple hotkeys separated by\nspaces to place multiple at once", "Enter location (center/edge)\nCan also enter 1 for center and 2 for edge"], [action.ids, action.location])
+                dialog = CustomDialog(self.root, "Edit Place Action", ["Enter tower IDs (ex. 1a 2b)\nPut in multiple ids separated by\nspaces to place multiple at once", "Enter location (center/edge)\nCan also enter 1 for center and 2 for edge"], [action.ids, action.location])
             elif action.action_type == "upgrade":
-                dialog = CustomDialog(self.root, "Edit Upgrade Action", ["Enter tower ids\nPut in multiple ids separated by spaces\nto cycle through upgrading each", "Enter number of times to upgrade tower\nType in 0 to continuously upgrade until end of game\nNo actions will work after upgrade 0 happens"], [action.ids, str(action.amount)])
+                dialog = CustomDialog(self.root, "Edit Upgrade Action", ["Enter tower IDs (ex. 1a 2b)\nPut in multiple ids separated by spaces\nto cycle through upgrading each", "Enter number of times to upgrade tower\nType in 0 to continuously upgrade until end of game\nNo actions will work after upgrade 0 happens"], [action.ids, str(action.amount)])
 
             if dialog is not None and dialog.result:
-                new_action = None
                 if action.action_type == "place":
-                    hotkeys_str, location = dialog.result
-                    hotkeys = hotkeys_str.split()
-                    if all(item in ["1", "2", "3", "4", "5", "6"] for item in hotkeys) and location in ["center", "edge", "1", "2"]:
-                        place_ids = []
-                        for hotkey in hotkeys:
-                            count = sum(1 for id_ in self.ids if id_[0] == hotkey)
-                            place_ids.append(f"{hotkey}{chr(ord('a') + count)}")
+                    ids_str, location = dialog.result
+                    ids = ids_str.split()
+                    if all(id_[0] in ["1", "2", "3", "4", "5", "6"] for id_ in ids) and location in ["center", "edge", "1", "2"]:
                         if location in ["1", "2"]:
                             location = "center" if location == "1" else "edge"
-                        new_action = Action("place", place_ids, location=location)
-                    else:
-                        messagebox.showerror("Error", "Invalid hotkeys or location")
+                        if not self.are_ids_unique(ids, action.ids):
+                            messagebox.showerror("Error", "IDs must be unique")
+                            return
+                        action.ids = ids
+                        action.location = location
                 elif action.action_type == "upgrade":
                     ids_str, amount_str = dialog.result
                     ids_ = ids_str.split()
                     try:
                         amount = int(amount_str)
-                        if all(item in self.ids for item in ids_) and amount >= 0:
-                            new_action = Action("upgrade", ids_, amount=amount)
-                        else:
-                            messagebox.showerror("Error", "Invalid ids or amount")
-                            return
+                        if all(id_ in self.ids() for id_ in ids_) and amount >= 0:
+                            action.ids = ids_
+                            action.amount = amount
                     except ValueError:
                         messagebox.showerror("Error", "Invalid input format")
                         return
 
-                if new_action is not None:
-                    old_action = self.actions[index]
-                    self.actions[index] = new_action
-                    if self.is_valid_order():
-                        self.update_action_listbox()
-                        self.action_listbox.selection_set(index)
-                    else:
-                        messagebox.showerror("Error", "Invalid order: cannot upgrade before placing")
-                        self.actions[index] = old_action
+                if self.is_valid_order():
+                    self.update_action_listbox()
+                    self.action_listbox.selection_set(index)
+                else:
+                    messagebox.showerror("Error", "Invalid order: cannot upgrade before placing")
+
+    def are_ids_unique(self, new_ids, current_ids=None):
+        if len(new_ids) != len(set(new_ids)):
+            return False
+
+        existing_ids = self.ids()
+        print(existing_ids)
+        if current_ids:
+            existing_ids = [id_ for id_ in existing_ids if id_ not in current_ids]
+        return all(new_id not in existing_ids for new_id in new_ids)
 
     def update_action_listbox(self):
         self.action_listbox.delete(0, tk.END)
@@ -211,9 +219,6 @@ class App:
             del self.actions[index]
             if self.is_valid_order():
                 self.update_action_listbox()
-                if deleted_action.action_type == "place":
-                    for id_ in deleted_action.ids:
-                        self.ids.remove(id_)
             else:
                 messagebox.showerror("Error", "Invalid order: cannot upgrade before placing")
                 self.actions.insert(index, deleted_action)
@@ -239,7 +244,7 @@ class App:
             messagebox.showerror("Error", "Invalid order: cannot upgrade before placing")
             return
 
-        hotkeys = list(set([id_[0] for id_ in self.ids]))
+        hotkeys = list(set([id_[0] for id_ in self.ids()]))
         hotkeys.sort()
 
         cost_labels = [f"Cost of tower {hotkey}" for hotkey in hotkeys]
@@ -285,12 +290,10 @@ class App:
             self.description_entry.insert(0, data["description"])
 
             self.actions.clear()
-            self.ids.clear()
             for action_data in data["actions"]:
                 action = None
                 if action_data["type"] == "place":
                     action = Action("place", action_data["ids"], location=action_data["location"])
-                    self.ids.extend(action_data["ids"])
                 elif action_data["type"] == "upgrade":
                     action = Action("upgrade", action_data["ids"], amount=action_data["amount"])
                 self.actions.append(action)
