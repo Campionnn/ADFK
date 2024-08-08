@@ -137,6 +137,10 @@ ancient_portal_place_color_tolerance = 20
 # Solar Temple Portal
 solar_portal_place_pos = [-3.2865376472473145, 29.219539642333984]
 solar_portal_place_pos_tolerance = 5.0
+solar_portal_front_pos = [-2.1604108810424805, -27.798036575317383]
+solar_portal_front_pos_tolerance = 5.0
+solar_portal_bridge_pos = [-24.15259552001953, -0.2981191575527191]
+solar_portal_bridge_pos_tolerance = 5.0
 solar_portal_place_rot = 270
 solar_portal_place_rot_tolerance = 1.0
 solar_portal_place_color = (50, 50, 150)

@@ -79,7 +79,10 @@ class RobloxBase(ABC):
         self.logger.debug(f"Waiting for Roblox instance for {self.username} to start")
         time.sleep(3)
         unique_pids = []
+        start = time.time()
         while len(unique_pids) == 0:
+            if time.time() - start > 120:
+                raise StartupException(f"Could not find Roblox instance for {self.username}")
             pids = get_pids_by_name(ROBLOX_EXE)
             current_pids = [instance.pid for instance in self.roblox_instances]
             unique_pids = [pid for pid in pids if pid not in current_pids]

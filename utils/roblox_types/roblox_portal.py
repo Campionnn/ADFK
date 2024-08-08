@@ -238,3 +238,63 @@ class RobloxPortal(RobloxBase):
         self.set_foreground()
         time.sleep(0.5)
         return self.click_text("start")
+
+    def play(self):
+        self.placed_towers = {}
+        self.invalid_towers = []
+        self.current_wave = [0, 0.0]
+        self.set_foreground()
+        time.sleep(1)
+        self.wait_game_load("story")
+        self.spiral()
+        if self.world == 4:
+            pos = memory.get_current_pos(self.pid, self.y_addrs)
+            dist_front = self.controller.calculate_distance(pos[0], pos[2], coords.solar_portal_front_pos[0], coords.solar_portal_front_pos[1])
+            dist_back = self.controller.calculate_distance(pos[0], pos[2], coords.solar_portal_place_pos[0], coords.solar_portal_place_pos[1])
+            if dist_front > dist_back:
+                attempts = 0
+                while True:
+                    if attempts > 2:
+                        raise PlayException("Could not go to place position")
+                    if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.solar_portal_front_pos[0], coords.solar_portal_front_pos[1], coords.solar_portal_front_pos_tolerance, 10, True):
+                        self.controller.unstuck(self.pid, self.y_addrs)
+                        attempts += 1
+                    else:
+                        break
+                self.controller.reset()
+                time.sleep(0.1)
+                attempts = 0
+                while True:
+                    if attempts > 2:
+                        raise PlayException("Could not go to place position")
+                    if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.solar_portal_bridge_pos[0], coords.solar_portal_bridge_pos[1], coords.solar_portal_bridge_pos_tolerance, 10, True):
+                        self.controller.unstuck(self.pid, self.y_addrs)
+                        attempts += 1
+                    else:
+                        break
+        attempts = 0
+        while True:
+            if attempts > 2:
+                raise PlayException("Could not go to place position")
+            if not self.controller.go_to_pos(self.pid, self.y_addrs, self.place_pos[0], self.place_pos[1], self.place_pos_tolerance, 10, True):
+                self.controller.unstuck(self.pid, self.y_addrs)
+                attempts += 1
+            else:
+                break
+        self.controller.reset()
+        time.sleep(0.1)
+        attempts = 0
+        while True:
+            if attempts > 2:
+                raise PlayException("Could not go to place position")
+            if not self.controller.go_to_pos(self.pid, self.y_addrs, self.place_pos[0], self.place_pos[1], self.place_pos_tolerance/10, 10, min_speed=0.2, max_speed=0.3, min_turn=0.5, precise=True, timeout=15):
+                self.controller.unstuck(self.pid, self.y_addrs)
+                attempts += 1
+            else:
+                break
+        self.controller.reset()
+        self.controller.turn_towards_yaw(self.pid, self.y_addrs, self.place_rot, self.place_rot_tolerance, 0.2)
+        self.controller.look_down(1.0)
+        time.sleep(1)
+        self.controller.reset_look()
+        self.controller.zoom_out(1)
