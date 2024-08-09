@@ -465,7 +465,7 @@ class RobloxBase(ABC):
         count = 0
         placed_towers = list(self.placed_towers.values())
         for x, y in spiral_coords:
-            if count % 3 == 0:
+            if count != 0 and count % 3 == 0:
                 if self.check_over():
                     return False
                 current_money = ocr.read_current_money(self.screenshot())
@@ -506,9 +506,9 @@ class RobloxBase(ABC):
             if time.time() - start > 150:
                 self.logger.warning(f"Timed out upgrading tower: {tower_id}")
                 return True
-            if skip and time.time() - start > 1:
+            if skip and time.time() - start > 5:
                 return True
-            if count % 10 == 0 and self.check_over():
+            if count != 0 and count % 10 == 0 and self.check_over():
                 return False
             screen = self.screenshot()
             upgrade_info = ocr.read_upgrade_cost(screen)
@@ -608,7 +608,7 @@ class RobloxBase(ABC):
             count = 0
             while current_money is None or current_money < cost:
                 time.sleep(0.1)
-                if count % 5 == 0 and self.check_over():
+                if count != 0 and count % 5 == 0 and self.check_over():
                     return False
                 current_money = ocr.read_current_money(self.screenshot())
                 count += 1
@@ -618,7 +618,7 @@ class RobloxBase(ABC):
             placed_towers = list(self.placed_towers.values())
             count = 0
             for x, y in self.spiral_coords:
-                if count % 3 == 0 and self.check_over():
+                if count != 0 and count % 3 == 0 and self.check_over():
                     return False
                 if (x, y) not in placed_towers and (x, y) not in self.invalid_towers:
                     autoit.mouse_move(x, y)
@@ -654,7 +654,7 @@ class RobloxBase(ABC):
                 autoit.mouse_click("left", x, y)
                 time.sleep(0.1)
                 start2 = time.time()
-                while time.time() - start2 < 0.5:
+                while time.time() - start2 < 3:
                     screen = self.screenshot()
                     upgrade_info = ocr.read_upgrade_cost(screen)
                     if upgrade_info is not None:

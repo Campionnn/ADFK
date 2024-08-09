@@ -149,9 +149,9 @@ solar_portal_place_color = (60, 80, 200)
 solar_portal_place_color_tolerance = 3
 
 # Lunar Temple Portal
-lunar_portal_place_pos = [827.1364135742188, -66.6644287109375]
+lunar_portal_place_pos = [831.307373046875, -73.92615509033203]
 lunar_portal_place_pos_tolerance = 5.0
-lunar_portal_place_rot = 120
+lunar_portal_place_rot = 110
 lunar_portal_place_rot_tolerance = 1.0
 lunar_portal_place_color = (150, 50, 150)
 lunar_portal_place_color_tolerance = 20
