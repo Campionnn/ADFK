@@ -27,6 +27,9 @@ def find_text(image_input: np.ndarray, text, numbers=False, black_text=False):
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     if numbers:
         tesseract_config += '0123456789'
+    if text == "$":
+        tesseract_config += '$'
+        thresh = thresh[:, :thresh.shape[1]//3]
     result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
     result = result.split('\n')
     for line in result:

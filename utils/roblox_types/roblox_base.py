@@ -425,7 +425,10 @@ class RobloxBase(ABC):
                 if not self.wait_wave(int(action.get('amount'))):
                     return False
             elif action.get('type') == 'sell':
-                pass
+                for tower_id in action.get("ids"):
+                    self.check_afk()
+                    if not self.sell_tower(tower_id):
+                        return False
             time.sleep(0.5)
         while True:
             self.check_afk()
@@ -565,6 +568,24 @@ class RobloxBase(ABC):
                 return True
             time.sleep(0.1)
             count += 1
+
+    def sell_tower(self, tower_id):
+        self.logger.debug(f"Selling tower with id {tower_id}")
+        tower_coords = self.placed_towers.get(tower_id)
+        if tower_coords is None:
+            self.logger.warning(f"Failed to find tower with id: {tower_id}")
+            return False
+        autoit.mouse_click("left", tower_coords[0], tower_coords[1])
+        time.sleep(0.1)
+        start = time.time()
+        while True:
+            if time.time() - start > 3:
+                self.logger.warning(f"Timed out selling tower: {tower_id}")
+                return True
+            if self.click_text("$"):
+                time.sleep(0.5)
+                if self.click_text("sell"):
+                    return True
 
     def check_over(self):
         if self.find_text("backtolobby") is not None:
