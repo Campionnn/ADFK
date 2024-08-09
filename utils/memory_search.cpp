@@ -147,9 +147,9 @@ std::vector<float> ReadPlayerRot(DWORD pid, uint64_t intAddress, int rotOffset) 
     }
     CloseHandle(hProcess);
 
-    float pitch = *reinterpret_cast<float*>(buffer.data());
-    float yaw1 = *reinterpret_cast<float*>(buffer.data() - 0x4);
-    float yaw2 = *reinterpret_cast<float*>(buffer.data() + 0x4);
+    float yaw1 = *reinterpret_cast<float*>(buffer.data());
+    float pitch = *reinterpret_cast<float*>(buffer.data() + 0x4);
+    float yaw2 = *reinterpret_cast<float*>(buffer.data() + 0x8);
 
     return {pitch, yaw1, yaw2};
 }
