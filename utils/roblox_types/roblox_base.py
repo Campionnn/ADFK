@@ -410,6 +410,22 @@ class RobloxBase(ABC):
                         self.check_afk()
                         if not self.upgrade_tower(tower_id):
                             return False
+            elif action.get('type') == 'auto_use':
+                for tower_id in action.get("ids"):
+                    self.check_afk()
+                    if not self.auto_use_tower(tower_id):
+                        return False
+            elif action.get('type') == 'wait_money':
+                if not self.wait_money(int(action.get('amount'))):
+                    return False
+            elif action.get('type') == 'wait_time':
+                if not self.wait_time(int(action.get('amount'))):
+                    return False
+            elif action.get('type') == 'wait_wave':
+                if not self.wait_wave(int(action.get('amount'))):
+                    return False
+            elif action.get('type') == 'sell':
+                pass
             time.sleep(0.5)
         while True:
             self.check_afk()
@@ -464,7 +480,6 @@ class RobloxBase(ABC):
                     keyboard.send("c")
                     return True
                 self.invalid_towers.append((x, y))
-            else:
                 count += 1
         self.logger.warning("Could not place tower")
         keyboard.send("c")
@@ -487,7 +502,7 @@ class RobloxBase(ABC):
                 return True
             if skip and time.time() - start > 1:
                 return True
-            if count % 5 == 0 and self.check_over():
+            if count % 10 == 0 and self.check_over():
                 return False
             screen = self.screenshot()
             upgrade_info = ocr.read_upgrade_cost(screen)
@@ -499,11 +514,63 @@ class RobloxBase(ABC):
             time.sleep(0.1)
             count += 1
 
+    def auto_use_tower(self, tower_id):
+        self.logger.debug(f"Toggling auto use for tower with id {tower_id}")
+        tower_coords = self.placed_towers.get(tower_id)
+        if tower_coords is None:
+            self.logger.warning(f"Failed to find tower with id: {tower_id}")
+            return False
+        autoit.mouse_click("left", tower_coords[0], tower_coords[1])
+        time.sleep(0.1)
+        start = time.time()
+        while True:
+            if time.time() - start > 3:
+                self.logger.warning(f"Timed out toggling auto use for tower: {tower_id}")
+                return True
+            if self.click_text("autouse"):
+                return True
+
+    def wait_money(self, amount):
+        self.logger.debug(f"Waiting for {amount} money")
+        count = 0
+        while True:
+            self.check_afk()
+            if count % 10 == 0 and self.check_over():
+                return False
+            current_money = ocr.read_current_money(self.screenshot())
+            if current_money is not None and current_money >= amount:
+                return True
+            time.sleep(0.1)
+            count += 1
+
+    def wait_time(self, seconds):
+        self.logger.debug(f"Waiting for {seconds} seconds")
+        count = 0
+        start = time.time()
+        while time.time() - start < seconds:
+            self.check_afk()
+            if count % 10 == 0 and self.check_over():
+                return False
+            time.sleep(0.1)
+        return True
+
+    def wait_wave(self, wave):
+        self.logger.debug(f"Waiting for wave {wave}")
+        count = 0
+        while True:
+            self.check_afk()
+            if count % 10 == 0 and self.check_over():
+                return False
+            if self.current_wave[0] >= wave:
+                return True
+            time.sleep(0.1)
+            count += 1
+
     def check_over(self):
         if self.find_text("backtolobby") is not None:
             self.wave_checker.stop()
             return True
-        if self.current_wave[1] != 0 and time.time() - self.current_wave[1] > 300:
+        if self.current_wave[1] != 0 and time.time() - self.current_wave[1] > 600:
             self.logger.warning("Wave lasted for over 5 minutes. Manually leaving")
             self.wave_checker.stop()
             return True
