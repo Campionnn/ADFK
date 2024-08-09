@@ -24,11 +24,12 @@ class CustomDialog(tk.Toplevel):
         self.grid_columnconfigure(1, weight=1)
 
         self.protocol("WM_DELETE_WINDOW", self.on_cancel)
+        self.bind("<Return>", self.on_ok)
         self.lift()
         self.focus_set()
         self.wait_window(self)
 
-    def on_ok(self):
+    def on_ok(self, event=None):
         self.result = [entry.get() for entry in self.entries]
         self.destroy()
 
@@ -107,8 +108,10 @@ class App:
         self.root.grid_columnconfigure(3, weight=1)
         self.root.grid_rowconfigure(3, weight=1)
 
+        self.action_listbox.bind("<Delete>", self.delete_action)
+        self.action_listbox.bind("<Double-1>", self.edit_action)
+
     def ids(self):
-        # return list(set(id_ for action in self.actions for id_ in action.ids if action.action_type == "place"))
         ids = []
         for action in self.actions:
             if action.action_type == "place":
@@ -232,7 +235,7 @@ class App:
             else:
                 messagebox.showerror("Error", "Invalid IDs")
 
-    def edit_action(self):
+    def edit_action(self, event=None):
         selection = self.action_listbox.curselection()
         if selection:
             index = selection[0]
@@ -304,7 +307,7 @@ class App:
                 self.action_listbox.selection_set(index+1)
                 self.action_listbox.yview(index+1)
 
-    def delete_action(self):
+    def delete_action(self, event=None):
         selection = self.action_listbox.curselection()
         if selection:
             index = selection[0]
