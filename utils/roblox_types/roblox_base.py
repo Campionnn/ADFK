@@ -119,8 +119,11 @@ class RobloxBase(ABC):
         self.controller.look_down(1.0)
         time.sleep(1.0)
         self.controller.reset_look()
-        self.y_addrs = memory.search_new(self.pid, coords.init_pos_x, coords.init_pos_y, coords.init_pos_z, coords.init_pos_tolerance, coords.init_pitch, coords.init_pitch_tolerance)
+        self.logger.debug(f"Searching for memory address for {self.username}")
+        self.y_addrs = memory.search(self.pid)
         if self.y_addrs is None or self.y_addrs == 0:
+            self.logger.debug(f"Could not find memory address for {self.username}")
+            self.logger.debug(f"If this happens repeatedly, there was likely a Roblox update")
             raise StartupException("Could not find memory address")
         self.logger.debug(f"Memory address found for {self.username}. {self.pid}: {self.y_addrs}")
         return
