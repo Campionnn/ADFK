@@ -5,7 +5,6 @@ import json
 import ast
 import pathlib
 import keyboard
-import threading
 import tkinter as tk
 
 from utils.sequence_maker import App
@@ -20,10 +19,7 @@ except ImportError:
     import config
 
 
-def kill_thread():
-    keyboard.wait(config.kill_key)
-    os._exit(0)
-threading.Thread(target=kill_thread).start()
+keyboard.hook_key(config.kill_key, lambda _: os._exit(0))
 
 
 pathlib.Path("./logs/").mkdir(parents=True, exist_ok=True)
@@ -208,6 +204,7 @@ elif mode_choice == 4:
     RobloxManager(RobloxPortal, logger, roblox_pids=roblox_pids, mode=mode_choice, world=portal_input, level=rarity_input, custom_sequence=custom_sequence)
 
 elif mode_choice == 5:
+    keyboard.unhook_all()
     root = tk.Tk()
     root.geometry("400x500")
     app = App(root)
