@@ -38,7 +38,7 @@ class CustomDialog(tk.Toplevel):
 
 
 class Action:
-    def __init__(self, action_type, ids, location=None, amount=None):
+    def __init__(self, action_type, ids=None, location=None, amount=None):
         self.action_type = action_type
         self.ids = ids
         self.location = location
@@ -49,6 +49,16 @@ class Action:
             return f"Place {self.ids} at {self.location}"
         elif self.action_type == "upgrade":
             return f"Upgrade {self.ids} by {self.amount}"
+        elif self.action_type == "auto_use":
+            return f"Toggle auto use ability for {self.ids}"
+        elif self.action_type == "wait_money":
+            return f"Wait for ¥{self.amount}"
+        elif self.action_type == "wait_time":
+            return f"Wait for {self.amount} seconds"
+        elif self.action_type == "wait_wave":
+            return f"Wait for wave {self.amount}"
+        elif self.action_type == "sell":
+            return f"Sell {self.ids}"
 
 
 class App:
@@ -69,11 +79,10 @@ class App:
         self.description_entry.grid(row=1, column=1, columnspan=2, sticky="ew")
 
         self.action_type_var = tk.StringVar(self.root)
-        self.action_type_var.set("Select Action")
-        self.action_type_menu = tk.OptionMenu(self.root, self.action_type_var, "Place", "Upgrade")
+        self.action_type_var.set("Add Action")
+        self.action_type_menu = tk.OptionMenu(self.root, self.action_type_var, "Place", "Upgrade", "Auto Use Ability", "Wait For Money", "Wait For Time", "Wait For Wave", "Sell", command=self.on_action_select)
         self.action_type_menu.grid(row=2, column=0, sticky="ew")
 
-        tk.Button(self.root, text="Add Action", command=self.add_action).grid(row=2, column=1, sticky="ew")
         tk.Button(self.root, text="Save", command=self.save).grid(row=2, column=2, sticky="ew")
         tk.Button(self.root, text="Open", command=self.open_config).grid(row=2, column=3, sticky="ew")
 
@@ -99,20 +108,33 @@ class App:
         self.root.grid_rowconfigure(3, weight=1)
 
     def ids(self):
-        return list(set(id_ for action in self.actions for id_ in action.ids if action.action_type == "place"))
+        # return list(set(id_ for action in self.actions for id_ in action.ids if action.action_type == "place"))
+        ids = []
+        for action in self.actions:
+            if action.action_type == "place":
+                ids.extend(action.ids)
+        return list(set(ids))
 
-    def add_action(self):
+    def on_action_select(self, _):
         action_type = self.action_type_var.get()
-        if action_type == "Select Action":
-            messagebox.showerror("Error", "Please select an action type")
-            return
         if action_type == "Place":
             self.add_place_action()
         elif action_type == "Upgrade":
             self.add_upgrade_action()
+        elif action_type == "Auto Use Ability":
+            self.add_auto_use_action()
+        elif action_type == "Wait For Money":
+            self.add_wait_money_action()
+        elif action_type == "Wait For Time":
+            self.add_wait_time_action()
+        elif action_type == "Wait For Wave":
+            self.add_wait_wave_action()
+        elif action_type == "Sell":
+            self.add_sell_action()
+        self.action_type_var.set("Add Action")
 
     def add_place_action(self):
-        dialog = CustomDialog(self.root, "Place Action", ["Enter tower IDs (ex. 1a 2b)\nPut in multiple ids separated by\nspaces to place multiple at once", "Enter location (center/edge)\nCan also enter 1 for center and 2 for edge"], ["", ""])
+        dialog = CustomDialog(self.root, "Place Action", ["Enter tower IDs (ex. 1a 2b)\nPut in multiple IDs separated by\nspaces to place multiple at once", "Enter location (center/edge)\nCan also enter 1 for center and 2 for edge"], ["", ""])
         if dialog.result:
             ids_str, location = dialog.result
             ids = ids_str.split()
@@ -129,20 +151,86 @@ class App:
                 messagebox.showerror("Error", "Invalid IDs or location")
 
     def add_upgrade_action(self):
-        dialog = CustomDialog(self.root, "Upgrade Action", ["Enter tower IDs (ex. 1a 2b)\nPut in multiple ids separated by spaces\nto cycle through upgrading each", "Enter number of times to upgrade tower\nType in 0 to continuously upgrade until end of game\nNo actions will work after upgrade 0 happens"], ["", ""])
+        dialog = CustomDialog(self.root, "Upgrade Action", ["Enter tower IDs (ex. 1a 2b)\nPut in multiple IDs separated by spaces\nto cycle through upgrading each", "Enter number of times to upgrade tower\nType in 0 to continuously upgrade until end of game\nNo actions will work after upgrade 0 happens"], ["", ""])
         if dialog.result:
             ids_str, amount_str = dialog.result
-            ids_ = ids_str.split()
+            ids = ids_str.split()
             try:
                 amount = int(amount_str)
-                if all(id_ in self.ids() for id_ in ids_) and amount >= 0:
-                    action = Action("upgrade", ids=ids_, amount=amount)
+                if len(ids) > 0 and all(id_ in self.ids() for id_ in ids) and amount >= 0:
+                    action = Action("upgrade", ids=ids, amount=amount)
                     self.actions.append(action)
                     self.update_action_listbox()
                 else:
                     messagebox.showerror("Error", "Invalid IDs or amount")
             except ValueError:
                 messagebox.showerror("Error", "Invalid input format")
+
+    def add_auto_use_action(self):
+        dialog = CustomDialog(self.root, "Auto Use Ability Action", ["Enter tower IDs (ex. 1a 2b)\nPut in multiple IDs separated by spaces\nto toggle auto use for each tower"], [""])
+        if dialog.result:
+            ids_str = dialog.result[0]
+            ids = ids_str.split()
+            if len(ids) > 0 and all(id_ in self.ids() for id_ in ids):
+                action = Action("auto_use", ids=ids)
+                self.actions.append(action)
+                self.update_action_listbox()
+            else:
+                messagebox.showerror("Error", "Invalid IDs")
+
+    def add_wait_money_action(self):
+        dialog = CustomDialog(self.root, "Wait For Money Action", ["Enter amount of money to wait for"], [""])
+        if dialog.result:
+            try:
+                amount = int(dialog.result[0])
+                if amount > 0:
+                    action = Action("wait_money", amount=amount)
+                    self.actions.append(action)
+                    self.update_action_listbox()
+                else:
+                    raise ValueError
+            except ValueError:
+                messagebox.showerror("Error", "Invalid amount")
+
+    def add_wait_time_action(self):
+        dialog = CustomDialog(self.root, "Wait For Time Action", ["Enter amount of time to wait for in seconds"], [""])
+        if dialog.result:
+            try:
+                amount = int(dialog.result[0])
+                if amount > 0:
+                    action = Action("wait_time", amount=amount)
+                    self.actions.append(action)
+                    self.update_action_listbox()
+                else:
+                    raise ValueError
+            except ValueError:
+                messagebox.showerror("Error", "Invalid amount")
+
+    def add_wait_wave_action(self):
+        dialog = CustomDialog(self.root, "Wait For Wave Action", ["Enter wave to wait for"], [""])
+        if dialog.result:
+            try:
+                amount = int(dialog.result[0])
+                if amount > 0:
+                    action = Action("wait_wave", amount=amount)
+                    self.actions.append(action)
+                    self.update_action_listbox()
+                else:
+                    raise ValueError
+            except ValueError:
+                messagebox.showerror("Error", "Invalid amount")
+
+    def add_sell_action(self):
+        dialog = CustomDialog(self.root, "Sell Action", ["Enter tower IDs (ex. 1a 2b)\nPut in multiple IDs separated by spaces\nto sell multiple at once"], [""])
+        if dialog.result:
+            ids_str = dialog.result[0]
+            ids = ids_str.split()
+            if len(ids) > 0 and all(id_ in self.ids() for id_ in ids):
+                action = Action("sell", ids=ids)
+                self.actions.append(action)
+                self.update_action_listbox()
+            else:
+                messagebox.showerror("Error", "Invalid IDs")
 
     def edit_action(self):
         selection = self.action_listbox.curselection()
@@ -151,9 +239,9 @@ class App:
             action = self.actions[index]
             dialog = None
             if action.action_type == "place":
-                dialog = CustomDialog(self.root, "Edit Place Action", ["Enter tower IDs (ex. 1a 2b)\nPut in multiple ids separated by\nspaces to place multiple at once", "Enter location (center/edge)\nCan also enter 1 for center and 2 for edge"], [action.ids, action.location])
+                dialog = CustomDialog(self.root, "Edit Place Action", ["Enter tower IDs (ex. 1a 2b)\nPut in multiple IDs separated by\nspaces to place multiple at once", "Enter location (center/edge)\nCan also enter 1 for center and 2 for edge"], [action.ids, action.location])
             elif action.action_type == "upgrade":
-                dialog = CustomDialog(self.root, "Edit Upgrade Action", ["Enter tower IDs (ex. 1a 2b)\nPut in multiple ids separated by spaces\nto cycle through upgrading each", "Enter number of times to upgrade tower\nType in 0 to continuously upgrade until end of game\nNo actions will work after upgrade 0 happens"], [action.ids, str(action.amount)])
+                dialog = CustomDialog(self.root, "Edit Upgrade Action", ["Enter tower IDs (ex. 1a 2b)\nPut in multiple IDs separated by spaces\nto cycle through upgrading each", "Enter number of times to upgrade tower\nType in 0 to continuously upgrade until end of game\nNo actions will work after upgrade 0 happens"], [action.ids, str(action.amount)])
 
             if dialog is not None and dialog.result:
                 if action.action_type == "place":
@@ -179,26 +267,22 @@ class App:
                         messagebox.showerror("Error", "Invalid input format")
                         return
 
-                if self.is_valid_order():
-                    self.update_action_listbox()
-                    self.action_listbox.selection_set(index)
-                else:
-                    messagebox.showerror("Error", "Invalid order: cannot upgrade before placing")
+                self.update_action_listbox()
+                self.action_listbox.selection_set(index)
 
     def are_ids_unique(self, new_ids, current_ids=None):
         if len(new_ids) != len(set(new_ids)):
             return False
 
         existing_ids = self.ids()
-        print(existing_ids)
         if current_ids:
             existing_ids = [id_ for id_ in existing_ids if id_ not in current_ids]
         return all(new_id not in existing_ids for new_id in new_ids)
 
     def update_action_listbox(self):
         self.action_listbox.delete(0, tk.END)
-        for action in self.actions:
-            self.action_listbox.insert(tk.END, str(action))
+        for index, action in enumerate(self.actions):
+            self.action_listbox.insert(tk.END, f"{index + 1}: {str(action)}")
 
     def move_up(self):
         selection = self.action_listbox.curselection()
@@ -206,13 +290,9 @@ class App:
             index = selection[0]
             if index > 0:
                 self.actions[index], self.actions[index-1] = self.actions[index-1], self.actions[index]
-                if self.is_valid_order():
-                    self.update_action_listbox()
-                    self.action_listbox.selection_set(index-1)
-                    self.action_listbox.yview(index-1)
-                else:
-                    self.actions[index], self.actions[index-1] = self.actions[index-1], self.actions[index]
-                    messagebox.showerror("Error", "Invalid order: cannot upgrade before placing")
+                self.update_action_listbox()
+                self.action_listbox.selection_set(index-1)
+                self.action_listbox.yview(index-1)
 
     def move_down(self):
         selection = self.action_listbox.curselection()
@@ -220,34 +300,36 @@ class App:
             index = selection[0]
             if index < len(self.actions) - 1:
                 self.actions[index], self.actions[index+1] = self.actions[index+1], self.actions[index]
-                if self.is_valid_order():
-                    self.update_action_listbox()
-                    self.action_listbox.selection_set(index+1)
-                    self.action_listbox.yview(index+1)
-                else:
-                    self.actions[index], self.actions[index+1] = self.actions[index+1], self.actions[index]
-                    messagebox.showerror("Error", "Invalid order: cannot upgrade before placing")
+                self.update_action_listbox()
+                self.action_listbox.selection_set(index+1)
+                self.action_listbox.yview(index+1)
 
     def delete_action(self):
         selection = self.action_listbox.curselection()
         if selection:
             index = selection[0]
-            deleted_action = self.actions[index]
             del self.actions[index]
-            if self.is_valid_order():
-                self.update_action_listbox()
-            else:
-                messagebox.showerror("Error", "Invalid order: cannot upgrade before placing")
-                self.actions.insert(index, deleted_action)
+            self.update_action_listbox()
 
     def is_valid_order(self):
         placed_ids = set()
-        for action in self.actions:
+        for index, action in enumerate(self.actions):
             if action.action_type == "place":
-                placed_ids.update(action.ids)
+                placed_ids.update(set(action.ids))
             elif action.action_type == "upgrade":
-                if not all(id_ in placed_ids for id_ in action.ids):
+                invalid_ids = [id_ for id_ in action.ids if id_ not in placed_ids]
+                if invalid_ids:
+                    messagebox.showerror("Invalid Order", f"Upgrade action at step {index + 1} is invalid.\nCannot upgrade tower(s) {', '.join(invalid_ids)} before they are placed or after they are sold.")
                     return False
+            elif action.action_type == "auto_use":
+                if not all(id_ in placed_ids for id_ in action.ids):
+                    messagebox.showerror("Invalid Order", f"Auto use action at step {index + 1} is invalid.\nCannot toggle auto use for tower(s) {', '.join(action.ids)} that are not placed or after they are sold.")
+                    return False
+            elif action.action_type == "sell":
+                if not all(id_ in placed_ids for id_ in action.ids):
+                    messagebox.showerror("Invalid Order", f"Sell action at step {index + 1} is invalid.\nCannot sell tower(s) {', '.join(action.ids)} that are not placed.")
+                    return False
+                placed_ids.difference_update(set(action.ids))
         return True
 
     def save(self):
@@ -258,7 +340,6 @@ class App:
             return
 
         if not self.is_valid_order():
-            messagebox.showerror("Error", "Invalid order: cannot upgrade before placing")
             return
 
         hotkeys = list(set([id_[0] for id_ in self.ids()]))
@@ -284,9 +365,20 @@ class App:
             data = {
                 "name": name,
                 "description": description,
-                "actions": [{"type": action.action_type, "ids": action.ids, "location": action.location} if action.action_type == "place" else {"type": action.action_type, "ids": action.ids, "amount": action.amount} for action in self.actions],
+                "actions": [],
                 "costs": costs
             }
+            for action in self.actions:
+                action_data = {
+                    "type": action.action_type,
+                }
+                if action.ids is not None:
+                    action_data["ids"] = action.ids
+                if action.location is not None:
+                    action_data["location"] = action.location
+                if action.amount is not None:
+                    action_data["amount"] = action.amount
+                data["actions"].append(action_data)
 
             filename = f"./custom-sequence/{name.replace(' ', '-').lower()}.json"
             with open(filename, "w") as f:
@@ -310,9 +402,19 @@ class App:
             for action_data in data["actions"]:
                 action = None
                 if action_data["type"] == "place":
-                    action = Action("place", action_data["ids"], location=action_data["location"])
+                    action = Action("place", ids=action_data["ids"], location=action_data["location"])
                 elif action_data["type"] == "upgrade":
-                    action = Action("upgrade", action_data["ids"], amount=action_data["amount"])
+                    action = Action("upgrade", ids=action_data["ids"], amount=action_data["amount"])
+                elif action_data["type"] == "auto_use":
+                    action = Action("auto_use", ids=action_data["ids"])
+                elif action_data["type"] == "wait_money":
+                    action = Action("wait_money", amount=action_data["amount"])
+                elif action_data["type"] == "wait_time":
+                    action = Action("wait_time", amount=action_data["amount"])
+                elif action_data["type"] == "wait_wave":
+                    action = Action("wait_wave", amount=action_data["amount"])
+                elif action_data["type"] == "sell":
+                    action = Action("sell", ids=action_data["ids"])
                 self.actions.append(action)
 
             self.update_action_listbox()
