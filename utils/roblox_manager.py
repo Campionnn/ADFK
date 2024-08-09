@@ -51,6 +51,10 @@ class RobloxManager:
         while True:
             if self.all_enter():
                 break
+            try:
+                self.main_instance.wave_checker.stop()
+            except AttributeError:
+                pass
 
     def all_start_instance(self, usernames=None):
         if usernames is None:
