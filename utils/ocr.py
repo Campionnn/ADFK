@@ -27,6 +27,9 @@ def find_text(image_input: np.ndarray, text, numbers=False, black_text=False):
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     if numbers:
         tesseract_config += '0123456789'
+    if text == "$":
+        tesseract_config += '$'
+        thresh = thresh[thresh.shape[0]//3*2:, :thresh.shape[1]//3]
     result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
     result = result.split('\n')
     for line in result:
@@ -48,6 +51,8 @@ def find_text(image_input: np.ndarray, text, numbers=False, black_text=False):
                 return x, y+h*2
             elif text == "start":
                 return (x+w//2)+(thresh.shape[1]*3), y+h//2
+            if text == "$":
+                return x+w//2, (y+h//2)+(thresh.shape[0]*2)
             return x+w//2, y+h//2
         elif text == "playagain" or text == "backtolobby":
             if len(line) == 12 and difflib.SequenceMatcher(None, "playagainbacktolobby", line[11].lower()).ratio() > 0.8:
@@ -56,6 +61,10 @@ def find_text(image_input: np.ndarray, text, numbers=False, black_text=False):
                     return (x+w//4), y+h//2
                 else:
                     return x+(w//4*3), y+h//2
+        elif text == "$":
+            if len(line) == 12 and '$' in line[11]:
+                x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
+                return x+w, (y+h//2)+(thresh.shape[0]*2)
     return None
 
 
