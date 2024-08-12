@@ -17,6 +17,7 @@ from utils.exceptions import *
 
 class RobloxPortal(RobloxBase):
     def __init__(self, *args):
+        self.cost_multiplier = 1.25
         super().__init__(*args)
 
         self.portal_names = {
@@ -107,7 +108,7 @@ class RobloxPortal(RobloxBase):
             raise StartupException("Could not find portal")
 
     def enter(self, depth=0):
-        if self.username == config.usernames[0]:
+        if self.username == self.roblox_instances[0].username:
             if self.level > 10:
                 self.logger.debug(f"Looking for best {self.portal_names.get(self.world)} to open")
                 if not self.open_best_portal():

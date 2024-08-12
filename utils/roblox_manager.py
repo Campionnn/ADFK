@@ -26,6 +26,8 @@ class RobloxManager:
         self.world = world
         self.level = level
         self.custom_sequence = custom_sequence
+        if self.custom_sequence is None:
+            self.default_sequence()
 
         self.place_id = "17017769292"
         self.roblox_exe = "RobloxPlayerBeta.exe"
@@ -130,6 +132,24 @@ class RobloxManager:
                 return False
         return True
 
+    def default_sequence(self):
+        self.custom_sequence = {
+            "name": "default sequence",
+            "description": "auto generated sequence",
+            "actions": [],
+            "costs": {config.tower_hotkey: config.tower_cost},
+        }
+        self.custom_sequence["actions"].append({
+            "type": "place",
+            "ids": [config.tower_hotkey + chr(ord("a") + i) for i in range(config.tower_cap)],
+            "location": "center",
+        })
+        self.custom_sequence["actions"].append({
+            "type": "upgrade",
+            "ids": [config.tower_hotkey + chr(ord("a") + i) for i in range(config.tower_cap)],
+            "amount": "0",
+        })
+
     def all_enter(self):
         if isinstance(self.main_instance, RobloxInfinite):
             return self.all_enter_infinite()
@@ -168,19 +188,9 @@ class RobloxManager:
         except (PlayException, StartupException):
             self.all_leave_death()
             return
-        if self.main_instance.custom_sequence is not None:
-            if not self.main_instance.do_custom_sequence():
-                self.all_leave_death()
-                return
-        else:
-            if not self.main_instance.place_all_towers(config.tower_hotkey, config.tower_cap, config.tower_cost):
-                self.all_leave_death()
-                return
-            self.logger.debug(f"Finished placing towers")
-            self.logger.debug(f"Upgrading towers")
-            if not self.main_instance.upgrade_all_towers(config.tower_cap):
-                self.all_leave_death()
-                return
+        if not self.main_instance.do_custom_sequence():
+            self.all_leave_death()
+            return
 
     def all_enter_story(self):
         assert isinstance(self.main_instance, RobloxStory)
@@ -213,55 +223,21 @@ class RobloxManager:
                 except (PlayException, StartupException):
                     self.all_leave_death()
                     return
-                if self.main_instance.custom_sequence is not None:
-                    if not self.main_instance.do_custom_sequence():
-                        time.sleep(0.5)
-                        if self.main_instance.find_text("victory") is not None:
-                            if self.main_instance.find_text("playnext"):
-                                self.all_play_next()
-                                continue
-                            else:
-                                self.all_leave_death()
-                                break
-                        elif self.main_instance.find_text("defeat") is not None:
-                            self.all_play_again()
+                if not self.main_instance.do_custom_sequence():
+                    time.sleep(0.5)
+                    if self.main_instance.find_text("victory") is not None:
+                        if self.main_instance.find_text("playnext"):
+                            self.all_play_next()
                             continue
                         else:
                             self.all_leave_death()
                             break
-                else:
-                    if not self.main_instance.place_all_towers(config.tower_hotkey, config.tower_cap, config.tower_cost):
-                        time.sleep(0.5)
-                        if self.main_instance.find_text("victory") is not None:
-                            if self.main_instance.find_text("playnext"):
-                                self.all_play_next()
-                                continue
-                            else:
-                                self.all_leave_death()
-                                break
-                        elif self.main_instance.find_text("defeat") is not None:
-                            self.all_play_again()
-                            continue
-                        else:
-                            self.all_leave_death()
-                            break
-                    self.logger.debug(f"Finished placing towers")
-                    self.logger.debug(f"Upgrading towers")
-                    if not self.main_instance.upgrade_all_towers(config.tower_cap):
-                        time.sleep(0.5)
-                        if self.main_instance.find_text("victory") is not None:
-                            if self.main_instance.find_text("playnext"):
-                                self.all_play_next()
-                                continue
-                            else:
-                                self.all_leave_death()
-                                break
-                        elif self.main_instance.find_text("defeat") is not None:
-                            self.all_play_again()
-                            continue
-                        else:
-                            self.all_leave_death()
-                            break
+                    elif self.main_instance.find_text("defeat") is not None:
+                        self.all_play_again()
+                        continue
+                    else:
+                        self.all_leave_death()
+                        break
         return True
 
     def enter_tower(self):
@@ -282,47 +258,18 @@ class RobloxManager:
             except (PlayException, StartupException):
                 self.all_leave_death()
                 return
-
-            if self.main_instance.custom_sequence is not None:
-                if not self.main_instance.do_custom_sequence():
-                    if self.main_instance.find_text("victory") is not None:
-                        if self.main_instance.find_text("playnext"):
-                            self.all_play_next()
-                            continue
-                        else:
-                            self.logger.debug("Won but couldn't find play next button")
-                            self.all_leave_death()
-                            break
+            if not self.main_instance.do_custom_sequence():
+                if self.main_instance.find_text("victory") is not None:
+                    if self.main_instance.find_text("playnext"):
+                        self.all_play_next()
+                        continue
                     else:
+                        self.logger.debug("Won but couldn't find play next button")
                         self.all_leave_death()
                         break
-            else:
-                if not self.main_instance.place_all_towers(config.tower_hotkey, config.tower_cap, config.tower_cost):
-                    if self.main_instance.find_text("victory") is not None:
-                        if self.main_instance.find_text("playnext"):
-                            self.all_play_next()
-                            continue
-                        else:
-                            self.logger.debug("Won but couldn't find play next button")
-                            self.all_leave_death()
-                            break
-                    else:
-                        self.all_leave_death()
-                        break
-                self.logger.debug(f"Finished placing towers")
-                self.logger.debug(f"Upgrading towers")
-                if not self.main_instance.upgrade_all_towers(config.tower_cap):
-                    if self.main_instance.find_text("victory") is not None:
-                        if self.main_instance.find_text("playnext"):
-                            self.all_play_next()
-                            continue
-                        else:
-                            self.logger.debug("Won but couldn't find play next button")
-                            self.all_leave_death()
-                            break
-                    else:
-                        self.all_leave_death()
-                        break
+                else:
+                    self.all_leave_death()
+                    break
 
     def all_enter_portal(self):
         assert isinstance(self.main_instance, RobloxPortal)
@@ -363,19 +310,9 @@ class RobloxManager:
         except (PlayException, StartupException):
             self.all_leave_death()
             return
-        if self.main_instance.custom_sequence is not None:
-            if not self.main_instance.do_custom_sequence():
-                self.all_leave_death()
-                return
-        else:
-            if not self.main_instance.place_all_towers(config.tower_hotkey, config.tower_cap, config.tower_cost):
-                self.all_leave_death()
-                return
-            self.logger.debug(f"Finished placing towers")
-            self.logger.debug(f"Upgrading towers")
-            if not self.main_instance.upgrade_all_towers(config.tower_cap):
-                self.all_leave_death()
-                return
+        if not self.main_instance.do_custom_sequence():
+            self.all_leave_death()
+            return
 
     def all_click_leave(self):
         for instance in self.roblox_instances:

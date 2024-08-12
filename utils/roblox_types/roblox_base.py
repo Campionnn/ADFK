@@ -445,6 +445,8 @@ class RobloxBase(ABC):
             spiral_coords = self.spiral_coords
         else:
             spiral_coords = self.spiral_coords[::-1]
+        cost = cost * getattr(self, "cost_multiplier", 1)
+        cost = int(cost) + (cost % 1 > 0)
         self.logger.debug(f"Waiting for {cost} money to place tower")
         current_money = ocr.read_current_money(self.screenshot())
         start = time.time()
@@ -596,74 +598,6 @@ class RobloxBase(ABC):
         if self.current_wave[1] != 0 and time.time() - self.current_wave[1] > 600:
             self.logger.warning("Wave lasted for over 5 minutes. Manually leaving")
             return True
-
-    def place_all_towers(self, hotkey, cap, cost):
-        self.set_foreground()
-        self.wave_checker = RepeatedTimer(1, self.check_wave)
-        for i in range(cap):
-            if self.check_over():
-                return False
-
-            current_money = ocr.read_current_money(self.screenshot())
-            count = 0
-            while current_money is None or current_money < cost:
-                time.sleep(0.1)
-                if count != 0 and count % 5 == 0 and self.check_over():
-                    return False
-                current_money = ocr.read_current_money(self.screenshot())
-                count += 1
-
-            if not self.check_placement():
-                keyboard.send(hotkey)
-            placed_towers = list(self.placed_towers.values())
-            count = 0
-            for x, y in self.spiral_coords:
-                if count != 0 and count % 3 == 0 and self.check_over():
-                    return False
-                if (x, y) not in placed_towers and (x, y) not in self.invalid_towers:
-                    autoit.mouse_move(x, y)
-                    time.sleep(0.15)
-                    autoit.mouse_click("left", x, y)
-                    time.sleep(0.15)
-                    if not self.check_placement():
-                        self.logger.debug(f"Placed tower at {x}, {y}")
-                        self.placed_towers[(x, y)] = (x, y)
-                        keyboard.send("c")
-                        break
-                    self.invalid_towers.append((x, y))
-                else:
-                    count += 1
-        keyboard.send("c")
-        return True
-
-    def upgrade_all_towers(self, tower_cap):
-        self.set_foreground()
-        time.sleep(1)
-        while True:
-            self.check_afk()
-
-            if tower_cap == 0:
-                if self.check_over():
-                    return False
-                time.sleep(0.5)
-
-            for x, y in self.placed_towers:
-                if self.check_over():
-                    return False
-
-                autoit.mouse_click("left", x, y)
-                time.sleep(0.1)
-                start2 = time.time()
-                while time.time() - start2 < 3:
-                    screen = self.screenshot()
-                    upgrade_info = ocr.read_upgrade_cost(screen)
-                    if upgrade_info is not None:
-                        current_money = ocr.read_current_money(screen)
-                        if current_money is not None and current_money >= upgrade_info[0]:
-                            autoit.mouse_click("left", upgrade_info[1], upgrade_info[2])
-                            self.logger.debug(f"Upgraded tower at {x}, {y}")
-                            break
-                    time.sleep(0.1)
 
     def check_wave(self):
         screen = self.screenshot()

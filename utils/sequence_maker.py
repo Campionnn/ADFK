@@ -380,7 +380,7 @@ class App:
                 if action.location is not None:
                     action_data["location"] = action.location
                 if action.amount is not None:
-                    action_data["amount"] = action.amount
+                    action_data["amount"] = str(action.amount)
                 data["actions"].append(action_data)
 
             filename = f"./custom-sequence/{name.replace(' ', '-').lower()}.json"
