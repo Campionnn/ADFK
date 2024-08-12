@@ -226,34 +226,23 @@ def word_in_text(word, text, threshold=0.8):
     return False
 
 
-def find_portal(image_input, portal_type, portal_rarity):
-    portal_type = portal_numbers[portal_type]
-    portal_rarity = rarity_numbers[portal_rarity]
+def find_portal(image_input, portal_rarity):
     image = image_input.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
     for i in range(5):
         crop = thresh[:, int(thresh.shape[1]//split_lines[i]):int(thresh.shape[1]//split_lines[i+1])]
-        tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ()'
         result = pytesseract.image_to_data(crop, config=tesseract_config, timeout=10)
         result = result.split('\n')
         for line in result:
             line = line.split('\t')
-            if len(line) == 12 and difflib.SequenceMatcher(None, portal_type, line[11].lower()).ratio() > 0.8:
-                x, y, w, h = int(line[6]), int(line[7]), crop.shape[0]//9, crop.shape[0]//9
-                crop2 = crop[y:y + h, x:x + w]
-                tesseract_config2 = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890()'
-                result2 = pytesseract.image_to_string(crop2, config=tesseract_config2, timeout=10).lower()
-                result2 = ''.join(result2.split())
-                # if "(" + rarity + ")" in result2:
-                #     count = int(re.search(r'\b([1-9]|10)x\b', result2).group(1))
-                #     return [count, x + w // 2, y + h // 2]
-                if word_in_text(portal_text.get(portal_type), result2) and word_in_text("("+portal_rarity+")", result2):
-                    return int((x + w // 2) + thresh.shape[1]//split_lines[i]), y + h // 2
+            if len(line) == 12:
+                if word_in_text("("+rarity_numbers[portal_rarity]+")", line[11].lower()):
+                    return int((int(line[6]) + int(line[8]) // 2) + thresh.shape[1]//split_lines[i]), int(int(line[7]) + int(line[9]) // 2)
 
 
-def find_best_portal(image_input, portal_type, max_rarity):
-    portal_type = portal_numbers[portal_type]
+def find_best_portal(image_input, max_rarity):
     possible_rarities = [rarity for rarity in list(rarity_numbers.keys()) if rarity <= max_rarity]
     image = image_input.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -261,23 +250,17 @@ def find_best_portal(image_input, portal_type, max_rarity):
     rarity = 0
     for i in range(5):
         crop = thresh[:, int(thresh.shape[1]//split_lines[i]):int(thresh.shape[1]//split_lines[i+1])]
-        tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ()'
         result = pytesseract.image_to_data(crop, config=tesseract_config, timeout=10)
         result = result.split('\n')
         for line in result:
             line = line.split('\t')
-            if len(line) == 12 and difflib.SequenceMatcher(None, portal_type, line[11].lower()).ratio() > 0.8:
-                x, y, w, h = int(line[6]), int(line[7]), crop.shape[0]//9, crop.shape[0]//9
-                crop2 = crop[y:y + h, x:x + w]
-                tesseract_config2 = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890()'
-                result2 = pytesseract.image_to_string(crop2, config=tesseract_config2, timeout=10).lower()
-                result2 = ''.join(result2.split())
-                if word_in_text(portal_text.get(portal_type), result2):
-                    for rarity_num in possible_rarities:
-                        if rarity_num > rarity and word_in_text("("+rarity_numbers.get(rarity_num)+")", result2):
-                            rarity = rarity_num
-                            if rarity == max_rarity:
-                                return rarity
+            if len(line) == 12:
+                for rarity_num in possible_rarities:
+                    if rarity_num > rarity and word_in_text("("+rarity_numbers.get(rarity_num)+")", line[11].lower()):
+                        rarity = rarity_num
+                        if rarity == max_rarity:
+                            return rarity
     if rarity > 0:
         return rarity
     return None
