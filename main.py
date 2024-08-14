@@ -1,4 +1,5 @@
 import os
+import coloredlogs
 import logging
 import time
 import json
@@ -24,22 +25,13 @@ keyboard.hook_key(config.kill_key, lambda _: os._exit(0))
 
 pathlib.Path("./logs/").mkdir(parents=True, exist_ok=True)
 pathlib.Path("custom-sequence/").mkdir(parents=True, exist_ok=True)
-if config.logging_level == "debug":
-    level = logging.DEBUG
-else:
-    level = logging.INFO
-logFormatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-rootLogger = logging.getLogger()
-logPath = "./logs"
-fileName = f"ADFK_{time.strftime('%Y%m%d-%H%M%S')}"
-fileHandler = logging.FileHandler(f"{logPath}/{fileName}.log")
-fileHandler.setFormatter(logFormatter)
-rootLogger.addHandler(fileHandler)
-consoleHandler = logging.StreamHandler()
-consoleHandler.setFormatter(logFormatter)
 logger = logging.getLogger()
-logger.setLevel(level)
-logging.getLogger().addHandler(consoleHandler)
+coloredlogs.install(level=config.logging_level, fmt="%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)")
+logger.setLevel(logging.DEBUG)
+fileHandler = logging.FileHandler(f"./logs/ADFK_{time.strftime('%Y%m%d-%H%M%S')}.log")
+fileHandler.setLevel(logging.DEBUG)
+fileHandler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"))
+logger.addHandler(fileHandler)
 
 
 print("Choose between infinite farming or story progression")
@@ -97,7 +89,6 @@ if mode_choice in [1, 2, 3, 4]:
     if custom_input:
         with open(f"custom-sequence/{custom_sequences[custom_input - 1]}", "r") as f:
             custom_sequence = json.load(f)
-            print(custom_sequence)
 
 
 if mode_choice == 1:

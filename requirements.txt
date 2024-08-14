@@ -11,3 +11,5 @@ vgamepad~=0.1.0
 PyAutoIt~=0.6.5
 requests~=2.32.3
 pillow~=10.4.0
+coloredlogs~=15.0.1
+colorama~=0.4.6
