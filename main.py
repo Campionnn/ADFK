@@ -1,4 +1,5 @@
 import os
+import coloredlogs
 import logging
 import time
 import json
@@ -24,25 +25,60 @@ keyboard.hook_key(config.kill_key, lambda _: os._exit(0))
 
 pathlib.Path("./logs/").mkdir(parents=True, exist_ok=True)
 pathlib.Path("custom-sequence/").mkdir(parents=True, exist_ok=True)
-if config.logging_level == "debug":
-    level = logging.DEBUG
-else:
-    level = logging.INFO
-logFormatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-rootLogger = logging.getLogger()
-logPath = "./logs"
-fileName = f"ADFK_{time.strftime('%Y%m%d-%H%M%S')}"
-fileHandler = logging.FileHandler(f"{logPath}/{fileName}.log")
-fileHandler.setFormatter(logFormatter)
-rootLogger.addHandler(fileHandler)
-consoleHandler = logging.StreamHandler()
-consoleHandler.setFormatter(logFormatter)
 logger = logging.getLogger()
-logger.setLevel(level)
-logging.getLogger().addHandler(consoleHandler)
+coloredlogs.install(level=config.logging_level, fmt="%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)")
+logger.setLevel(logging.DEBUG)
+fileHandler = logging.FileHandler(f"./logs/ADFK_{time.strftime('%Y%m%d-%H%M%S')}.log")
+fileHandler.setLevel(logging.DEBUG)
+fileHandler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"))
+logger.addHandler(fileHandler)
 
 
-print("Choose between infinite farming or story progression")
+mode_names = {
+    1: "Infinite Farming",
+    2: "Story Progression",
+    3: "Tower of Eternity",
+    4: "Auto Complete Portals",
+    5: "Create or Edit a Custom Placement"
+}
+
+world_names = {
+    1: "Windmill Village",
+    2: "Haunted City",
+    3: "Cursed Academy",
+    4: "Blue Planet",
+    5: "Underwater Temple",
+    6: "Swordsman Dojo",
+    7: "Snowy Woods",
+    8: "Crystal Cave"
+}
+
+portal_names = {
+    1: "Demon Portal",
+    2: "Cursed Kingdom Portal",
+    3: "Ancient Dragon Portal",
+    4: "Solar Temple Portal",
+    5: "Lunar Temple Portal"
+}
+
+rarity_names = {
+    1: "Rare",
+    2: "Epic",
+    3: "Legendary",
+    4: "Mythic",
+    5: "Secret",
+    6: "In Descending Order"
+}
+
+rarity_names2 = {
+    12: "Epic",
+    13: "Legendary",
+    14: "Mythic",
+    15: "Secret",
+    16: "Do All"
+}
+
+print("Choose between the following modes")
 print("1: Infinite Farming")
 print("2: Story Progression")
 print("3: Tower of Eternity(only 1 account for now)")
@@ -55,6 +91,7 @@ while True:
             break
     except ValueError:
         pass
+logger.info(f"Mode Choice: {mode_names[mode_choice]}")
 
 roblox_pids = None
 custom_sequence = None
@@ -75,6 +112,7 @@ if mode_choice in [1, 2, 3, 4]:
                 break
         except (ValueError, AssertionError, SyntaxError):
             pass
+    logger.info(f"Roblox PIDs: {roblox_pids}")
 
     print("Choose a custom placement to use")
     print("Leave blank and press enter if you want to use default placement")
@@ -97,8 +135,7 @@ if mode_choice in [1, 2, 3, 4]:
     if custom_input:
         with open(f"custom-sequence/{custom_sequences[custom_input - 1]}", "r") as f:
             custom_sequence = json.load(f)
-            print(custom_sequence)
-
+    logger.info(f"Custom Sequence: {custom_sequence}")
 
 if mode_choice == 1:
     print("Choose which world to farm in")
@@ -117,6 +154,8 @@ if mode_choice == 1:
                 break
         except ValueError:
             pass
+    logger.info(f"World Choice: {world_names[world_input]}")
+
     RobloxManager(RobloxInfinite, logger, roblox_pids=roblox_pids, mode=mode_choice, world=world_input, custom_sequence=custom_sequence)
 
 elif mode_choice == 2:
@@ -136,6 +175,8 @@ elif mode_choice == 2:
                 break
         except ValueError:
             pass
+    logger.info(f"World Choice: {world_names[world_input]}")
+
     print("Choose which chapter to start story progression in")
     print("1: Chapter 1")
     print("2: Chapter 2")
@@ -150,6 +191,8 @@ elif mode_choice == 2:
                 break
         except ValueError:
             pass
+    logger.info(f"Chapter Choice: Chapter {chapter_input}")
+
     RobloxManager(RobloxStory, logger, roblox_pids=roblox_pids, mode=mode_choice, world=world_input, level=chapter_input, custom_sequence=custom_sequence)
 
 elif mode_choice == 3:
@@ -171,6 +214,8 @@ elif mode_choice == 4:
                 break
         except ValueError:
             pass
+    logger.info(f"Portal Choice: {portal_names[portal_input]}")
+
     print("Choose which rarity to auto complete")
     print("1: Rare")
     print("2: Epic")
@@ -185,6 +230,7 @@ elif mode_choice == 4:
                 break
         except ValueError:
             pass
+    logger.info(f"Rarity Choice: {rarity_names[rarity_input]}")
 
     if rarity_input == 6:
         print("What rarity to stop at (will not attempt this rarity and higher)")
@@ -201,6 +247,8 @@ elif mode_choice == 4:
             except ValueError:
                 pass
         rarity_input = rarity_input + 11
+        logger.info(f"Rarity Stop: {rarity_names2[rarity_input]}")
+
     RobloxManager(RobloxPortal, logger, roblox_pids=roblox_pids, mode=mode_choice, world=portal_input, level=rarity_input, custom_sequence=custom_sequence)
 
 elif mode_choice == 5:

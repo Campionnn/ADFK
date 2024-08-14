@@ -2,7 +2,7 @@
 
 # Kill key ex: "del" or "esc"
 kill_key = "del"
-# How much logging you want ex: "default" or "debug"
+# How much logging you want ex: "info" or "debug"
 logging_level = "debug"
 # Tesseract OCR Path. Default Location: r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 tesseract_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"

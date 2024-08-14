@@ -150,7 +150,7 @@ class RobloxBase(ABC):
         try:
             app = pywinauto.Application().connect(process=self.pid)
             app.top_window().set_focus()
-            self.logger.debug(f"Set foreground window to {self.pid}")
+            self.logger.debug(f"Set foreground window to {self.pid} for {self.username}")
             return True
         except (pywinauto.application.ProcessNotFoundError, OSError, RuntimeError):
             raise StartupException(f"Could not set foreground window: {self.pid}")
