@@ -483,7 +483,7 @@ class RobloxBase(ABC):
                 autoit.mouse_click("left", x, y)
                 time.sleep(0.15)
                 if not self.check_placement():
-                    self.logger.debug(f"Placed tower at {x}, {y}")
+                    self.logger.debug(f"Placed tower {tower_id} at {x}, {y}")
                     self.placed_towers[tower_id] = (x, y)
                     keyboard.send("c")
                     return True

@@ -132,16 +132,16 @@ class RobloxManager:
             "name": "default sequence",
             "description": "auto generated sequence",
             "actions": [],
-            "costs": {config.tower_hotkey: config.tower_cost},
+            "costs": {str(config.tower_hotkey): str(config.tower_cost)},
         }
         self.custom_sequence["actions"].append({
             "type": "place",
-            "ids": [config.tower_hotkey + chr(ord("a") + i) for i in range(config.tower_cap)],
+            "ids": [str(config.tower_hotkey) + chr(ord("a") + i) for i in range(config.tower_cap)],
             "location": "center",
         })
         self.custom_sequence["actions"].append({
             "type": "upgrade",
-            "ids": [config.tower_hotkey + chr(ord("a") + i) for i in range(config.tower_cap)],
+            "ids": [str(config.tower_hotkey) + chr(ord("a") + i) for i in range(config.tower_cap)],
             "amount": "0",
         })
 

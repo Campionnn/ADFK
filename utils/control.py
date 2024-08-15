@@ -114,8 +114,6 @@ class Control:
         init_distance = self.calculate_distance(current_pos[0], current_pos[2], final_x, final_z)
         self.logger.debug(f"Going to {final_x}, {final_z} from {current_pos[0]}, {current_pos[2]}")
         self.logger.debug(f"Distance to target: {init_distance}")
-        final_rot = self.calculate_degree_pos(current_pos[0], current_pos[2], final_x, final_z)
-        self.turn_towards_yaw(pid, y_addrs, final_rot, 5, min_turn, precise)
         start = time.time()
         while time.time() - start < timeout:
             current_x = current_pos[0]
@@ -124,7 +122,7 @@ class Control:
                 self.reset_move()
                 return True
             final_rot = self.calculate_degree_pos(current_x, current_z, final_x, final_z)
-            self.turn_towards_yaw(pid, y_addrs, final_rot, turn_tolerance)
+            self.turn_towards_yaw(pid, y_addrs, final_rot, turn_tolerance, min_turn, precise)
             distance = self.calculate_distance(current_x, current_z, final_x, final_z)
             amount = max(min((distance / 15), max_speed), min_speed)
             if jump:
