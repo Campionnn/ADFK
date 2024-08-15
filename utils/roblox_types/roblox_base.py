@@ -84,7 +84,7 @@ class RobloxBase(ABC):
             if time.time() - start > 120:
                 raise StartupException(f"Could not find Roblox instance for {self.username}")
             pids = get_pids_by_name(ROBLOX_EXE)
-            current_pids = [instance.pid for instance in self.roblox_instances]
+            current_pids = [instance.pid for instance in self.roblox_instances.values()]
             unique_pids = [pid for pid in pids if pid not in current_pids]
             time.sleep(1)
         if len(unique_pids) > 1:
@@ -608,7 +608,8 @@ class RobloxBase(ABC):
             self.logger.debug(f"Detected wave: {wave}")
 
     def anti_afk(self):
-        for instance in self.roblox_instances:
+        for username in config.usernames:
+            instance = self.roblox_instances.get(username)
             try:
                 instance.set_foreground()
                 time.sleep(1)

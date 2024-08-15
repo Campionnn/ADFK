@@ -108,7 +108,7 @@ class RobloxPortal(RobloxBase):
             raise StartupException("Could not find portal")
 
     def enter(self, depth=0):
-        if self.username == self.roblox_instances[0].username:
+        if self.username == config.usernames[0]:
             if self.level > 10:
                 self.logger.debug(f"Looking for best {self.portal_names.get(self.world)} to open")
                 if not self.open_best_portal():
@@ -120,8 +120,8 @@ class RobloxPortal(RobloxBase):
                 while not found:
                     if attempts > 3:
                         raise StartupException("Could not find portal to open")
-                    for instance in self.roblox_instances:
-                        if instance.open_portal():
+                    for username in config.usernames:
+                        if self.roblox_instances[username].open_portal():
                             found = True
                             break
                     attempts += 1
@@ -194,7 +194,8 @@ class RobloxPortal(RobloxBase):
     def open_best_portal(self):
         best_portal = 0
         best_instance = None
-        for instance in self.roblox_instances:
+        for username in config.usernames:
+            instance = self.roblox_instances[username]
             portal = instance.get_best_portal()
             if portal > best_portal:
                 best_portal = portal

@@ -33,15 +33,15 @@ class RobloxManager:
         self.roblox_exe = "RobloxPlayerBeta.exe"
 
         self.main_instance = None
-        self.roblox_instances = []
+        self.roblox_instances = {}
         if roblox_pids is not None:
             for pid, y_addrs in roblox_pids.items():
                 username = config.usernames[list(roblox_pids.keys()).index(pid)]
                 instance = roblox_type(self.roblox_instances, self.logger, self.controller, username, self.world, self.level, self.custom_sequence, pid, y_addrs)
-                self.roblox_instances.append(instance)
-            pids = {instance.pid: instance.y_addrs for instance in self.roblox_instances}
+                self.roblox_instances[username] = instance
+            pids = {self.roblox_instances[username].pid: self.roblox_instances[username].y_addrs for username in config.usernames}
             self.logger.info(f"Roblox PIDs: {pids}")
-            self.main_instance = [instance for instance in self.roblox_instances if instance.username == config.usernames[0]][0]
+            self.main_instance = self.roblox_instances[config.usernames[0]]
         else:
             if issubclass(roblox_type, (RobloxInfinite, RobloxStory, RobloxPortal)):
                 self.all_start_instance()
@@ -81,7 +81,7 @@ class RobloxManager:
         while True:
             try:
                 instance.start_account()
-                self.roblox_instances.append(instance)
+                self.roblox_instances[username] = instance
                 break
             except StartupException:
                 self.logger.warning(f"Failed to start {username} instance")
@@ -90,33 +90,28 @@ class RobloxManager:
     def ensure_all_instance(self):
         while True:
             if self.check_all_crash():
-                break
-            time.sleep(5)
-
-        roblox_instances = []
-        for username in config.usernames:
-            for instance in self.roblox_instances:
-                if instance.username == username:
-                    roblox_instances.append(instance)
+                time.sleep(5)
+                if self.check_all_crash():
                     break
-        self.roblox_instances = roblox_instances
+            time.sleep(1)
 
-        pids = {instance.pid: instance.y_addrs for instance in self.roblox_instances}
+        pids = {self.roblox_instances[username].pid: self.roblox_instances[username].y_addrs for username in config.usernames}
         self.logger.info(f"Roblox PIDs: {pids}")
-        self.main_instance = [instance for instance in self.roblox_instances if instance.username == config.usernames[0]][0]
+        self.main_instance = self.roblox_instances[config.usernames[0]]
         time.sleep(5)
 
         if not self.check_all_crash():
             self.ensure_all_instance()
 
     def check_all_crash(self):
-        for instance in self.roblox_instances:
+        for username in config.usernames:
+            instance = self.roblox_instances[username]
             try:
                 instance.check_crash()
             except StartupException:
                 self.logger.warning(f"Instance for {instance.username} crashed")
                 instance.close_instance()
-                self.roblox_instances.remove(instance)
+                self.roblox_instances.pop(instance.username)
                 username = instance.username
                 del instance
                 try:
@@ -165,14 +160,16 @@ class RobloxManager:
     def all_enter_infinite(self):
         assert isinstance(self.main_instance, RobloxInfinite)
         self.logger.debug(f"Entering infinite for all accounts. World: {self.world} Level: {self.level}")
-        for instance in self.roblox_instances:
+        for username in config.usernames:
+            instance = self.roblox_instances[username]
             try:
                 instance.teleport()
             except StartupException:
                 instance.close_instance()
                 self.ensure_all_instance()
                 return
-        for instance in self.roblox_instances:
+        for username in config.usernames:
+            instance = self.roblox_instances[username]
             try:
                 instance.enter()
             except (StartupException, MemoryException):
@@ -199,14 +196,16 @@ class RobloxManager:
             self.main_instance.set_world(self.world, self.level)
             self.logger.debug(f"Entering story for all accounts. World: {self.world} Level: {self.level}")
             self.level = 1
-            for instance in self.roblox_instances:
+            for username in config.usernames:
+                instance = self.roblox_instances[username]
                 try:
                     instance.teleport()
                 except StartupException:
                     instance.close_instance()
                     self.ensure_all_instance()
                     return
-            for instance in self.roblox_instances:
+            for username in config.usernames:
+                instance = self.roblox_instances[username]
                 try:
                     instance.enter()
                 except (StartupException, MemoryException):
@@ -274,14 +273,16 @@ class RobloxManager:
     def all_enter_portal(self):
         assert isinstance(self.main_instance, RobloxPortal)
         self.logger.debug(f"Entering portal for all accounts")
-        for instance in self.roblox_instances:
+        for username in config.usernames:
+            instance = self.roblox_instances[username]
             try:
                 instance.teleport()
             except StartupException:
                 instance.close_instance()
                 self.ensure_all_instance()
                 return
-        for instance in self.roblox_instances:
+        for username in config.usernames:
+            instance = self.roblox_instances[username]
             try:
                 instance.enter()
             except (StartupException, MemoryException):
@@ -291,7 +292,8 @@ class RobloxManager:
                 return
         self.logger.debug(f"Starting portal")
         found = False
-        for instance in self.roblox_instances:
+        for username in config.usernames:
+            instance = self.roblox_instances[username]
             try:
                 if instance.start():
                     found = True
@@ -315,7 +317,8 @@ class RobloxManager:
             return
 
     def all_click_leave(self):
-        for instance in self.roblox_instances:
+        for username in config.usernames:
+            instance = self.roblox_instances[username]
             try:
                 instance.set_foreground()
                 time.sleep(0.5)
@@ -325,13 +328,13 @@ class RobloxManager:
                 pass
 
     def all_leave_death(self):
-        for instance in self.roblox_instances:
-            instance.leave_death()
+        for username in config.usernames:
+            self.roblox_instances[username].leave_death()
 
     def all_play_next(self):
-        for instance in self.roblox_instances:
-            instance.play_next()
+        for username in config.usernames:
+            self.roblox_instances[username].play_next()
 
     def all_play_again(self):
-        for instance in self.roblox_instances:
-            instance.play_again()
+        for username in config.usernames:
+            self.roblox_instances[username].play_again()
