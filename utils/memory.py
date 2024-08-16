@@ -1,6 +1,7 @@
 import os
 import math
 import psutil
+import multiprocessing
 
 import coords
 from utils.exceptions import *
@@ -26,9 +27,25 @@ def get_pids_by_name(process_name):
     return pids
 
 
+def search_multiprocess(pid, queue):
+    try:
+        addresses = memory_search.search_memory(pid, coords.init_pos_x, coords.init_pos_y, coords.init_pos_z, coords.init_pos_tolerance, coords.init_pitch, coords.init_pitch_tolerance, coords.rot_offset)
+        queue.put(addresses)
+    except Exception as e:
+        queue.put(e)
+
+
 def search(pid):
-    addresses = memory_search.search_memory(pid, coords.init_pos_x, coords.init_pos_y, coords.init_pos_z, coords.init_pos_tolerance, coords.init_pitch, coords.init_pitch_tolerance, coords.rot_offset)
-    return addresses
+    queue = multiprocessing.Queue()
+    p = multiprocessing.Process(target=search_multiprocess, args=(pid, queue))
+    p.start()
+    p.join()
+    if p.exitcode != 0:
+        raise MemoryException("Could not find memory addresses")
+    result = queue.get()
+    if isinstance(result, Exception):
+        raise MemoryException("Could not find memory addresses")
+    return result
 
 
 def get_current_info(pid, y_address):

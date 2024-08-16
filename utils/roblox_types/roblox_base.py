@@ -120,7 +120,10 @@ class RobloxBase(ABC):
         time.sleep(1.0)
         self.controller.reset_look()
         self.logger.debug(f"Searching for memory address for {self.username}")
-        self.y_addrs = memory.search(self.pid)
+        try:
+            self.y_addrs = memory.search(self.pid)
+        except MemoryException:
+            self.y_addrs = None
         if self.y_addrs is None or self.y_addrs == 0:
             self.logger.debug(f"Could not find memory address for {self.username}")
             self.logger.debug(f"If this happens repeatedly, there was likely a Roblox update")

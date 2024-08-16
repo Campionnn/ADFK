@@ -21,7 +21,6 @@ class Control:
     def reset(self):
         self.gamepad.reset()
         self.gamepad.update()
-        keyboard.release("space")
 
     def reset_look(self):
         self.gamepad.right_joystick_float(x_value_float=0, y_value_float=0)
