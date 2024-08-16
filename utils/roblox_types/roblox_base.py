@@ -631,8 +631,7 @@ class RobloxBase(ABC):
         time.sleep(1)
         text_coords = self.find_text("backtolobby")
         if text_coords is None:
-            self.leave_wave()
-            return False
+            return self.leave_wave()
         autoit.mouse_click("left", text_coords[0], text_coords[1])
         return True
 
@@ -673,3 +672,4 @@ class RobloxBase(ABC):
         autoit.mouse_click("left", fast_travel_coords[0], fast_travel_coords[1])
         time.sleep(0.5)
         self.click_text("leave")
+        return True

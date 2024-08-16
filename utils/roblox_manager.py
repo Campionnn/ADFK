@@ -59,18 +59,14 @@ class RobloxManager:
                 pass
 
     def all_start_instance(self, usernames=None):
+        self.roblox_instances = {}
         if usernames is None:
             usernames = config.usernames
         try:
             for username in usernames:
                 self.start_instance(username)
         except PlayException:
-            self.logger.warning(f"Closing all Roblox instances and retrying")
-            for pid in get_pids_by_name(self.roblox_exe):
-                try:
-                    os.kill(pid, 15)
-                except OSError:
-                    pass
+            self.kill_all_roblox()
             self.all_start_instance()
         time.sleep(5)
         self.ensure_all_instance()
@@ -85,7 +81,10 @@ class RobloxManager:
                 break
             except StartupException:
                 self.logger.warning(f"Failed to start {username} instance")
-                instance.close_instance()
+                try:
+                    instance.close_instance()
+                except TypeError:
+                    raise PlayException("Failed to start instance")
 
     def ensure_all_instance(self):
         while True:
@@ -117,15 +116,23 @@ class RobloxManager:
                 try:
                     self.start_instance(username)
                 except PlayException:
-                    self.logger.warning(f"Closing all Roblox instances and retrying")
-                    for pid in get_pids_by_name(self.roblox_exe):
-                        try:
-                            os.kill(pid, 15)
-                        except OSError:
-                            pass
+                    self.kill_all_roblox()
                     self.all_start_instance()
                 return False
         return True
+
+    def kill_all_roblox(self):
+        self.logger.warning("Killing all Roblox instances to reset fresh")
+        pids = get_pids_by_name(self.roblox_exe)
+        while len(pids) > 0:
+            for pid in pids:
+                try:
+                    os.kill(pid, 15)
+                except OSError:
+                    pass
+            time.sleep(1)
+            pids = get_pids_by_name(self.roblox_exe)
+        time.sleep(5)
 
     def default_sequence(self):
         self.custom_sequence = {
@@ -195,7 +202,6 @@ class RobloxManager:
             self.world = world
             self.main_instance.set_world(self.world, self.level)
             self.logger.debug(f"Entering story for all accounts. World: {self.world} Level: {self.level}")
-            self.level = 1
             for username in config.usernames:
                 instance = self.roblox_instances[username]
                 try:
@@ -227,9 +233,11 @@ class RobloxManager:
                     if self.main_instance.find_text("victory") is not None:
                         if self.main_instance.find_text("playnext"):
                             self.all_play_next()
+                            self.level += 1
                             continue
                         else:
                             self.all_leave_death()
+                            self.level = 1
                             break
                     elif self.main_instance.find_text("defeat") is not None:
                         self.all_play_again()
@@ -329,7 +337,9 @@ class RobloxManager:
 
     def all_leave_death(self):
         for username in config.usernames:
-            self.roblox_instances[username].leave_death()
+            if not self.roblox_instances[username].leave_death():
+                self.roblox_instances[username].close_instance()
+        self.ensure_all_instance()
 
     def all_play_next(self):
         for username in config.usernames:
