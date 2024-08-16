@@ -93,7 +93,7 @@ class RobloxBase(ABC):
         self.logger.debug(f"Roblox instance for {self.username} started. Waiting for window to appear")
         start = time.time()
         while time.time() - start < 60:
-            self.check_crash(False)
+            self.check_crash()
             try:
                 self.set_foreground()
                 break
@@ -260,16 +260,11 @@ class RobloxBase(ABC):
 
         return matching_percentage > self.place_color_tolerance
 
-    def check_crash(self, responsive=True):
+    def check_crash(self):
         if self.pid is None:
             raise StartupException("Roblox pid does not exist")
         if not psutil.pid_exists(self.pid):
             raise StartupException("Roblox instance crashed")
-        if responsive:
-            cmd = 'tasklist /FI "PID eq %d" /FI "STATUS eq running"' % self.pid
-            status = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout.read()
-            if not str(self.pid) in str(status):
-                raise StartupException("Roblox instance crashed")
 
     def fast_travel(self, location):
         self.logger.debug(f"Fast traveling to {location} for {self.username}")
