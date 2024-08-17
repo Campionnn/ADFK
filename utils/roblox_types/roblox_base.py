@@ -3,7 +3,6 @@ import time
 import cv2
 import numpy as np
 import logging
-import subprocess
 import autoit
 import keyboard
 import pyautogui
@@ -30,9 +29,9 @@ PLACE_ID = "17017769292"
 
 
 class RobloxBase(ABC):
-    def __init__(self, roblox_instances, logger: logging.Logger, controller: control.Control, username, world, level, custom_sequence, pid=None, y_addrs=None):
+    def __init__(self, roblox_instances, controller: control.Control, username, world, level, custom_sequence, pid=None, y_addrs=None):
         self.roblox_instances = roblox_instances
-        self.logger = logger
+        self.logger = logging.getLogger()
         self.controller = controller
         self.username = username
         self.world = world
@@ -194,9 +193,9 @@ class RobloxBase(ABC):
 
     def click_nav_rect(self, sequence, error_message, click=True, chapter=False):
         if click:
-            self.logger.debug(f"Clicking button with sequence {sequence} for {self.username}")
+            self.logger.debug(f"Clicking button with sequence \"{sequence}\" for {self.username}")
         else:
-            self.logger.debug(f"Finding button with sequence {sequence} for {self.username}")
+            self.logger.debug(f"Finding button with sequence \"{sequence}\" for {self.username}")
         keyboard.send("\\")
         time.sleep(0.1)
         rect = self.find_nav_rect(sequence, chapter)

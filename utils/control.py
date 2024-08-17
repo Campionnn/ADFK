@@ -9,8 +9,8 @@ from utils import memory
 
 
 class Control:
-    def __init__(self, logger: logging.Logger):
-        self.logger = logger
+    def __init__(self):
+        self.logger = logging.getLogger()
         try:
             self.gamepad = vg.VX360Gamepad()
         except AssertionError:
