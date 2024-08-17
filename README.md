@@ -17,6 +17,7 @@ Roblox Settings:
 * Camera Mode is set to "Default (Classic)"
 * UI Navigation Toggle is enabled
 * Graphics settings are set to the lowest
+* Language is set to English
 
 Anime Defenders Settings
 * Skill VFX is disabled

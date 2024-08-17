@@ -157,7 +157,8 @@ class RobloxPortal(RobloxBase):
             keyboard.write(search)
             time.sleep(0.1)
         rect = self.get_window_rect()
-        autoit.mouse_move(int(rect[2]//8*4.8), rect[3]//2)  # move mouse to scrollbar area so doesn't hover items. might not be reliable
+        # move mouse to scrollbar area so doesn't hover over items. might not be reliable
+        autoit.mouse_move(int(rect[2]//8*4.8), rect[3]//2)
         time.sleep(0.2)
 
     def open_portal(self, level=None):

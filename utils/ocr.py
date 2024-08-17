@@ -256,11 +256,15 @@ def find_best_portal(image_input, max_rarity):
         for line in result:
             line = line.split('\t')
             if len(line) == 12:
+                found_rarity = 0
                 for rarity_num in possible_rarities:
-                    if rarity_num > rarity and word_in_text("("+rarity_numbers.get(rarity_num)+")", line[11].lower()):
-                        rarity = rarity_num
-                        if rarity == max_rarity:
-                            return rarity
+                    if word_in_text("("+rarity_numbers.get(rarity_num)+")", line[11].lower()):
+                        found_rarity = rarity_num
+                        break
+                if found_rarity != 0 and found_rarity > rarity:
+                    rarity = found_rarity
+                    if rarity == max_rarity:
+                        return rarity
     if rarity > 0:
         return rarity
     return None
