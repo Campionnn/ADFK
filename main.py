@@ -32,9 +32,9 @@ def check_and_install_modules():
         "pywinauto": "pywinauto~=0.6.8",
         "pybind11": "pybind11~=2.13.1",
         "vgamepad": "vgamepad~=0.1.0",
-        "PyAutoIt": "PyAutoIt~=0.6.5",
+        "autoit": "PyAutoIt~=0.6.5",
         "requests": "requests~=2.32.3",
-        "Pillow": "pillow~=10.4.0",
+        "PIL": "pillow~=10.4.0",
         "coloredlogs": "coloredlogs~=15.0.1",
         "colorama": "colorama~=0.4.6"
     }
