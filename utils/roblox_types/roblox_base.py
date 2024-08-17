@@ -31,7 +31,7 @@ PLACE_ID = "17017769292"
 class RobloxBase(ABC):
     def __init__(self, roblox_instances, controller: control.Control, username, world, level, custom_sequence, pid=None, y_addrs=None):
         self.roblox_instances = roblox_instances
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger("ADFK")
         self.controller = controller
         self.username = username
         self.world = world

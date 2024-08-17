@@ -20,7 +20,7 @@ except ImportError:
 class RobloxManager:
     def __init__(self, roblox_type: Type[RobloxBase], roblox_pids=None, mode=1, world=1, level=None, custom_sequence=None):
         self.roblox_type = roblox_type
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger("ADFK")
         self.controller = Control()
         self.mode = mode
         self.world = world

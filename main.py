@@ -66,13 +66,13 @@ def main():
 
     pathlib.Path("./logs/").mkdir(parents=True, exist_ok=True)
     pathlib.Path("custom-sequence/").mkdir(parents=True, exist_ok=True)
-    logger = logging.getLogger()
-    coloredlogs.install(level=config.logging_level, fmt="%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)")
+    logger = logging.getLogger("ADFK")
+    coloredlogs.install(logger=logger, level=config.logging_level, fmt="%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)")
     logger.setLevel(logging.DEBUG)
-    fileHandler = logging.FileHandler(f"./logs/ADFK_{time.strftime('%Y%m%d-%H%M%S')}.log")
-    fileHandler.setLevel(logging.DEBUG)
-    fileHandler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"))
-    logger.addHandler(fileHandler)
+    file_handler = logging.FileHandler(f"./logs/ADFK_{time.strftime('%Y%m%d-%H%M%S')}.log")
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"))
+    logger.addHandler(file_handler)
 
     mode_names = {
         1: "Infinite Farming",
