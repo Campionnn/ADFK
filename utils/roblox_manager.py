@@ -18,10 +18,10 @@ except ImportError:
 
 
 class RobloxManager:
-    def __init__(self, roblox_type: Type[RobloxBase], logger: logging.Logger, roblox_pids=None, mode=1, world=1, level=None, custom_sequence=None):
+    def __init__(self, roblox_type: Type[RobloxBase], roblox_pids=None, mode=1, world=1, level=None, custom_sequence=None):
         self.roblox_type = roblox_type
-        self.logger = logger
-        self.controller = Control(self.logger)
+        self.logger = logging.getLogger()
+        self.controller = Control()
         self.mode = mode
         self.world = world
         self.level = level
@@ -35,9 +35,10 @@ class RobloxManager:
         self.main_instance = None
         self.roblox_instances = {}
         if roblox_pids is not None:
+            self.logger.info("Initializing Roblox instances from given PIDs and Memory Addresses")
             for pid, y_addrs in roblox_pids.items():
                 username = config.usernames[list(roblox_pids.keys()).index(pid)]
-                instance = roblox_type(self.roblox_instances, self.logger, self.controller, username, self.world, self.level, self.custom_sequence, pid, y_addrs)
+                instance = roblox_type(self.roblox_instances, self.controller, username, self.world, self.level, self.custom_sequence, pid, y_addrs)
                 self.roblox_instances[username] = instance
             pids = {self.roblox_instances[username].pid: self.roblox_instances[username].y_addrs for username in config.usernames}
             self.logger.info(f"Roblox PIDs: {pids}")
@@ -48,6 +49,7 @@ class RobloxManager:
             elif issubclass(roblox_type, RobloxTower):
                 self.all_start_instance([config.usernames[0]])
             else:
+                self.logger.error("Invalid roblox type")
                 raise StartupException("Invalid roblox type")
 
         while True:
@@ -62,6 +64,7 @@ class RobloxManager:
         self.roblox_instances = {}
         if usernames is None:
             usernames = config.usernames
+        self.logger.info(f"Creating new Roblox instances for {usernames}")
         try:
             for username in usernames:
                 self.start_instance(username)
@@ -72,21 +75,24 @@ class RobloxManager:
         self.ensure_all_instance()
 
     def start_instance(self, username):
-        self.logger.debug(f"Creating instance for {username}")
-        instance = self.roblox_type(self.roblox_instances, self.logger, self.controller, username, self.world, self.level, self.custom_sequence)
+        self.logger.info(f"Creating instance for {username}")
+        instance = self.roblox_type(self.roblox_instances, self.controller, username, self.world, self.level, self.custom_sequence)
         while True:
             try:
                 instance.start_account()
                 self.roblox_instances[username] = instance
                 break
             except StartupException:
-                self.logger.warning(f"Failed to start {username} instance")
+                self.logger.warning(f"Failed to start instance for {username}")
                 try:
                     instance.close_instance()
                 except TypeError:
-                    raise PlayException("Failed to start instance")
+                    self.logger.warning(f"Failed to close instance for {username}")
+                    raise PlayException(f"Failed to close instance for {username}")
 
     def ensure_all_instance(self):
+        self.logger.debug("Ensuring all Roblox instances are running")
+
         while True:
             if self.check_all_crash():
                 time.sleep(5)
@@ -122,7 +128,7 @@ class RobloxManager:
         return True
 
     def kill_all_roblox(self):
-        self.logger.warning("Killing all Roblox instances to reset fresh")
+        self.logger.warning("Killing all Roblox instances to start fresh")
         pids = get_pids_by_name(self.roblox_exe)
         while len(pids) > 0:
             for pid in pids:
@@ -135,6 +141,7 @@ class RobloxManager:
         time.sleep(5)
 
     def default_sequence(self):
+        self.logger.debug("Creating default custom sequence using config")
         self.custom_sequence = {
             "name": "default sequence",
             "description": "auto generated sequence",
@@ -151,6 +158,7 @@ class RobloxManager:
             "ids": [str(config.tower_hotkey) + chr(ord("a") + i) for i in range(config.tower_cap)],
             "amount": "0",
         })
+        self.logger.debug(f"Default custom sequence: {self.custom_sequence}")
 
     def all_enter(self):
         if isinstance(self.main_instance, RobloxInfinite):
@@ -166,7 +174,8 @@ class RobloxManager:
 
     def all_enter_infinite(self):
         assert isinstance(self.main_instance, RobloxInfinite)
-        self.logger.debug(f"Entering infinite for all accounts. World: {self.world} Level: {self.level}")
+        self.logger.info(f"Entering infinite for all accounts. World: {self.world} Level: {self.level}")
+        self.logger.info("Teleporting to play position")
         for username in config.usernames:
             instance = self.roblox_instances[username]
             try:
@@ -175,6 +184,7 @@ class RobloxManager:
                 instance.close_instance()
                 self.ensure_all_instance()
                 return
+        self.logger.info("Entering story select area")
         for username in config.usernames:
             instance = self.roblox_instances[username]
             try:
@@ -184,15 +194,18 @@ class RobloxManager:
                 self.ensure_all_instance()
                 self.all_click_leave()
                 return
-        self.logger.debug(f"Starting story")
+        self.logger.info(f"Starting story")
         self.main_instance.start()
         time.sleep(2)
+        self.logger.info("Going to play position")
         try:
             self.main_instance.play()
         except (PlayException, StartupException):
             self.all_leave_death()
             return
+        self.logger.info("Performing custom sequence")
         if not self.main_instance.do_custom_sequence():
+            self.logger.info("Leaving infinite")
             self.all_leave_death()
             return
 
@@ -201,7 +214,8 @@ class RobloxManager:
         for world in range(self.world, 9):
             self.world = world
             self.main_instance.set_world(self.world, self.level)
-            self.logger.debug(f"Entering story for all accounts. World: {self.world} Level: {self.level}")
+            self.logger.info(f"Entering story for all accounts. World: {self.world} Level: {self.level}")
+            self.logger.info("Teleporting to play position")
             for username in config.usernames:
                 instance = self.roblox_instances[username]
                 try:
@@ -210,6 +224,7 @@ class RobloxManager:
                     instance.close_instance()
                     self.ensure_all_instance()
                     return
+            self.logger.info("Entering story select area")
             for username in config.usernames:
                 instance = self.roblox_instances[username]
                 try:
@@ -223,23 +238,29 @@ class RobloxManager:
             self.main_instance.start()
             time.sleep(2)
             while True:
+                self.logger.info("Going to play position")
                 try:
                     self.main_instance.play()
                 except (PlayException, StartupException):
                     self.all_leave_death()
                     return
+                self.logger.info("Performing custom sequence")
                 if not self.main_instance.do_custom_sequence():
                     time.sleep(0.5)
                     if self.main_instance.find_text("victory") is not None:
+                        self.logger.debug("Detected victory screen")
                         if self.main_instance.find_text("playnext"):
+                            self.logger.debug("Clicking play next")
                             self.all_play_next()
                             self.level += 1
                             continue
                         else:
+                            self.logger.debug("Finished world. Going back to lobby")
                             self.all_leave_death()
                             self.level = 1
                             break
                     elif self.main_instance.find_text("defeat") is not None:
+                        self.logger.warning("Detected defeat screen. Trying again")
                         self.all_play_again()
                         continue
                     else:
@@ -249,25 +270,30 @@ class RobloxManager:
 
     def enter_tower(self):
         assert isinstance(self.main_instance, RobloxTower)
-        self.logger.debug(f"Entering Tower of Eternity for main account")
+        self.logger.info(f"Entering Tower of Eternity for main account")
+        self.logger.info("Teleporting to tower enter position")
         try:
             self.main_instance.teleport()
         except StartupException:
             self.main_instance.close_instance()
             self.ensure_all_instance()
             return
-        self.logger.debug(f"Starting tower")
+        self.logger.info(f"Starting tower")
         self.main_instance.start()
         time.sleep(2)
         while True:
+            self.logger.info("Going to play position")
             try:
                 self.main_instance.play()
             except (PlayException, StartupException):
                 self.all_leave_death()
                 return
+            self.logger.info("Performing custom sequence")
             if not self.main_instance.do_custom_sequence():
                 if self.main_instance.find_text("victory") is not None:
+                    self.logger.debug("Detected victory screen")
                     if self.main_instance.find_text("playnext"):
+                        self.logger.debug("Clicking play next")
                         self.all_play_next()
                         continue
                     else:
@@ -280,7 +306,8 @@ class RobloxManager:
 
     def all_enter_portal(self):
         assert isinstance(self.main_instance, RobloxPortal)
-        self.logger.debug(f"Entering portal for all accounts")
+        self.logger.info(f"Entering portal for all accounts")
+        self.logger.info("Going to portal open position")
         for username in config.usernames:
             instance = self.roblox_instances[username]
             try:
@@ -289,6 +316,7 @@ class RobloxManager:
                 instance.close_instance()
                 self.ensure_all_instance()
                 return
+        self.logger.info("Entering portal")
         for username in config.usernames:
             instance = self.roblox_instances[username]
             try:
@@ -298,7 +326,7 @@ class RobloxManager:
                 self.ensure_all_instance()
                 self.all_click_leave()
                 return
-        self.logger.debug(f"Starting portal")
+        self.logger.info(f"Starting portal")
         found = False
         for username in config.usernames:
             instance = self.roblox_instances[username]
@@ -311,20 +339,24 @@ class RobloxManager:
                 self.ensure_all_instance()
                 return
         if not found:
+            self.logger.warning("Failed to start portal. Retrying")
             self.all_click_leave()
             self.ensure_all_instance()
             return
         time.sleep(2)
+        self.logger.info("Going to play position")
         try:
             self.main_instance.play()
         except (PlayException, StartupException):
             self.all_leave_death()
             return
+        self.logger.info("Performing custom sequence")
         if not self.main_instance.do_custom_sequence():
             self.all_leave_death()
             return
 
     def all_click_leave(self):
+        self.logger.info("Clicking leave for all accounts")
         for username in config.usernames:
             instance = self.roblox_instances[username]
             try:
@@ -336,15 +368,18 @@ class RobloxManager:
                 pass
 
     def all_leave_death(self):
+        self.logger.info("Leaving for all accounts")
         for username in config.usernames:
             if not self.roblox_instances[username].leave_death():
                 self.roblox_instances[username].close_instance()
         self.ensure_all_instance()
 
     def all_play_next(self):
+        self.logger.info("Clicking play next for all accounts")
         for username in config.usernames:
             self.roblox_instances[username].play_next()
 
     def all_play_again(self):
+        self.logger.info("Clicking play again for all accounts")
         for username in config.usernames:
             self.roblox_instances[username].play_again()

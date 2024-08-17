@@ -23,20 +23,20 @@ except ImportError:
 
 def check_and_install_modules():
     modules_to_check = {
-        "cv2": "opencv-python",
-        "pytesseract": "pytesseract",
-        "numpy": "numpy",
-        "psutil": "psutil",
-        "keyboard": "keyboard",
-        "pyautogui": "PyAutoGUI",
-        "pywinauto": "pywinauto",
-        "pybind11": "pybind11",
-        "vgamepad": "vgamepad",
-        "PyAutoIt": "PyAutoIt",
-        "requests": "requests",
-        "Pillow": "pillow",
-        "coloredlogs": "coloredlogs",
-        "colorama": "colorama"
+        "cv2": "opencv-python~=4.10.0.84",
+        "pytesseract": "pytesseract~=0.3.13",
+        "numpy": "numpy~=2.0.1",
+        "psutil": "psutil~=6.0.0",
+        "keyboard": "keyboard~=0.13.5",
+        "pyautogui": "PyAutoGUI~=0.9.54",
+        "pywinauto": "pywinauto~=0.6.8",
+        "pybind11": "pybind11~=2.13.1",
+        "vgamepad": "vgamepad~=0.1.0",
+        "PyAutoIt": "PyAutoIt~=0.6.5",
+        "requests": "requests~=2.32.3",
+        "Pillow": "pillow~=10.4.0",
+        "coloredlogs": "coloredlogs~=15.0.1",
+        "colorama": "colorama~=0.4.6"
     }
 
     for module_name, package_name in modules_to_check.items():
@@ -198,7 +198,7 @@ def main():
                 pass
         logger.info(f"World Choice: {world_names[world_input]}")
 
-        RobloxManager(RobloxInfinite, logger, roblox_pids=roblox_pids, mode=mode_choice, world=world_input, custom_sequence=custom_sequence)
+        RobloxManager(RobloxInfinite, roblox_pids=roblox_pids, mode=mode_choice, world=world_input, custom_sequence=custom_sequence)
 
     elif mode_choice == 2:
         print("Choose which world to start story progression in")
@@ -235,12 +235,12 @@ def main():
                 pass
         logger.info(f"Chapter Choice: Chapter {chapter_input}")
 
-        RobloxManager(RobloxStory, logger, roblox_pids=roblox_pids, mode=mode_choice, world=world_input, level=chapter_input, custom_sequence=custom_sequence)
+        RobloxManager(RobloxStory, roblox_pids=roblox_pids, mode=mode_choice, world=world_input, level=chapter_input, custom_sequence=custom_sequence)
 
     elif mode_choice == 3:
         if roblox_pids is not None:
             roblox_pids = {list(roblox_pids.keys())[0]: list(roblox_pids.values())[0]}
-        RobloxManager(RobloxTower, logger, roblox_pids=roblox_pids, mode=mode_choice, world=0, custom_sequence=custom_sequence)
+        RobloxManager(RobloxTower, roblox_pids=roblox_pids, mode=mode_choice, world=0, custom_sequence=custom_sequence)
 
     elif mode_choice == 4:
         print("Choose which portal to auto complete")
@@ -291,7 +291,7 @@ def main():
             rarity_input = rarity_input + 11
             logger.info(f"Rarity Stop: {rarity_names2[rarity_input]}")
 
-        RobloxManager(RobloxPortal, logger, roblox_pids=roblox_pids, mode=mode_choice, world=portal_input, level=rarity_input, custom_sequence=custom_sequence)
+        RobloxManager(RobloxPortal, roblox_pids=roblox_pids, mode=mode_choice, world=portal_input, level=rarity_input, custom_sequence=custom_sequence)
 
     elif mode_choice == 5:
         keyboard.unhook_all()

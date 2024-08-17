@@ -25,7 +25,7 @@ tower_cost = 850
 port = 0000
 # Webserver Password for RAM. Leave blank if you didn't set one ex: "12345678890abcdef
 password = ""
-# List of usernames in RAM ex: ["username1", "username2"] first username in list is main account
+# List of usernames in RAM ex: ["username1", "username2"] first username in list is used as main account
 usernames = []
 # link to private server ex: "https://www.roblox.com/games/17017769292/Anime-Defenders?privateServerLinkCode=12345678901234567890123456789012"
 # if it does not end in all numbers, open private server link in a browser and copy the code from the url once it changes
