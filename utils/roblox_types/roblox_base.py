@@ -164,7 +164,11 @@ class RobloxBase(ABC):
         return client_rect.left, client_rect.top, client_rect.width(), client_rect.height()
 
     def screenshot(self):
-        screen = pyautogui.screenshot()
+        try:
+            screen = pyautogui.screenshot()
+        except OSError:
+            time.sleep(1)
+            return self.screenshot()
         screen_np = np.array(screen)
         return cv2.cvtColor(screen_np, cv2.COLOR_RGB2BGR)
 
@@ -220,17 +224,15 @@ class RobloxBase(ABC):
             time.sleep(0.1)
             keyboard.send(key)
         time.sleep(0.5)
-        screen = pyautogui.screenshot()
-        screen_np = np.array(screen)
+        screen = self.screenshot()
+        gray = cv2.cvtColor(screen, cv2.COLOR_BGR2GRAY)
 
         if chapter:
-            screen_crop = screen_np[:, screen_np.shape[1] // 3:]
+            crop = gray[:, screen.shape[1] // 3:]
         else:
-            screen_crop = screen_np[:int(screen_np.shape[0] * 0.9), :]
+            crop = gray[:int(screen.shape[0] * 0.9), :]
 
-        image = cv2.cvtColor(screen_crop, cv2.COLOR_RGB2BGR)
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
+        _, thresh = cv2.threshold(crop, 254, 255, cv2.THRESH_BINARY)
         contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
             epsilon = 0.01 * cv2.arcLength(contour, True)
@@ -240,21 +242,19 @@ class RobloxBase(ABC):
                 x, y, w, h = cv2.boundingRect(contour)
                 if 0.8 * (w * h) <= area <= 1.2 * (w * h):
                     if chapter:
-                        return x + screen_np.shape[1] // 3, y, w, h
+                        return x + screen.shape[1] // 3, y, w, h
                     return x, y, w, h
         return None
 
     def check_placement(self):
-        image = pyautogui.screenshot()
-        image_np = np.array(image)
-        image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+        image = self.screenshot()
 
-        blue_channel = image_np[:, :, 0]
-        green_channel = image_np[:, :, 1]
-        red_channel = image_np[:, :, 2]
+        blue_channel = image[:, :, 0]
+        green_channel = image[:, :, 1]
+        red_channel = image[:, :, 2]
         mask = (blue_channel < self.place_color[0]) & (green_channel < self.place_color[1]) & (red_channel > self.place_color[2])
 
-        total_pixels = image_np.shape[0] * image_np.shape[1]
+        total_pixels = image.shape[0] * image.shape[1]
         matching_pixels = np.sum(mask)
         matching_percentage = (matching_pixels / total_pixels) * 100
 
