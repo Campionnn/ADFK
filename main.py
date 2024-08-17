@@ -1,12 +1,13 @@
 import os
-import coloredlogs
 import logging
 import time
 import json
 import ast
 import pathlib
-import keyboard
 import tkinter as tk
+import importlib
+import subprocess
+import sys
 
 from utils.sequence_maker import App
 from utils.roblox_manager import RobloxManager
@@ -19,9 +20,49 @@ try:
 except ImportError:
     import config
 
-def main():
-    keyboard.hook_key(config.kill_key, lambda _: os._exit(0))
 
+def check_and_install_modules():
+    modules_to_check = {
+        "cv2": "opencv-python",
+        "pytesseract": "pytesseract",
+        "numpy": "numpy",
+        "psutil": "psutil",
+        "keyboard": "keyboard",
+        "pyautogui": "PyAutoGUI",
+        "pywinauto": "pywinauto",
+        "pybind11": "pybind11",
+        "vgamepad": "vgamepad",
+        "PyAutoIt": "PyAutoIt",
+        "requests": "requests",
+        "Pillow": "pillow",
+        "coloredlogs": "coloredlogs",
+        "colorama": "colorama"
+    }
+
+    for module_name, package_name in modules_to_check.items():
+        try:
+            importlib.import_module(module_name)
+        except ImportError:
+            package_name = package_name
+            user_input = input(f"{module_name} (package: {package_name}) is not installed. Would you like to install it? (y/n): ").strip().lower()
+            if user_input == 'y':
+                try:
+                    subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
+                    print(f"{package_name} has been successfully installed.")
+                except subprocess.CalledProcessError:
+                    print(f"Failed to install {package_name}. Please install it manually.")
+            else:
+                print(f"{module_name} will not be installed. The script may not run properly without it.")
+                return
+
+
+def main():
+    check_and_install_modules()
+
+    import coloredlogs
+    import keyboard
+
+    keyboard.hook_key(config.kill_key, lambda _: os._exit(0))
 
     pathlib.Path("./logs/").mkdir(parents=True, exist_ok=True)
     pathlib.Path("custom-sequence/").mkdir(parents=True, exist_ok=True)
@@ -32,7 +73,6 @@ def main():
     fileHandler.setLevel(logging.DEBUG)
     fileHandler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"))
     logger.addHandler(fileHandler)
-
 
     mode_names = {
         1: "Infinite Farming",
