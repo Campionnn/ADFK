@@ -82,12 +82,19 @@ class RobloxBase(ABC):
         while len(unique_pids) == 0:
             if time.time() - start > 120:
                 raise StartupException(f"Could not find Roblox instance for {self.username}")
-            pids = get_pids_by_name(ROBLOX_EXE)
             current_pids = [instance.pid for instance in self.roblox_instances.values()]
-            unique_pids = [pid for pid in pids if pid not in current_pids]
+            unique_pids = [pid for pid in get_pids_by_name(ROBLOX_EXE) if pid not in current_pids]
             time.sleep(1)
         if len(unique_pids) > 1:
-            raise PlayException(f"Too many Roblox instances found")
+            start2 = time.time()
+            while len(unique_pids) > 1:
+                if time.time() - start2 > 10:
+                    break
+                current_pids = [instance.pid for instance in self.roblox_instances.values()]
+                unique_pids = [pid for pid in get_pids_by_name(ROBLOX_EXE) if pid not in current_pids]
+                time.sleep(1)
+            if len(unique_pids) > 1:
+                raise PlayException(f"Too many Roblox instances found")
         self.pid = unique_pids[0]
         self.logger.debug(f"Roblox instance for {self.username} started. Waiting for window to appear")
         start = time.time()
@@ -196,9 +203,11 @@ class RobloxBase(ABC):
             self.logger.debug(f"Clicking button with sequence \"{sequence}\" for {self.username}")
         else:
             self.logger.debug(f"Finding button with sequence \"{sequence}\" for {self.username}")
+        self.set_foreground()
         keyboard.send("\\")
         time.sleep(0.1)
         rect = self.find_nav_rect(sequence, chapter)
+        self.set_foreground()
         keyboard.send("\\")
         if rect is None:
             if error_message != "":
