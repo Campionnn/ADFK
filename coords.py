@@ -45,48 +45,48 @@ windmill_place_pos = [-1666.4205322265625, -532.5964965820312]
 windmill_place_pos_tolerance = 5.0
 windmill_place_rot = 0
 windmill_place_rot_tolerance = 1.0
-windmill_place_color = (180, 50, 230)
-windmill_place_color_tolerance = 20
+windmill_place_color = (190, 60, 230)
+windmill_place_color_tolerance = 15
 # Haunted City
 haunted_sequence = "a"*2 + "s"*1
 haunted_place_pos = [102.20825958251953, 147.38023376464844]
 haunted_place_pos_tolerance = 5.0
 haunted_place_rot = 90
 haunted_place_rot_tolerance = 1.0
-haunted_place_color = (150, 120, 200)
-haunted_place_color_tolerance = 20
+haunted_place_color = (170, 120, 200)
+haunted_place_color_tolerance = 15
 # Cursed Academy
 cursed_sequence = "a"*2 + "s"*2
 cursed_place_pos = [-1220.3328857421875, -313.42803955078125]
 cursed_place_pos_tolerance = 5.0
 cursed_place_rot = 90
 cursed_place_rot_tolerance = 1.0
-cursed_place_color = (80, 30, 200)
-cursed_place_color_tolerance = 20
+cursed_place_color = (90, 30, 200)
+cursed_place_color_tolerance = 15
 # Blue Planet
 blue_sequence = "a"*2 + "s"*3
 blue_place_pos = [-20.107425689697266, 443.73675537109375]
 blue_place_pos_tolerance = 5.0
 blue_place_rot = 180
 blue_place_rot_tolerance = 1.0
-blue_place_color = (90, 60, 150)
-blue_place_color_tolerance = 20
+blue_place_color = (130, 80, 150)
+blue_place_color_tolerance = 15
 # Underwater Temple
 underwater_sequence = "a"*2 + "s"*4
 underwater_place_pos = [540.2739868164062, -1303.6859130859375]
 underwater_place_pos_tolerance = 5.0
 underwater_place_rot = 270
 underwater_place_rot_tolerance = 1.0
-underwater_place_color = (150, 60, 200)
-underwater_place_color_tolerance = 20
+underwater_place_color = (170, 70, 200)
+underwater_place_color_tolerance = 15
 # Swordsman Dojo
 swordsman_sequence = "a"*2 + "s"*5
 swordsman_place_pos = [-139.7988739013672, 174.72378540039062]
 swordsman_place_pos_tolerance = 5.0
 swordsman_place_rot = 270
 swordsman_place_rot_tolerance = 1.0
-swordsman_place_color = (90, 80, 180)
-swordsman_place_color_tolerance = 20
+swordsman_place_color = (110, 80, 180)
+swordsman_place_color_tolerance = 15
 # Snowy Woods
 snowy_sequence = "a"*2 + "s"*6
 snowy_place_pos = [-110.88480377197266, -181.0884552001953]
@@ -101,8 +101,8 @@ crystal_place_pos = [163.49806213378906, -190.7405242919922]
 crystal_place_pos_tolerance = 5.0
 crystal_place_rot = 0
 crystal_place_rot_tolerance = 1.0
-crystal_place_color = (20, 20, 80)
-crystal_place_color_tolerance = 20
+crystal_place_color = (90, 20, 80)
+crystal_place_color_tolerance = 15
 
 # Tower of Eternity
 tower_enter_pos = [8.400460243225098, -325.99554443359375]
