@@ -51,7 +51,7 @@ def find_text(image_input: np.ndarray, text, numbers=False, black_text=False):
                 return x, y+h*2
             elif text == "start":
                 return (x+w//2)+(thresh.shape[1]*3), y+h//2
-            if text == "$":
+            elif text == "$":
                 return x+w//2, (y+h//2)+(thresh.shape[0]*2)
             return x+w//2, y+h//2
         elif text == "playagain" or text == "backtolobby":
