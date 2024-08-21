@@ -254,8 +254,9 @@ class RobloxBase(ABC):
                     return x, y, w, h
         return None
 
-    def check_placement(self):
-        image = self.screenshot()
+    def check_placement(self, image=None):
+        if image is None:
+            image = self.screenshot()
 
         blue_channel = image[:, :, 0]
         green_channel = image[:, :, 1]
