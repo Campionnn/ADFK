@@ -471,6 +471,7 @@ class RobloxBase(ABC):
             keyboard.send(hotkey)
         count = 0
         placed_towers = list(self.placed_towers.values())
+        invalid_towers = []
         for x, y in spiral_coords:
             if count != 0 and count % 3 == 0:
                 if self.check_over():
@@ -490,9 +491,10 @@ class RobloxBase(ABC):
                 if not self.check_placement():
                     self.logger.info(f"Placed tower {tower_id} at {x}, {y}")
                     self.placed_towers[tower_id] = (x, y)
+                    self.invalid_towers.extend(invalid_towers)
                     keyboard.send("c")
                     return True
-                self.invalid_towers.append((x, y))
+                invalid_towers.append((x, y))
                 count += 1
         self.logger.warning("Could not place tower")
         keyboard.send("c")
