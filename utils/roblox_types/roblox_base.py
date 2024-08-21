@@ -198,8 +198,9 @@ class RobloxBase(ABC):
             case "story":
                 raise StartupException("Could not detect story load")
 
-    def click_text(self, text, numbers=False):
-        self.logger.info(f"Clicking text \"{text}\" for {self.username}")
+    def click_text(self, text, log=True, numbers=False):
+        if log:
+            self.logger.info(f"Clicking text \"{text}\" for {self.username}")
         text_coords = ocr.find_text(self.screenshot(), text, numbers)
         if text_coords is None:
             return False
@@ -646,7 +647,8 @@ class RobloxBase(ABC):
         self.set_foreground()
         time.sleep(1)
         start = time.time()
-        while not self.click_text("playnext") and time.time() - start < 7:
+        self.logger.info(f"Clicking text \"playnext\" for {self.username}")
+        while not self.click_text("playnext", False) and time.time() - start < 7:
             time.sleep(0.5)
 
     def play_again(self):
