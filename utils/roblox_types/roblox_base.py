@@ -243,9 +243,9 @@ class RobloxBase(ABC):
             epsilon = 0.01 * cv2.arcLength(contour, True)
             approx = cv2.approxPolyDP(contour, epsilon, True)
             if len(approx) == 4:
+                area = cv2.contourArea(contour)
                 x, y, w, h = cv2.boundingRect(contour)
-                contour_area = cv2.contourArea(contour)
-                if contour_area < (w * h):
+                if 0.8 * (w * h) <= area <= 1.2 * (w * h):
                     if chapter:
                         return x + screen.shape[1] // 3, y, w, h
                     return x, y, w, h
