@@ -9,17 +9,6 @@ import importlib
 import subprocess
 import sys
 
-from utils.sequence_maker import App
-from utils.roblox_manager import RobloxManager
-from utils.roblox_types.roblox_infinite import RobloxInfinite
-from utils.roblox_types.roblox_story import RobloxStory
-from utils.roblox_types.roblox_tower import RobloxTower
-from utils.roblox_types.roblox_portal import RobloxPortal
-try:
-    import config_personal as config
-except ImportError:
-    import config
-
 
 def check_and_install_modules():
     modules_to_check = {
@@ -61,6 +50,17 @@ def main():
 
     import coloredlogs
     import keyboard
+
+    from utils.sequence_maker import App
+    from utils.roblox_manager import RobloxManager
+    from utils.roblox_types.roblox_infinite import RobloxInfinite
+    from utils.roblox_types.roblox_story import RobloxStory
+    from utils.roblox_types.roblox_tower import RobloxTower
+    from utils.roblox_types.roblox_portal import RobloxPortal
+    try:
+        import config_personal as config
+    except ImportError:
+        import config
 
     keyboard.hook_key(config.kill_key, lambda _: os._exit(0))
 
