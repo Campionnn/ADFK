@@ -110,11 +110,11 @@ class RobloxPortal(RobloxBase):
     def enter(self, depth=0):
         if self.username == config.usernames[0]:
             if self.level > 10:
-                self.logger.debug(f"Looking for best {self.portal_names.get(self.world)} to open")
+                self.logger.info(f"Looking for best {self.portal_names.get(self.world)} to open")
                 if not self.open_best_portal():
                     raise StartupException("Could not find portal to open")
             else:
-                self.logger.debug(f"Looking for {self.rarity_names.get(self.level)} {self.portal_names.get(self.world)} to open")
+                self.logger.info(f"Looking for {self.rarity_names.get(self.level)} {self.portal_names.get(self.world)} to open")
                 found = False
                 attempts = 0
                 while not found:
@@ -188,7 +188,7 @@ class RobloxPortal(RobloxBase):
                 return True
             autoit.mouse_wheel("down", 3)
             new_text = ocr.find_all_text(self.screenshot())
-        self.logger.debug(f"Could not find portal for {self.username}")
+        self.logger.info(f"Could not find portal for {self.username}")
         self.click_text("x")
         return False
 
@@ -231,9 +231,9 @@ class RobloxPortal(RobloxBase):
             autoit.mouse_move(int(rect[2] // 8 * 4.8), rect[3] // 2)
             new_text = ocr.find_all_text(self.screenshot())
         if best_portal == 0:
-            self.logger.debug(f"Could not find portal for {self.username}")
+            self.logger.info(f"Could not find portal for {self.username}")
         else:
-            self.logger.debug(f"Best portal for {self.username} is {self.rarity_names.get(best_portal)}")
+            self.logger.info(f"Best portal for {self.username} is {self.rarity_names.get(best_portal)}")
         self.click_text("x")
         return best_portal
 

@@ -111,7 +111,7 @@ class Control:
     def go_to_pos(self, pid, y_addrs, final_x, final_z, tolerance, turn_tolerance=5, jump=False, min_speed=0.4, max_speed=1.0, min_turn=0.4, precise=False, timeout=10):
         current_pos = memory.get_current_pos(pid, y_addrs)
         init_distance = self.calculate_distance(current_pos[0], current_pos[2], final_x, final_z)
-        self.logger.debug(f"Going to {final_x}, {final_z} from {current_pos[0]}, {current_pos[2]}")
+        self.logger.debug(f"Going to ({final_x}, {final_z}) from ({current_pos[0]}, {current_pos[2]})")
         self.logger.debug(f"Distance to target: {init_distance}")
         start = time.time()
         while time.time() - start < timeout:
@@ -136,7 +136,7 @@ class Control:
         return False
 
     def unstuck(self, pid, y_addrs, jump=True):
-        self.logger.debug("Unstucking player")
+        self.logger.warning("Unstucking player")
         init_pos = memory.get_current_pos(pid, y_addrs)
         for _ in range(5):
             if jump:
