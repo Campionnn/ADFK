@@ -5,11 +5,11 @@ import numpy as np
 import logging
 import autoit
 import keyboard
-import pyautogui
 import psutil
 import pywinauto
 import requests
 from abc import ABC, abstractmethod
+from PIL import ImageGrab
 
 try:
     import config_personal as config
@@ -171,7 +171,7 @@ class RobloxBase(ABC):
 
     def screenshot(self):
         try:
-            screen = pyautogui.screenshot()
+            screen = ImageGrab.grab()
         except OSError:
             time.sleep(1)
             return self.screenshot()

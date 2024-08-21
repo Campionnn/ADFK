@@ -3,7 +3,6 @@ pytesseract~=0.3.13
 numpy~=2.0.1
 psutil~=6.0.0
 keyboard~=0.13.5
-PyAutoGUI~=0.9.54
 pywinauto~=0.6.8
 pybind11~=2.13.1
 vgamepad~=0.1.0

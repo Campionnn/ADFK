@@ -17,7 +17,6 @@ def check_and_install_modules():
         "numpy": "numpy~=2.0.1",
         "psutil": "psutil~=6.0.0",
         "keyboard": "keyboard~=0.13.5",
-        "pyautogui": "PyAutoGUI~=0.9.54",
         "pywinauto": "pywinauto~=0.6.8",
         "pybind11": "pybind11~=2.13.1",
         "vgamepad": "vgamepad~=0.1.0",
