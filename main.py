@@ -28,21 +28,25 @@ def check_and_install_modules():
         "colorama": "colorama~=0.4.6"
     }
 
+    modules_to_install = {}
     for module_name, package_name in modules_to_check.items():
         try:
             importlib.import_module(module_name)
         except (ImportError, ModuleNotFoundError):
-            package_name = package_name
-            user_input = input(f"{module_name} (package: {package_name}) is not installed. Would you like to install it? (y/n): ").strip().lower()
-            if user_input == 'y':
+            modules_to_install[module_name] = package_name
+
+    if modules_to_install:
+        print("The following modules are not installed:")
+        for module_name, package_name in modules_to_install.items():
+            print(f"{module_name} (package: {package_name})")
+        print("Would you like to install them? (y/n)")
+        user_input = input().strip().lower()
+        if user_input == 'y':
+            for package_name in modules_to_install.values():
                 try:
                     subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
-                    print(f"{package_name} has been successfully installed.")
                 except subprocess.CalledProcessError:
                     print(f"Failed to install {package_name}. Please install it manually.")
-            else:
-                print(f"{module_name} will not be installed. The script may not run properly without it.")
-                return
 
 
 def main():
