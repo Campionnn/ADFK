@@ -522,10 +522,8 @@ class RobloxBase(ABC):
             screen = self.screenshot()
             upgrade_info = ocr.read_upgrade_cost(screen)
             if upgrade_info is not None:
-                current_money = ocr.read_current_money(screen)
-                if current_money is not None and current_money >= upgrade_info[0]:
-                    autoit.mouse_click("left", upgrade_info[1], upgrade_info[2])
-                    return True
+                autoit.mouse_click("left", upgrade_info[1], upgrade_info[2])
+                return True
             time.sleep(0.1)
             count += 1
 
