@@ -31,7 +31,7 @@ PLACE_ID = "17017769292"
 class RobloxBase(ABC):
     def __init__(self, roblox_instances, controller: control.Control, username, world, level, custom_sequence, pid=None, y_addrs=None):
         self.roblox_instances = roblox_instances
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger("ADFK")
         self.controller = controller
         self.username = username
         self.world = world
@@ -81,15 +81,20 @@ class RobloxBase(ABC):
         time.sleep(3)
         unique_pids = []
         start = time.time()
-        while len(unique_pids) != 1:
+        while len(unique_pids) == 0:
             if time.time() - start > 120:
-                if len(unique_pids) > 1:
-                    raise PlayException(f"Too many Roblox instances found")
                 raise StartupException(f"Timed out looking for Roblox instance for {self.username}")
-            pids = get_pids_by_name(ROBLOX_EXE)
             current_pids = [instance.pid for instance in self.roblox_instances.values()]
-            unique_pids = [pid for pid in pids if pid not in current_pids]
+            unique_pids = [pid for pid in get_pids_by_name(ROBLOX_EXE) if pid not in current_pids]
             time.sleep(1)
+        if len(unique_pids) > 1:
+            start2 = time.time()
+            while len(unique_pids) > 1:
+                if time.time() - start2 > 10:
+                    raise PlayException(f"Too many Roblox instances found")
+                current_pids = [instance.pid for instance in self.roblox_instances.values()]
+                unique_pids = [pid for pid in get_pids_by_name(ROBLOX_EXE) if pid not in current_pids]
+                time.sleep(1)
         self.pid = unique_pids[0]
         self.logger.info(f"Roblox instance for {self.username} started. Waiting for window to appear")
         start = time.time()
@@ -203,9 +208,11 @@ class RobloxBase(ABC):
 
     def click_nav_rect(self, sequence, error_message, chapter=False):
         self.logger.info(f"Clicking button with sequence \"{sequence}\" for {self.username}")
+        self.set_foreground()
         keyboard.send("\\")
         time.sleep(0.1)
         rect = self.find_nav_rect(sequence, chapter)
+        self.set_foreground()
         keyboard.send("\\")
         if rect is None:
             if error_message != "":
@@ -243,8 +250,9 @@ class RobloxBase(ABC):
                     return x, y, w, h
         return None
 
-    def check_placement(self):
-        image = self.screenshot()
+    def check_placement(self, image=None):
+        if image is None:
+            image = self.screenshot()
 
         blue_channel = image[:, :, 0]
         green_channel = image[:, :, 1]
@@ -512,11 +520,9 @@ class RobloxBase(ABC):
             screen = self.screenshot()
             upgrade_info = ocr.read_upgrade_cost(screen)
             if upgrade_info is not None:
-                current_money = ocr.read_current_money(screen)
-                if current_money is not None and current_money >= upgrade_info[0]:
-                    autoit.mouse_click("left", upgrade_info[1], upgrade_info[2])
-                    self.logger.info(f"Upgraded tower with id {tower_id}")
-                    return True
+                autoit.mouse_click("left", upgrade_info[1], upgrade_info[2])
+                self.logger.info(f"Upgraded tower with id {tower_id}")
+                return True
             time.sleep(0.1)
             count += 1
 

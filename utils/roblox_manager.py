@@ -20,7 +20,7 @@ except ImportError:
 class RobloxManager:
     def __init__(self, roblox_type: Type[RobloxBase], roblox_pids=None, mode=1, world=1, level=None, custom_sequence=None):
         self.roblox_type = roblox_type
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger("ADFK")
         self.controller = Control()
         self.mode = mode
         self.world = world
@@ -161,20 +161,21 @@ class RobloxManager:
         self.logger.debug(f"Default custom sequence: {self.custom_sequence}")
 
     def all_enter(self):
-        if isinstance(self.main_instance, RobloxInfinite):
+        if type(self.main_instance) is RobloxInfinite:
             return self.all_enter_infinite()
-        elif isinstance(self.main_instance, RobloxStory):
+        elif type(self.main_instance) is RobloxStory:
             return self.all_enter_story()
-        elif isinstance(self.main_instance, RobloxTower):
+        elif type(self.main_instance) is RobloxTower:
             return self.enter_tower()
-        elif isinstance(self.main_instance, RobloxPortal):
+        elif type(self.main_instance) is RobloxPortal:
             return self.all_enter_portal()
         else:
             raise StartupException("Invalid roblox type")
 
     def all_enter_infinite(self):
-        assert isinstance(self.main_instance, RobloxInfinite)
-        self.logger.info(f"Entering infinite for all accounts. World: {self.world} Level: {self.level}")
+        assert type(self.main_instance) is RobloxInfinite
+        self.main_instance: RobloxInfinite  # type hint to suppress warnings
+        self.logger.info(f"Entering infinite for all accounts. World: {self.world}")
         self.logger.info("Teleporting to play position")
         for username in config.usernames:
             instance = self.roblox_instances[username]
@@ -204,15 +205,20 @@ class RobloxManager:
             self.all_leave_death()
             return
         self.logger.info("Performing custom sequence")
-        if not self.main_instance.do_custom_sequence():
-            self.logger.info("Leaving infinite")
+        try:
+            if not self.main_instance.do_custom_sequence():
+                self.logger.info("Leaving infinite")
+                self.all_leave_death()
+                return
+        except (PlayException, StartupException, MemoryException):
             self.all_leave_death()
-            return
+            self.ensure_all_instance()
+            return self.all_enter_infinite()
 
     def all_enter_story(self):
-        assert isinstance(self.main_instance, RobloxStory)
-        for world in range(self.world, 9):
-            self.world = world
+        assert type(self.main_instance) is RobloxStory
+        self.main_instance: RobloxStory  # type hint to suppress warnings
+        while self.world <= 9:
             self.main_instance.set_world(self.world, self.level)
             self.logger.info(f"Entering story for all accounts. World: {self.world} Level: {self.level}")
             self.logger.info("Teleporting to play position")
@@ -245,31 +251,38 @@ class RobloxManager:
                     self.all_leave_death()
                     return
                 self.logger.info("Performing custom sequence")
-                if not self.main_instance.do_custom_sequence():
-                    time.sleep(0.5)
-                    if self.main_instance.find_text("victory") is not None:
-                        self.logger.debug("Detected victory screen")
-                        if self.main_instance.find_text("playnext"):
-                            self.logger.debug("Clicking play next")
-                            self.all_play_next()
-                            self.level += 1
+                try:
+                    if not self.main_instance.do_custom_sequence():
+                        time.sleep(0.5)
+                        if self.main_instance.find_text("victory") is not None:
+                            self.logger.debug("Detected victory screen")
+                            if self.main_instance.find_text("playnext"):
+                                self.logger.debug("Clicking play next")
+                                self.all_play_next()
+                                self.level += 1
+                                continue
+                            else:
+                                self.logger.debug("Finished world. Going back to lobby")
+                                self.all_leave_death()
+                                self.world += 1
+                                self.level = 1
+                                break
+                        elif self.main_instance.find_text("defeat") is not None:
+                            self.logger.warning("Detected defeat screen. Trying again")
+                            self.all_play_again()
                             continue
                         else:
-                            self.logger.debug("Finished world. Going back to lobby")
                             self.all_leave_death()
-                            self.level = 1
                             break
-                    elif self.main_instance.find_text("defeat") is not None:
-                        self.logger.warning("Detected defeat screen. Trying again")
-                        self.all_play_again()
-                        continue
-                    else:
-                        self.all_leave_death()
-                        break
+                except (PlayException, StartupException, MemoryException):
+                    self.all_leave_death()
+                    self.ensure_all_instance()
+                    break
         return True
 
     def enter_tower(self):
-        assert isinstance(self.main_instance, RobloxTower)
+        assert type(self.main_instance) is RobloxTower
+        self.main_instance: RobloxTower  # type hint to suppress warnings
         self.logger.info(f"Entering Tower of Eternity for main account")
         self.logger.info("Teleporting to tower enter position")
         try:
@@ -289,23 +302,29 @@ class RobloxManager:
                 self.all_leave_death()
                 return
             self.logger.info("Performing custom sequence")
-            if not self.main_instance.do_custom_sequence():
-                if self.main_instance.find_text("victory") is not None:
-                    self.logger.debug("Detected victory screen")
-                    if self.main_instance.find_text("playnext"):
-                        self.logger.debug("Clicking play next")
-                        self.all_play_next()
-                        continue
+            try:
+                if not self.main_instance.do_custom_sequence():
+                    if self.main_instance.find_text("victory") is not None:
+                        self.logger.debug("Detected victory screen")
+                        if self.main_instance.find_text("playnext"):
+                            self.logger.debug("Clicking play next")
+                            self.all_play_next()
+                            continue
+                        else:
+                            self.logger.debug("Won but couldn't find play next button")
+                            self.all_leave_death()
+                            break
                     else:
-                        self.logger.debug("Won but couldn't find play next button")
                         self.all_leave_death()
                         break
-                else:
-                    self.all_leave_death()
-                    break
+            except (PlayException, StartupException, MemoryException):
+                self.all_leave_death()
+                self.ensure_all_instance()
+                return self.enter_tower()
 
     def all_enter_portal(self):
-        assert isinstance(self.main_instance, RobloxPortal)
+        assert type(self.main_instance) is RobloxPortal
+        self.main_instance: RobloxPortal  # type hint to suppress warnings
         self.logger.info(f"Entering portal for all accounts")
         self.logger.info("Going to portal open position")
         for username in config.usernames:
@@ -351,9 +370,14 @@ class RobloxManager:
             self.all_leave_death()
             return
         self.logger.info("Performing custom sequence")
-        if not self.main_instance.do_custom_sequence():
+        try:
+            if not self.main_instance.do_custom_sequence():
+                self.all_leave_death()
+                return
+        except (PlayException, StartupException, MemoryException):
             self.all_leave_death()
-            return
+            self.ensure_all_instance()
+            return self.all_enter_portal()
 
     def all_click_leave(self):
         self.logger.info("Clicking leave for all accounts")

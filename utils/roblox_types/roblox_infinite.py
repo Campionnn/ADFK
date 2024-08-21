@@ -147,8 +147,9 @@ class RobloxInfinite(RobloxBase):
         self.click_text("start")
 
     def check_over(self):
-        super().check_over()
-        if self.current_wave[0] >= config.wave_stop:
+        if super().check_over():
+            return True
+        if self.current_wave[0] >= config.wave_stop and type(self) is RobloxInfinite:
             self.wave_checker.stop()
             time.sleep(3)
             return True

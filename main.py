@@ -9,17 +9,6 @@ import importlib
 import subprocess
 import sys
 
-from utils.sequence_maker import App
-from utils.roblox_manager import RobloxManager
-from utils.roblox_types.roblox_infinite import RobloxInfinite
-from utils.roblox_types.roblox_story import RobloxStory
-from utils.roblox_types.roblox_tower import RobloxTower
-from utils.roblox_types.roblox_portal import RobloxPortal
-try:
-    import config_personal as config
-except ImportError:
-    import config
-
 
 def check_and_install_modules():
     modules_to_check = {
@@ -32,28 +21,32 @@ def check_and_install_modules():
         "pywinauto": "pywinauto~=0.6.8",
         "pybind11": "pybind11~=2.13.1",
         "vgamepad": "vgamepad~=0.1.0",
-        "PyAutoIt": "PyAutoIt~=0.6.5",
+        "autoit": "PyAutoIt~=0.6.5",
         "requests": "requests~=2.32.3",
-        "Pillow": "pillow~=10.4.0",
+        "PIL": "pillow~=10.4.0",
         "coloredlogs": "coloredlogs~=15.0.1",
         "colorama": "colorama~=0.4.6"
     }
 
+    modules_to_install = {}
     for module_name, package_name in modules_to_check.items():
         try:
             importlib.import_module(module_name)
-        except ImportError:
-            package_name = package_name
-            user_input = input(f"{module_name} (package: {package_name}) is not installed. Would you like to install it? (y/n): ").strip().lower()
-            if user_input == 'y':
+        except (ImportError, ModuleNotFoundError):
+            modules_to_install[module_name] = package_name
+
+    if modules_to_install:
+        print("The following modules are not installed:")
+        for module_name, package_name in modules_to_install.items():
+            print(f"{module_name} (package: {package_name})")
+        print("Would you like to install them? (y/n)")
+        user_input = input().strip().lower()
+        if user_input == 'y':
+            for package_name in modules_to_install.values():
                 try:
                     subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
-                    print(f"{package_name} has been successfully installed.")
                 except subprocess.CalledProcessError:
                     print(f"Failed to install {package_name}. Please install it manually.")
-            else:
-                print(f"{module_name} will not be installed. The script may not run properly without it.")
-                return
 
 
 def main():
@@ -62,17 +55,28 @@ def main():
     import coloredlogs
     import keyboard
 
+    from utils.sequence_maker import App
+    from utils.roblox_manager import RobloxManager
+    from utils.roblox_types.roblox_infinite import RobloxInfinite
+    from utils.roblox_types.roblox_story import RobloxStory
+    from utils.roblox_types.roblox_tower import RobloxTower
+    from utils.roblox_types.roblox_portal import RobloxPortal
+    try:
+        import config_personal as config
+    except ImportError:
+        import config
+
     keyboard.hook_key(config.kill_key, lambda _: os._exit(0))
 
     pathlib.Path("./logs/").mkdir(parents=True, exist_ok=True)
     pathlib.Path("custom-sequence/").mkdir(parents=True, exist_ok=True)
-    logger = logging.getLogger()
-    coloredlogs.install(level=config.logging_level, fmt="%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)")
+    logger = logging.getLogger("ADFK")
+    coloredlogs.install(logger=logger, level=config.logging_level, fmt="%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)")
     logger.setLevel(logging.DEBUG)
-    fileHandler = logging.FileHandler(f"./logs/ADFK_{time.strftime('%Y%m%d-%H%M%S')}.log")
-    fileHandler.setLevel(logging.DEBUG)
-    fileHandler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"))
-    logger.addHandler(fileHandler)
+    file_handler = logging.FileHandler(f"./logs/ADFK_{time.strftime('%Y%m%d-%H%M%S')}.log")
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"))
+    logger.addHandler(file_handler)
 
     mode_names = {
         1: "Infinite Farming",
