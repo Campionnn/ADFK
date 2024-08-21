@@ -60,30 +60,5 @@ class RobloxTower(RobloxBase):
         self.click_text("start")
 
     def spiral(self):
-        spiral_coords = []
-        rect = self.get_window_rect()
-        window_width = int(rect[2] * 0.8)
-        window_height = int(rect[3] * 0.8)
-        step = int(rect[2] * 0.025)
-        x = (rect[0] + rect[2] // 2) - step
-        y = rect[1] + rect[3] // 2
-
-        directions = [(-1, 0), (0, -1), (1, 0), (0, 1)]
-        direction_index = 0
-        steps_in_current_direction = 0
-        change_direction_after_steps = 1
-
-        spiral_coords.append((x + step, y))
-        while 0 <= x < window_width and 0 <= y < window_height:
-            spiral_coords.append((x, y))
-            steps_in_current_direction += 1
-            if steps_in_current_direction == change_direction_after_steps:
-                direction_index = (direction_index + 1) % 4
-                steps_in_current_direction = 0
-                if direction_index == 0 or direction_index == 2:
-                    change_direction_after_steps += 1
-            dx, dy = directions[direction_index]
-            x += dx * step
-            y += dy * step
-
-        self.spiral_coords = spiral_coords[9:]
+        super().spiral()
+        self.spiral_coords = self.spiral_coords[9:]
