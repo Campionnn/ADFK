@@ -66,6 +66,8 @@ class RobloxBase(ABC):
         }
         if config.password != "":
             params["Password"] = config.password
+
+        self.logger.debug(f"Sending request to http://localhost:{config.port}/LaunchAccount?Account={self.username}&PlaceId={PLACE_ID}&JobId={config.private_server_link}" + (f"&Password={config.password}" if config.password != "" else ""))
         try:
             result = requests.get(f"http://localhost:{config.port}/LaunchAccount", params=params)
         except requests.exceptions.ConnectionError:
@@ -73,15 +75,15 @@ class RobloxBase(ABC):
             os._exit(0)
             return
         if result.status_code != 200:
-            raise StartupException(f"Failed to launch Roblox instance for {self.username}")
+            raise StartupException(f"Invalid status code for {self.username}: {result.status_code}")
 
-        self.logger.debug(f"Waiting for Roblox instance for {self.username} to start")
+        self.logger.info(f"Waiting for Roblox instance for {self.username} to start")
         time.sleep(3)
         unique_pids = []
         start = time.time()
         while len(unique_pids) == 0:
             if time.time() - start > 120:
-                raise StartupException(f"Could not find Roblox instance for {self.username}")
+                raise StartupException(f"Timed out looking for Roblox instance for {self.username}")
             current_pids = [instance.pid for instance in self.roblox_instances.values()]
             unique_pids = [pid for pid in get_pids_by_name(ROBLOX_EXE) if pid not in current_pids]
             time.sleep(1)
@@ -89,14 +91,12 @@ class RobloxBase(ABC):
             start2 = time.time()
             while len(unique_pids) > 1:
                 if time.time() - start2 > 10:
-                    break
+                    raise PlayException(f"Too many Roblox instances found")
                 current_pids = [instance.pid for instance in self.roblox_instances.values()]
                 unique_pids = [pid for pid in get_pids_by_name(ROBLOX_EXE) if pid not in current_pids]
                 time.sleep(1)
-            if len(unique_pids) > 1:
-                raise PlayException(f"Too many Roblox instances found")
         self.pid = unique_pids[0]
-        self.logger.debug(f"Roblox instance for {self.username} started. Waiting for window to appear")
+        self.logger.info(f"Roblox instance for {self.username} started. Waiting for window to appear")
         start = time.time()
         while time.time() - start < 60:
             self.check_crash()
@@ -125,7 +125,7 @@ class RobloxBase(ABC):
         self.controller.look_down(1.0)
         time.sleep(1.0)
         self.controller.reset_look()
-        self.logger.debug(f"Searching for memory address for {self.username}")
+        self.logger.info(f"Searching for memory address for {self.username}")
         try:
             self.y_addrs = memory.search(self.pid)
         except MemoryException:
@@ -134,11 +134,11 @@ class RobloxBase(ABC):
             self.logger.debug(f"Could not find memory address for {self.username}")
             self.logger.debug(f"If this happens repeatedly, there was likely a Roblox update")
             raise StartupException("Could not find memory address")
-        self.logger.debug(f"Memory address found for {self.username}. {self.pid}: {self.y_addrs}")
+        self.logger.info(f"Memory address found for {self.username}. {self.pid}: {self.y_addrs}")
         return
 
     def close_instance(self):
-        self.logger.debug(f"Killing Roblox instance for {self.username}")
+        self.logger.warning(f"Killing Roblox instance for {self.username}")
         try:
             os.kill(self.pid, 15)
             try:
@@ -159,7 +159,7 @@ class RobloxBase(ABC):
         try:
             app = pywinauto.Application().connect(process=self.pid)
             app.top_window().set_focus()
-            self.logger.debug(f"Set foreground window to {self.pid} for {self.username}")
+            self.logger.info(f"Switched foreground window to {self.pid} for {self.username}")
             return True
         except (pywinauto.application.ProcessNotFoundError, OSError, RuntimeError):
             raise StartupException(f"Could not set foreground window: {self.pid}")
@@ -198,11 +198,16 @@ class RobloxBase(ABC):
             case "story":
                 raise StartupException("Could not detect story load")
 
-    def click_nav_rect(self, sequence, error_message, click=True, chapter=False):
-        if click:
-            self.logger.debug(f"Clicking button with sequence \"{sequence}\" for {self.username}")
-        else:
-            self.logger.debug(f"Finding button with sequence \"{sequence}\" for {self.username}")
+    def click_text(self, text, numbers=False):
+        self.logger.info(f"Clicking text \"{text}\" for {self.username}")
+        text_coords = ocr.find_text(self.screenshot(), text, numbers)
+        if text_coords is None:
+            return False
+        autoit.mouse_click("left", text_coords[0], text_coords[1])
+        return True
+
+    def click_nav_rect(self, sequence, error_message, chapter=False):
+        self.logger.info(f"Clicking button with sequence \"{sequence}\" for {self.username}")
         self.set_foreground()
         keyboard.send("\\")
         time.sleep(0.1)
@@ -213,21 +218,12 @@ class RobloxBase(ABC):
             if error_message != "":
                 self.logger.warning(error_message)
             return False
-        if click:
-            x = rect[0] + rect[2] // 2
-            y = rect[1] + rect[3] // 2
-            autoit.mouse_click("left", x, y)
+        x = rect[0] + rect[2] // 2
+        y = rect[1] + rect[3] // 2
+        autoit.mouse_click("left", x, y)
         return rect
 
-    def click_text(self, text, numbers=False):
-        self.logger.debug(f"Clicking text {text} for {self.username}")
-        text_coords = ocr.find_text(self.screenshot(), text, numbers)
-        if text_coords is None:
-            return False
-        autoit.mouse_click("left", text_coords[0], text_coords[1])
-        return True
-
-    def find_nav_rect(self, sequence="", chapter=False):
+    def find_nav_rect(self, sequence, chapter=False):
         for key in list(sequence):
             time.sleep(0.1)
             keyboard.send(key)
@@ -246,9 +242,9 @@ class RobloxBase(ABC):
             epsilon = 0.01 * cv2.arcLength(contour, True)
             approx = cv2.approxPolyDP(contour, epsilon, True)
             if len(approx) == 4:
-                area = cv2.contourArea(contour)
                 x, y, w, h = cv2.boundingRect(contour)
-                if 0.8 * (w * h) <= area <= 1.2 * (w * h):
+                contour_area = cv2.contourArea(contour)
+                if contour_area < (w * h):
                     if chapter:
                         return x + screen.shape[1] // 3, y, w, h
                     return x, y, w, h
@@ -276,7 +272,7 @@ class RobloxBase(ABC):
             raise StartupException("Roblox instance crashed")
 
     def fast_travel(self, location):
-        self.logger.debug(f"Fast traveling to {location} for {self.username}")
+        self.logger.info(f"Fast traveling to {location} for {self.username}")
         rect = self.click_nav_rect(coords.fast_travel_sequence, "")
         time.sleep(0.1)
         attempts = 0
@@ -305,7 +301,7 @@ class RobloxBase(ABC):
         return True
 
     def check_fast_travel(self, screen):
-        self.logger.debug(f"Checking if fast travel menu is open for {self.username}")
+        self.logger.info(f"Checking if fast travel menu is open for {self.username}")
         location = "challenges"
         fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=4)
         if fast_travel_coords is None:
@@ -411,6 +407,7 @@ class RobloxBase(ABC):
             elif action.get('type') == 'upgrade':
                 if int(action.get('amount')) == 0:
                     while True:
+                        self.logger.info(f"Upgrading towers with id {action.get('ids')} continuously")
                         for tower_id in action.get("ids"):
                             self.check_afk()
                             if not self.upgrade_tower(tower_id, True):
@@ -447,7 +444,7 @@ class RobloxBase(ABC):
             time.sleep(0.5)
 
     def place_tower(self, tower_id, hotkey, location, cost, depth=0):
-        self.logger.debug(f"Placing tower with id {tower_id} at {location}")
+        self.logger.info(f"Placing tower with id {tower_id} at {location}")
         if location == "center":
             spiral_coords = self.spiral_coords
         else:
@@ -490,7 +487,7 @@ class RobloxBase(ABC):
                 autoit.mouse_click("left", x, y)
                 time.sleep(0.15)
                 if not self.check_placement():
-                    self.logger.debug(f"Placed tower {tower_id} at {x}, {y}")
+                    self.logger.info(f"Placed tower {tower_id} at {x}, {y}")
                     self.placed_towers[tower_id] = (x, y)
                     keyboard.send("c")
                     return True
@@ -501,7 +498,8 @@ class RobloxBase(ABC):
         return False
 
     def upgrade_tower(self, tower_id, skip=False):
-        self.logger.debug(f"Upgrading tower with id {tower_id}")
+        if not skip:
+            self.logger.info(f"Upgrading tower with id {tower_id}")
         tower_coords = self.placed_towers.get(tower_id)
         if tower_coords is None:
             self.logger.warning(f"Failed to find tower with id: {tower_id}")
@@ -523,12 +521,13 @@ class RobloxBase(ABC):
             upgrade_info = ocr.read_upgrade_cost(screen)
             if upgrade_info is not None:
                 autoit.mouse_click("left", upgrade_info[1], upgrade_info[2])
+                self.logger.info(f"Upgraded tower with id {tower_id}")
                 return True
             time.sleep(0.1)
             count += 1
 
     def auto_use_tower(self, tower_id):
-        self.logger.debug(f"Toggling auto use for tower with id {tower_id}")
+        self.logger.info(f"Toggling auto use for tower with id {tower_id}")
         tower_coords = self.placed_towers.get(tower_id)
         if tower_coords is None:
             self.logger.warning(f"Failed to find tower with id: {tower_id}")
@@ -541,10 +540,11 @@ class RobloxBase(ABC):
                 self.logger.warning(f"Timed out toggling auto use for tower: {tower_id}")
                 return True
             if self.click_text("autouse"):
+                self.logger.info(f"Toggled auto use for tower with id {tower_id}")
                 return True
 
     def wait_money(self, amount):
-        self.logger.debug(f"Waiting for {amount} money")
+        self.logger.info(f"Waiting for {amount} money")
         count = 0
         while True:
             self.check_afk()
@@ -552,12 +552,13 @@ class RobloxBase(ABC):
                 return False
             current_money = ocr.read_current_money(self.screenshot())
             if current_money is not None and current_money >= amount:
+                self.logger.info(f"Detected {current_money} money")
                 return True
             time.sleep(0.1)
             count += 1
 
     def wait_time(self, seconds):
-        self.logger.debug(f"Waiting for {seconds} seconds")
+        self.logger.info(f"Waiting for {seconds} seconds")
         count = 0
         start = time.time()
         while time.time() - start < seconds:
@@ -565,22 +566,25 @@ class RobloxBase(ABC):
             if count % 10 == 0 and self.check_over():
                 return False
             time.sleep(0.1)
+            count += 1
+        self.logger.info(f"Finished waiting {seconds} seconds")
         return True
 
     def wait_wave(self, wave):
-        self.logger.debug(f"Waiting for wave {wave}")
+        self.logger.info(f"Waiting for wave {wave}")
         count = 0
         while True:
             self.check_afk()
             if count % 10 == 0 and self.check_over():
                 return False
             if self.current_wave[0] >= wave:
+                self.logger.info(f"Finished waiting for wave {wave}")
                 return True
             time.sleep(0.1)
             count += 1
 
     def sell_tower(self, tower_id):
-        self.logger.debug(f"Selling tower with id {tower_id}")
+        self.logger.info(f"Selling tower with id {tower_id}")
         tower_coords = self.placed_towers.get(tower_id)
         if tower_coords is None:
             self.logger.warning(f"Failed to find tower with id: {tower_id}")
@@ -595,6 +599,7 @@ class RobloxBase(ABC):
             if self.click_text("$"):
                 time.sleep(0.5)
                 if self.click_text("sell"):
+                    self.logger.info(f"Sold tower with id {tower_id}")
                     return True
 
     def check_over(self):
