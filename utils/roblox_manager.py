@@ -128,14 +128,15 @@ class RobloxManager:
         return True
 
     def kill_all_roblox(self):
-        self.logger.warning("Killing all Roblox instances to start fresh")
+        self.logger.warning("Killing all bad Roblox instances")
         pids = get_pids_by_name(self.roblox_exe)
         while len(pids) > 0:
             for pid in pids:
-                try:
-                    os.kill(pid, 15)
-                except OSError:
-                    pass
+                if pid not in [instance.pid for instance in self.roblox_instances.values()]:
+                    try:
+                        os.kill(pid, 15)
+                    except OSError:
+                        pass
             time.sleep(1)
             pids = get_pids_by_name(self.roblox_exe)
         time.sleep(5)
