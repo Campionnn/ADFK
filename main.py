@@ -42,7 +42,7 @@ def check_and_install_modules():
     for module_name, package_name in modules_to_check.items():
         try:
             importlib.import_module(module_name)
-        except ImportError:
+        except (ImportError, ModuleNotFoundError):
             package_name = package_name
             user_input = input(f"{module_name} (package: {package_name}) is not installed. Would you like to install it? (y/n): ").strip().lower()
             if user_input == 'y':
