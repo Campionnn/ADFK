@@ -29,7 +29,7 @@ class RobloxTower(RobloxBase):
         self.set_foreground()
         time.sleep(0.5)
         self.wait_game_load("main")
-        self.click_text("x")
+        self.close_menu()
         try:
             if not self.fast_travel("trading"):
                 self.controller.jump()

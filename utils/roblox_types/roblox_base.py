@@ -112,7 +112,7 @@ class RobloxBase(ABC):
         if not self.wait_game_load("main"):
             return
         time.sleep(0.5)
-        self.click_text("x")
+        self.close_menu()
         if not self.fast_travel("leaderboards"):
             self.controller.jump()
             time.sleep(0.5)
@@ -159,7 +159,7 @@ class RobloxBase(ABC):
         try:
             app = pywinauto.Application().connect(process=self.pid)
             app.top_window().set_focus()
-            self.logger.info(f"Switched foreground window to {self.pid} for {self.username}")
+            self.logger.debug(f"Switched foreground window to {self.pid} for {self.username}")
             return True
         except (pywinauto.application.ProcessNotFoundError, OSError, RuntimeError):
             raise StartupException(f"Could not set foreground window: {self.pid}")
@@ -218,7 +218,6 @@ class RobloxBase(ABC):
         if rect is None:
             if error_message != "":
                 self.logger.warning(error_message)
-            return False
         x = rect[0] + rect[2] // 2
         y = rect[1] + rect[3] // 2
         autoit.mouse_click("left", x, y)
@@ -229,7 +228,7 @@ class RobloxBase(ABC):
             time.sleep(0.1)
             keyboard.send(key)
         if sequence != "":
-            time.sleep(0.1)
+            time.sleep(0.2)
         screen = self.screenshot()
         gray = cv2.cvtColor(screen, cv2.COLOR_BGR2GRAY)
         if chapter:
@@ -252,12 +251,22 @@ class RobloxBase(ABC):
                         inner_bounding_box = cv2.boundingRect(inner_contour)
                         inner_bounding_box_area = inner_bounding_box[2] * inner_bounding_box[3]
                         if inner_bounding_box_area < bounding_box_area:
+                            epsilon = 0.01 * cv2.arcLength(inner_contour, True)
                             inner_approx = cv2.approxPolyDP(inner_contour, epsilon, True)
                             if len(inner_approx) == 4:
                                 if chapter:
                                     return x + screen.shape[1] // 3, y, w, h
                                 return x, y, w, h
         return None
+
+    def close_menu(self):
+        self.logger.info(f"Closing menu for {self.username}")
+        image = self.screenshot()
+        close_coord = ocr.find_close_menu(image)
+        if close_coord is not None:
+            autoit.mouse_click("left", close_coord[0], close_coord[1])
+            return True
+        return False
 
     def check_placement(self, image=None):
         if image is None:

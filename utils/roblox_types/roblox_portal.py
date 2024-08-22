@@ -81,7 +81,7 @@ class RobloxPortal(RobloxBase):
         self.set_foreground()
         time.sleep(0.5)
         self.wait_game_load("main")
-        self.click_text("x")
+        self.close_menu()
         try:
             pos = memory.get_current_pos(self.pid, self.y_addrs)
             attempts = 0
@@ -127,7 +127,7 @@ class RobloxPortal(RobloxBase):
                     attempts += 1
         self.set_foreground()
         time.sleep(0.5)
-        self.click_text("x")
+        self.close_menu()
         time.sleep(0.1)
         self.controller.move_forward(0.4)
         time.sleep(0.25)
@@ -147,7 +147,7 @@ class RobloxPortal(RobloxBase):
         self.controller.zoom_in()
         self.controller.zoom_out(0.25)
         time.sleep(0.1)
-        self.click_text("x")
+        self.close_menu()
         time.sleep(0.1)
         self.click_text("items")
         time.sleep(1)
@@ -177,19 +177,19 @@ class RobloxPortal(RobloxBase):
                 autoit.mouse_move(int(rect[2]//8*4.8), rect[3]//2)
                 time.sleep(0.5)
                 if not self.click_text("use"):
-                    self.click_text("x")
+                    self.close_menu()
                     return False
                 time.sleep(0.5)
                 if not self.click_text("openportal"):
                     self.click_text("back")
                     time.sleep(0.5)
-                    self.click_text("x")
+                    self.close_menu()
                     return False
                 return True
             autoit.mouse_wheel("down", 3)
             new_text = ocr.find_all_text(self.screenshot())
         self.logger.info(f"Could not find portal for {self.username}")
-        self.click_text("x")
+        self.close_menu()
         return False
 
     def open_best_portal(self):
@@ -234,7 +234,7 @@ class RobloxPortal(RobloxBase):
             self.logger.info(f"Could not find portal for {self.username}")
         else:
             self.logger.info(f"Best portal for {self.username} is {self.rarity_names.get(best_portal)}")
-        self.click_text("x")
+        self.close_menu()
         return best_portal
 
     def start(self):

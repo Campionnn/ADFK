@@ -95,6 +95,25 @@ def find_fast_travel(image_input: np.ndarray, location, tolerance=50, ratio=3, u
     return None
 
 
+def find_close_menu(image_input: np.ndarray):
+    image = image_input.copy()
+    crop = image[:image.shape[0] // 3, (image.shape[1] // 3) * 2:]
+    blue_channel = crop[:, :, 0]
+    green_channel = crop[:, :, 1]
+    red_channel = crop[:, :, 2]
+    thresh = (blue_channel < 40) & (green_channel < 40) & (red_channel > 120)
+    thresh = thresh.astype(np.uint8) * 255
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        contour_crop = crop[y:y + h, x:x + w]
+        _, contour_thresh = cv2.threshold(cv2.cvtColor(contour_crop, cv2.COLOR_BGR2GRAY), 253, 255, cv2.THRESH_BINARY)
+        result = pytesseract.image_to_string(contour_thresh, config=f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', timeout=10).strip().lower()
+        if result == "x":
+            return x + w // 2 + (image.shape[1] // 3) * 2, y + h // 2
+    return None
+
+
 def read_upgrade_cost(image_input: np.ndarray):
     image = image_input.copy()
     crop = image[image.shape[0] // 2:, :image.shape[1] // 2]
@@ -158,8 +177,7 @@ def read_current_money(image_input: np.ndarray):
         return None
     try:
         crop = gray[y:y + h, x:x + w]
-        text = str(
-            pytesseract.image_to_string(crop, config='--psm 8 --oem 3 -c tessedit_char_whitelist=0123456789', timeout=10)).strip()
+        text = str(pytesseract.image_to_string(crop, config='--psm 8 --oem 3 -c tessedit_char_whitelist=0123456789', timeout=10)).strip()
         if text == "":
             return None
         return int(text)
