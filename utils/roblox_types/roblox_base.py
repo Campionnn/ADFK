@@ -228,27 +228,35 @@ class RobloxBase(ABC):
         for key in list(sequence):
             time.sleep(0.1)
             keyboard.send(key)
-        time.sleep(0.5)
+        if sequence != "":
+            time.sleep(0.1)
         screen = self.screenshot()
         gray = cv2.cvtColor(screen, cv2.COLOR_BGR2GRAY)
-
         if chapter:
             crop = gray[:, screen.shape[1] // 3:]
         else:
             crop = gray[:int(screen.shape[0] * 0.9), :]
-
         _, thresh = cv2.threshold(crop, 254, 255, cv2.THRESH_BINARY)
         contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
-            epsilon = 0.01 * cv2.arcLength(contour, True)
+            epsilon = 0.001 * cv2.arcLength(contour, True)
             approx = cv2.approxPolyDP(contour, epsilon, True)
-            if len(approx) == 4:
-                area = cv2.contourArea(contour)
+            if len(approx) in [4, 6, 8]:
                 x, y, w, h = cv2.boundingRect(contour)
-                if 0.8 * (w * h) <= area <= 1.2 * (w * h):
-                    if chapter:
-                        return x + screen.shape[1] // 3, y, w, h
-                    return x, y, w, h
+                bounding_box_area = w * h
+                contour_area = cv2.contourArea(contour)
+                if contour_area < bounding_box_area:
+                    inner_crop = thresh[y:y + h, x:x + w]
+                    inner_contours, _ = cv2.findContours(inner_crop, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                    for inner_contour in inner_contours:
+                        inner_bounding_box = cv2.boundingRect(inner_contour)
+                        inner_bounding_box_area = inner_bounding_box[2] * inner_bounding_box[3]
+                        if inner_bounding_box_area < bounding_box_area:
+                            inner_approx = cv2.approxPolyDP(inner_contour, epsilon, True)
+                            if len(inner_approx) == 4:
+                                if chapter:
+                                    return x + screen.shape[1] // 3, y, w, h
+                                return x, y, w, h
         return None
 
     def check_placement(self, image=None):
