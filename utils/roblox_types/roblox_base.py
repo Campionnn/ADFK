@@ -173,7 +173,7 @@ class RobloxBase(ABC):
         try:
             screen = ImageGrab.grab()
         except OSError:
-            time.sleep(1)
+            time.sleep(0.5)
             return self.screenshot()
         screen_np = np.array(screen)
         return cv2.cvtColor(screen_np, cv2.COLOR_RGB2BGR)

@@ -14,11 +14,12 @@ def check_and_install_modules():
     modules_to_check = {
         "cv2": "opencv-python~=4.10.0.84",
         "pytesseract": "pytesseract~=0.3.13",
-        "numpy": "numpy~=2.0.1",
+        "numpy": "numpy~=2.1.0",
         "psutil": "psutil~=6.0.0",
         "keyboard": "keyboard~=0.13.5",
         "pywinauto": "pywinauto~=0.6.8",
         "pybind11": "pybind11~=2.13.1",
+        "setuptools": "setuptools~=73.0.1",
         "vgamepad": "vgamepad~=0.1.0",
         "autoit": "PyAutoIt~=0.6.5",
         "requests": "requests~=2.32.3",
@@ -46,6 +47,11 @@ def check_and_install_modules():
                     subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
                 except subprocess.CalledProcessError:
                     print(f"Failed to install {package_name}. Please install it manually.")
+            text = "All modules have been installed. Please restart the script."
+            print("=" * len(text))
+            print(text)
+            print("=" * len(text))
+            sys.exit(0)
 
 
 def main():

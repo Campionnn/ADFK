@@ -31,9 +31,10 @@ Miscellaneous
 * This has only been extensively tested on 1920x1080 and 2560x1440 resolutions and may not work on other resolutions
 
 ### Running from source
-1. Install Python 3.8 or higher
-2. Install the required packages with `pip install -r requirements.txt`
+1. Install Python 3.8 or higher (3.11.4 recommended)
+2. Install the required packages with `pip install -r requirements.txt` or running the script which will install them for you
 3. Install Tesseract OCR from above
 4. Optionally delete the precompiled memory_search.cp311-win_amd64.pyd file to automatically recompile yourself
-5. You will likely have to do step 4 if you aren't using python 3.11.4
-6. Run the script with `python main.py`
+5. You will likely have to do step 4 if you aren't using Python 3.11.4
+6. Modify the `config.json` file to your settings
+7. Run the script with `python main.py`
