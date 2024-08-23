@@ -218,6 +218,7 @@ class RobloxBase(ABC):
         if rect is None:
             if error_message != "":
                 self.logger.warning(error_message)
+            return None
         x = rect[0] + rect[2] // 2
         y = rect[1] + rect[3] // 2
         autoit.mouse_click("left", x, y)
@@ -424,8 +425,8 @@ class RobloxBase(ABC):
                         return False
             elif action.get('type') == 'upgrade':
                 if int(action.get('amount')) == 0:
+                    self.logger.info(f"Upgrading towers with id {action.get('ids')} continuously")
                     while True:
-                        self.logger.info(f"Upgrading towers with id {action.get('ids')} continuously")
                         for tower_id in action.get("ids"):
                             self.check_afk()
                             if not self.upgrade_tower(tower_id, True):
@@ -541,7 +542,8 @@ class RobloxBase(ABC):
             upgrade_info = ocr.read_upgrade_cost(screen)
             if upgrade_info is not None:
                 autoit.mouse_click("left", upgrade_info[1], upgrade_info[2])
-                self.logger.info(f"Upgraded tower with id {tower_id}")
+                if not skip:
+                    self.logger.info(f"Upgraded tower with id {tower_id}")
                 return True
             time.sleep(0.1)
             count += 1
