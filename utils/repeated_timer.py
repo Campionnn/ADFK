@@ -1,7 +1,6 @@
 import time
 from threading import Event, Thread
 
-from utils import ocr
 
 class RepeatedTimer:
     def __init__(self, interval, function, *args, **kwargs):

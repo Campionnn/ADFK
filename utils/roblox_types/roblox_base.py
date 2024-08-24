@@ -51,7 +51,7 @@ class RobloxBase(ABC):
         self.spiral_coords = []
         self.placed_towers = {}
         self.invalid_towers = []
-        self.current_wave = [0, 0.0]
+        self.current_wave = [0, 0.0, 0]
         self.afk_time = 0.0
         self.wave_checker = None
 
@@ -382,7 +382,7 @@ class RobloxBase(ABC):
     def play(self):
         self.placed_towers = {}
         self.invalid_towers = []
-        self.current_wave = [0, 0.0]
+        self.current_wave = [0, 0.0, 0]
         self.set_foreground()
         time.sleep(1)
         self.wait_game_load("story")
@@ -627,17 +627,21 @@ class RobloxBase(ABC):
     def check_over(self):
         if self.find_text("backtolobby") is not None:
             return True
-        if self.current_wave[1] != 0 and time.time() - self.current_wave[1] > 600:
-            self.logger.warning("Wave lasted for over 5 minutes. Manually leaving")
+        if self.current_wave[1] != 0 and time.time() - self.current_wave[1] > 300:
+            self.logger.warning("Wave lasted for over 5 minutes and money hasn't changed. Manually leaving")
             return True
 
     def check_wave(self):
         screen = self.screenshot()
         wave = ocr.read_current_wave(screen)
+        money = ocr.read_current_money(screen)
         if wave is not None and wave != self.current_wave[0]:
             self.current_wave[0] = wave
             self.current_wave[1] = time.time()
             self.logger.debug(f"Detected wave: {wave}")
+        if money is not None and money != self.current_wave[2]:
+            self.current_wave[2] = money
+            self.current_wave[1] = time.time()
 
     def anti_afk(self):
         for username in config.usernames:
