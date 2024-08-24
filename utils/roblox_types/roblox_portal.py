@@ -101,7 +101,7 @@ class RobloxPortal(RobloxBase):
                 pos = memory.get_current_pos(self.pid, self.y_addrs)
                 attempts += 1
             time.sleep(0.25)
-            if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.portal_play_pos[0], coords.portal_play_pos[1], coords.portal_play_pos_tolerance, 10, precise=True):
+            if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.portal_play_pos[0], coords.portal_play_pos[1], coords.portal_play_pos_tolerance):
                 return self.teleport()
             self.controller.turn_towards_yaw(self.pid, self.y_addrs, coords.portal_play_rot, coords.portal_play_rot_tolerance, 0.2)
         except MemoryException:
@@ -248,8 +248,8 @@ class RobloxPortal(RobloxBase):
             dist_front = self.controller.calculate_distance(pos[0], pos[2], coords.solar_portal_front_pos[0], coords.solar_portal_front_pos[1])
             dist_back = self.controller.calculate_distance(pos[0], pos[2], coords.solar_portal_place_pos[0], coords.solar_portal_place_pos[1])
             if dist_front < dist_back:
-                self.cont_go_to_pos(coords.solar_portal_front_pos[0], coords.solar_portal_front_pos[1], coords.solar_portal_front_pos_tolerance, 10, True)
+                self.cont_go_to_pos(coords.solar_portal_front_pos[0], coords.solar_portal_front_pos[1], coords.solar_portal_front_pos_tolerance, jump=True)
                 self.controller.reset()
                 time.sleep(0.1)
-                self.cont_go_to_pos(coords.solar_portal_bridge_pos[0], coords.solar_portal_bridge_pos[1], coords.solar_portal_bridge_pos_tolerance, 10, True)
+                self.cont_go_to_pos(coords.solar_portal_bridge_pos[0], coords.solar_portal_bridge_pos[1], coords.solar_portal_bridge_pos_tolerance, jump=True)
         super().go_to_play()

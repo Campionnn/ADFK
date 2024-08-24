@@ -115,7 +115,7 @@ class RobloxInfinite(RobloxBase):
                 pos = memory.get_current_pos(self.pid, self.y_addrs)
                 attempts += 1
             time.sleep(0.25)
-            if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_play_pos[0], coords.story_play_pos[1], coords.story_play_pos_tolerance, 10, precise=True):
+            if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_play_pos[0], coords.story_play_pos[1], coords.story_play_pos_tolerance):
                 return self.teleport()
             return True
         except MemoryException:
@@ -125,7 +125,7 @@ class RobloxInfinite(RobloxBase):
         self.logger.info(f"Entering infinite for {self.username}")
         self.set_foreground()
         time.sleep(1)
-        if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_enter_pos[0], coords.story_enter_pos[1], coords.story_enter_pos_tolerance, 20):
+        if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_enter_pos[0], coords.story_enter_pos[1], coords.story_enter_pos_tolerance):
             if depth > 2:
                 raise StartupException("Could not go to infinite enter position")
             self.teleport()

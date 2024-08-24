@@ -41,7 +41,7 @@ class RobloxTower(RobloxBase):
                     raise StartupException("Could not fast travel to tower")
                 time.sleep(0.5)
             time.sleep(0.25)
-            if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.tower_enter_pos[0], coords.tower_enter_pos[1], coords.tower_enter_pos_tolerance, 10, precise=True):
+            if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.tower_enter_pos[0], coords.tower_enter_pos[1], coords.tower_enter_pos_tolerance):
                 return self.teleport()
             return True
         except MemoryException:

@@ -71,7 +71,6 @@ class RobloxManager:
         except PlayException:
             self.kill_all_roblox()
             self.all_start_instance()
-        time.sleep(5)
         self.ensure_all_instance()
 
     def start_instance(self, username):
@@ -103,10 +102,6 @@ class RobloxManager:
         pids = {self.roblox_instances[username].pid: self.roblox_instances[username].y_addrs for username in config.usernames}
         self.logger.info(f"Roblox PIDs: {pids}")
         self.main_instance = self.roblox_instances[config.usernames[0]]
-        time.sleep(5)
-
-        if not self.check_all_crash():
-            self.ensure_all_instance()
 
     def check_all_crash(self):
         for username in config.usernames:

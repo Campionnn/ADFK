@@ -395,18 +395,18 @@ class RobloxBase(ABC):
         self.controller.zoom_out(1)
 
     def go_to_play(self):
-        self.cont_go_to_pos(self.place_pos[0], self.place_pos[1], self.place_pos_tolerance, turn_tolerance=10, jump=True, timeout=15)
+        self.cont_go_to_pos(self.place_pos[0], self.place_pos[1], self.place_pos_tolerance, jump=True, timeout=15)
         self.controller.reset()
         time.sleep(0.1)
-        self.cont_go_to_pos(self.place_pos[0], self.place_pos[1], self.place_pos_tolerance/10, min_speed=0.2, max_speed=0.3, min_turn=0.5, precise=True)
+        self.cont_go_to_pos(self.place_pos[0], self.place_pos[1], self.place_pos_tolerance/10, slow=True)
         self.controller.reset()
 
-    def cont_go_to_pos(self, x, z, tolerance, turn_tolerance=5, jump=False, min_speed=0.4, max_speed=1.0, min_turn=0.4, precise=False, timeout=10):
+    def cont_go_to_pos(self, x, z, tolerance, jump=False, slow=False, timeout=10):
         attempts = 0
         while True:
             if attempts > 2:
                 raise PlayException("Failed to go to position")
-            if not self.controller.go_to_pos(self.pid, self.y_addrs, x, z, tolerance, turn_tolerance, jump, min_speed, max_speed, min_turn, precise, timeout):
+            if not self.controller.go_to_pos(self.pid, self.y_addrs, x, z, tolerance, jump, slow, timeout):
                 self.controller.unstuck(self.pid, self.y_addrs)
                 attempts += 1
             else:

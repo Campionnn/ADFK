@@ -81,7 +81,7 @@ class Control:
             diff -= 360
         return diff
 
-    def turn_towards_yaw(self, pid, y_addrs, degree, tolerance, min_amount=0.4, precise=False):
+    def turn_towards_yaw(self, pid, y_addrs, degree, tolerance=10, min_amount=0.4):
         while True:
             rot = memory.get_current_rot(pid, y_addrs)[1]
             diff = self.calculate_degree_difference(rot, degree)
@@ -96,8 +96,6 @@ class Control:
             else:
                 self.look_left(amount)
             time.sleep(0.1)
-            if precise:
-                self.reset_look()
 
     def calculate_degree_pos(self, x1, z1, x2, z2):
         degrees = math.degrees(math.atan2(z2 - z1, x2 - x1))
@@ -108,11 +106,17 @@ class Control:
     def calculate_distance(self, x1, z1, x2, z2):
         return math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2)
 
-    def go_to_pos(self, pid, y_addrs, final_x, final_z, tolerance, turn_tolerance=5, jump=False, min_speed=0.4, max_speed=1.0, min_turn=0.4, precise=False, timeout=10):
+    def go_to_pos(self, pid, y_addrs, final_x, final_z, tolerance, jump=False, slow=False, timeout=10):
+        min_speed = 0.4 if not slow else 0.2
+        max_speed = 1.0 if not slow else 0.3
         current_pos = memory.get_current_pos(pid, y_addrs)
         init_distance = self.calculate_distance(current_pos[0], current_pos[2], final_x, final_z)
         self.logger.debug(f"Going to ({final_x}, {final_z}) from ({current_pos[0]}, {current_pos[2]})")
         self.logger.debug(f"Distance to target: {init_distance}")
+        current_x = current_pos[0]
+        current_z = current_pos[2]
+        if abs(current_x - final_x) > tolerance and abs(current_z - final_z) > tolerance:
+            self.turn_towards_yaw(pid, y_addrs, self.calculate_degree_pos(current_x, current_z, final_x, final_z), 2, 0.3)
         start = time.time()
         while time.time() - start < timeout:
             current_x = current_pos[0]
@@ -121,14 +125,14 @@ class Control:
                 self.reset_move()
                 return True
             final_rot = self.calculate_degree_pos(current_x, current_z, final_x, final_z)
-            self.turn_towards_yaw(pid, y_addrs, final_rot, turn_tolerance, min_turn, precise)
+            self.turn_towards_yaw(pid, y_addrs, final_rot)
             distance = self.calculate_distance(current_x, current_z, final_x, final_z)
             amount = max(min((distance / 15), max_speed), min_speed)
             if jump:
                 self.jump()
             self.move_forward(amount)
             time.sleep(0.1)
-            if precise:
+            if slow:
                 self.reset_move()
             current_pos = memory.get_current_info(pid, y_addrs)
         self.logger.warning("Timed out while moving to position")
