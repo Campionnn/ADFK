@@ -82,9 +82,17 @@ class Control:
         return diff
 
     def turn_towards_yaw(self, pid, y_addrs, degree, tolerance=10, min_amount=0.4):
+        error = 0
         while True:
-            rot = memory.get_current_rot(pid, y_addrs)[1]
-            diff = self.calculate_degree_difference(rot, degree)
+            rot = memory.get_current_rot(pid, y_addrs)
+            if rot[0] == 0 and abs(90 - rot[1]) < 0.00001 and error < 5:
+                error += 1
+                self.reset_look()
+                time.sleep(0.1)
+                continue
+            if error >= 5:
+                error = 0
+            diff = self.calculate_degree_difference(rot[1], degree)
             if abs(diff) <= tolerance:
                 self.reset_look()
                 return True
