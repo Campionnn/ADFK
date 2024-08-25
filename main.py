@@ -60,16 +60,17 @@ def main():
     import coloredlogs
     import keyboard
 
+    try:
+        import config_personal as config
+    except ImportError:
+        import config
     from utils.sequence_maker import App
     from utils.roblox_manager import RobloxManager
     from utils.roblox_types.roblox_infinite import RobloxInfinite
     from utils.roblox_types.roblox_story import RobloxStory
     from utils.roblox_types.roblox_tower import RobloxTower
     from utils.roblox_types.roblox_portal import RobloxPortal
-    try:
-        import config_personal as config
-    except ImportError:
-        import config
+    from utils.roblox_types.roblox_realm_base import RobloxRealmBase
 
     keyboard.hook_key(config.kill_key, lambda _: os._exit(0))
 
@@ -88,7 +89,8 @@ def main():
         2: "Story Progression",
         3: "Tower of Eternity",
         4: "Auto Complete Portals",
-        5: "Create or Edit a Custom Placement"
+        5: "Athenyx Realm Modes",
+        6: "Create or Edit a Custom Placement"
     }
 
     world_names = {
@@ -132,11 +134,12 @@ def main():
     print("2: Story Progression")
     print("3: Tower of Eternity(only 1 account for now)")
     print("4: Auto Complete Portals")
-    print("5: Create or Edit a Custom Placement")
+    print("5: Athenyx Realm Modes")
+    print("6: Create or Edit a Custom Placement")
     while True:
         try:
             mode_choice = int(input("Enter choice: "))
-            if mode_choice in [1, 2, 3, 4, 5]:
+            if mode_choice in [1, 2, 3, 4, 5, 6]:
                 break
         except ValueError:
             pass
@@ -144,7 +147,7 @@ def main():
 
     roblox_pids = None
     custom_sequence = None
-    if mode_choice in [1, 2, 3, 4]:
+    if mode_choice in [1, 2, 3, 4, 5]:
         print("Enter Roblox PIDs from running macro previously")
         print("Skips the steps for getting memory addresses on each instance")
         print("Can be found in the logs of the previous run")
@@ -164,6 +167,7 @@ def main():
                 pass
         logger.info(f"Roblox PIDs: {roblox_pids}")
 
+    if mode_choice in [1, 2, 3, 4]:
         print("Choose a custom placement to use")
         print("Leave blank and press enter if you want to use default placement")
         custom_sequences = [f for f in os.listdir("custom-sequence/") if f.endswith(".json")]
@@ -303,6 +307,15 @@ def main():
         RobloxManager(RobloxPortal, roblox_pids=roblox_pids, mode=mode_choice, world=portal_input, level=rarity_input, custom_sequence=custom_sequence)
 
     elif mode_choice == 5:
+        print("Choose which mode to do in Athenyx Realm")
+        print("1: Realm Infinite Farming")
+        print("2: Realm Story Progression")
+        print("3: Realm Story Farming")
+        print("4: Realm Challenge/Infinite Farming (alternates)")
+
+        RobloxManager(RobloxRealmBase, roblox_pids=roblox_pids, mode=mode_choice, custom_sequence=custom_sequence)
+
+    elif mode_choice == 6:
         keyboard.unhook_all()
         root = tk.Tk()
         root.geometry("400x500")

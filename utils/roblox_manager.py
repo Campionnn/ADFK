@@ -10,6 +10,7 @@ from utils.roblox_types.roblox_infinite import RobloxInfinite
 from utils.roblox_types.roblox_story import RobloxStory
 from utils.roblox_types.roblox_tower import RobloxTower
 from utils.roblox_types.roblox_portal import RobloxPortal
+from utils.roblox_types.roblox_realm_base import RobloxRealmBase
 from utils.memory import get_pids_by_name
 try:
     import config_personal as config
@@ -44,7 +45,7 @@ class RobloxManager:
             self.logger.info(f"Roblox PIDs: {pids}")
             self.main_instance = self.roblox_instances[config.usernames[0]]
         else:
-            if issubclass(roblox_type, (RobloxInfinite, RobloxStory, RobloxPortal)):
+            if issubclass(roblox_type, (RobloxInfinite, RobloxStory, RobloxPortal, RobloxRealmBase)):
                 self.all_start_instance()
             elif issubclass(roblox_type, RobloxTower):
                 self.all_start_instance([config.usernames[0]])
@@ -102,6 +103,9 @@ class RobloxManager:
         pids = {self.roblox_instances[username].pid: self.roblox_instances[username].y_addrs for username in config.usernames}
         self.logger.info(f"Roblox PIDs: {pids}")
         self.main_instance = self.roblox_instances[config.usernames[0]]
+
+        if not self.check_all_crash():
+            self.ensure_all_instance()
 
     def check_all_crash(self):
         for username in config.usernames:
@@ -165,6 +169,8 @@ class RobloxManager:
             return self.enter_tower()
         elif type(self.main_instance) is RobloxPortal:
             return self.all_enter_portal()
+        elif type(self.main_instance) is RobloxRealmBase:
+            return self.all_enter_realm_base()
         else:
             raise StartupException("Invalid roblox type")
 
@@ -374,6 +380,31 @@ class RobloxManager:
             self.all_leave_death()
             self.ensure_all_instance()
             return self.all_enter_portal()
+
+    def all_enter_realm_base(self):
+        assert type(self.main_instance) is RobloxRealmBase
+        self.main_instance: RobloxRealmBase  # type hint to suppress warnings
+        self.logger.info(f"Entering realm for all accounts")
+        self.logger.info("Going to realm enter position")
+        for username in config.usernames:
+            instance = self.roblox_instances[username]
+            try:
+                instance.teleport()
+            except StartupException:
+                instance.close_instance()
+                self.ensure_all_instance()
+                return
+        return
+        self.logger.info("Entering realm")
+        for username in config.usernames:
+            instance = self.roblox_instances[username]
+            try:
+                instance.enter()
+            except (StartupException, MemoryException):
+                instance.close_instance()
+                self.ensure_all_instance()
+                self.all_click_leave()
+                return
 
     def all_click_leave(self):
         self.logger.info("Clicking leave for all accounts")
