@@ -386,6 +386,11 @@ class RobloxBase(ABC):
         self.set_foreground()
         time.sleep(1)
         self.wait_game_load("story")
+        for username in config.usernames:
+            self.roblox_instances[username].set_foreground()
+            time.sleep(0.1)
+        self.set_foreground()
+        time.sleep(0.1)
         self.spiral()
         self.go_to_play()
         self.controller.turn_towards_yaw(self.pid, self.y_addrs, self.place_rot, self.place_rot_tolerance, 0.2)
