@@ -17,7 +17,7 @@ def find_text(image_input: np.ndarray, text, numbers=False, black_text=False):
     image = image_input.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     if black_text:
-        _, thresh = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY_INV)
+        _, thresh = cv2.threshold(gray, 10, 255, cv2.THRESH_BINARY_INV)
     else:
         _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
     if text in ["units", "items", "quests", "guilds"]:
@@ -30,6 +30,10 @@ def find_text(image_input: np.ndarray, text, numbers=False, black_text=False):
     if text == "$":
         tesseract_config += '$'
         thresh = thresh[thresh.shape[0]//3*2:, :thresh.shape[1]//3]
+    if "+" in text:
+        tesseract_config += '+'
+    if "%" in text:
+        tesseract_config += '%'
     result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
     result = result.split('\n')
     for line in result:
@@ -45,6 +49,10 @@ def find_text(image_input: np.ndarray, text, numbers=False, black_text=False):
             if len(line) == 12 and difflib.SequenceMatcher(None, "all", line[11].lower()).ratio() > 0.8:
                 x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
                 return x - w * 5, y + h // 2
+        if text == "typehere":
+            if len(line) == 12 and difflib.SequenceMatcher(None, "teleport", line[11].lower()).ratio() > 0.8:
+                x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
+                return x, y - h * 2
         if len(line) == 12 and difflib.SequenceMatcher(None, text, line[11].lower()).ratio() > 0.8:
             x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
             if text == "openportal":
