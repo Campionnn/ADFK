@@ -63,14 +63,10 @@ class RobloxRealmBase(RobloxBase):
             raise StartupException("Could not teleport to Athenyx Realm")
 
     def travel_realm(self):
-        self.set_foreground()
-        time.sleep(0.5)
-        self.close_menu()
-        time.sleep(0.1)
         try:
             pos = memory.get_current_pos(self.pid, self.y_addrs)
             attempts = 0
-            while self.controller.calculate_distance(pos[0], pos[2], coords.portal_play_pos[0], coords.portal_play_pos[1]) > 130:
+            while self.controller.calculate_distance(pos[0], pos[2], coords.realm_travel_pos[0], coords.realm_travel_pos[1]) > 135:
                 if attempts > 2:
                     raise StartupException("Could not travel to Athenyx Realm")
                 time.sleep(0.25)
