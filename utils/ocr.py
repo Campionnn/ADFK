@@ -58,7 +58,14 @@ def find_text(image_input: np.ndarray, text, numbers=False, black_text=False):
             if len(line) == 12 and difflib.SequenceMatcher(None, "playagainbacktolobby", line[11].lower()).ratio() > 0.8:
                 x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
                 if text == "playagain":
-                    return (x+w//4), y+h//2
+                    return x+w//4, y+h//2
+                else:
+                    return x+(w//4*3), y+h//2
+        elif text == "teleport" or text == "joinfriend":
+            if len(line) == 12 and difflib.SequenceMatcher(None, "teleportjoinfriend", line[11].lower()).ratio() > 0.8:
+                x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
+                if text == "teleport":
+                    return x+w//4, y+h//2
                 else:
                     return x+(w//4*3), y+h//2
         elif text == "$":
