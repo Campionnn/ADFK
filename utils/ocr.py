@@ -34,7 +34,7 @@ def find_text(image_input: np.ndarray, text, numbers=False, black_text=False):
         tesseract_config += '+'
     if "%" in text:
         tesseract_config += '%'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=2)
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -100,7 +100,7 @@ def find_fast_travel(image_input: np.ndarray, location, tolerance=50, ratio=3, u
         cv2.drawContours(mask, contours, -1, (255, 255, 255), cv2.FILLED)
         crop = cv2.bitwise_and(crop, mask)
 
-    result = pytesseract.image_to_data(crop, config=f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', timeout=10).lower()
+    result = pytesseract.image_to_data(crop, config=f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', timeout=2).lower()
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -122,10 +122,12 @@ def find_close_menu(image_input: np.ndarray):
     for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
         contour_crop = crop[y:y + h, x:x + w]
-        _, contour_thresh = cv2.threshold(cv2.cvtColor(contour_crop, cv2.COLOR_BGR2GRAY), 253, 255, cv2.THRESH_BINARY)
-        result = pytesseract.image_to_string(contour_thresh, config=f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', timeout=10).strip().lower()
-        if result == "x":
-            return x + w // 2 + (image.shape[1] // 3) * 2, y + h // 2
+        if 0.8 < w / h < 1.2:
+            _, contour_thresh = cv2.threshold(cv2.cvtColor(contour_crop, cv2.COLOR_BGR2GRAY), 253, 255, cv2.THRESH_BINARY)
+            if 0.05 < cv2.countNonZero(contour_thresh) / (w * h) < 0.15:
+                result = pytesseract.image_to_string(contour_thresh, config=f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', timeout=1).strip().lower()
+                if result == "x":
+                    return x + w // 2 + (image.shape[1] // 3) * 2, y + h // 2
     return None
 
 
@@ -192,7 +194,7 @@ def read_current_money(image_input: np.ndarray):
         return None
     try:
         crop = gray[y:y + h, x:x + w]
-        text = str(pytesseract.image_to_string(crop, config='--psm 8 --oem 3 -c tessedit_char_whitelist=0123456789', timeout=10)).strip()
+        text = str(pytesseract.image_to_string(crop, config='--psm 8 --oem 3 -c tessedit_char_whitelist=0123456789', timeout=2)).strip()
         if text == "":
             return None
         return int(text)
@@ -204,9 +206,10 @@ def read_current_wave(image_input: np.ndarray):
     image = image_input.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
+    thresh = thresh[:thresh.shape[0]//2, :]
     kernel = np.ones((3, 3), np.uint8)
     thresh = cv2.erode(thresh, kernel, iterations=1)
-    result = pytesseract.image_to_string(thresh, config=f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', timeout=10)
+    result = pytesseract.image_to_string(thresh, config=f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', timeout=1)
     result = result.split('\n')
     for line in result:
         line = line.lower()
@@ -308,4 +311,4 @@ def find_all_text(image_input):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    return pytesseract.image_to_string(thresh, config=tesseract_config, timeout=10)
+    return pytesseract.image_to_string(thresh, config=tesseract_config, timeout=5)
