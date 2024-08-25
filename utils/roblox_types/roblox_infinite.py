@@ -18,73 +18,26 @@ class RobloxInfinite(RobloxBase):
         self.set_coords()
 
     def set_coords(self):
-        match self.world:
-            case 1:
-                self.world_sequence = coords.windmill_sequence
-                self.place_pos = coords.windmill_place_pos
-                self.place_pos_tolerance = coords.windmill_place_pos_tolerance
-                self.place_rot = coords.windmill_place_rot
-                self.place_rot_tolerance = coords.windmill_place_rot_tolerance
-                self.place_color = coords.windmill_place_color
-                self.place_color_tolerance = coords.windmill_place_color_tolerance
-            case 2:
-                self.world_sequence = coords.haunted_sequence
-                self.place_pos = coords.haunted_place_pos
-                self.place_pos_tolerance = coords.haunted_place_pos_tolerance
-                self.place_rot = coords.haunted_place_rot
-                self.place_rot_tolerance = coords.haunted_place_rot_tolerance
-                self.place_color = coords.haunted_place_color
-                self.place_color_tolerance = coords.haunted_place_color_tolerance
-            case 3:
-                self.world_sequence = coords.cursed_sequence
-                self.place_pos = coords.cursed_place_pos
-                self.place_pos_tolerance = coords.cursed_place_pos_tolerance
-                self.place_rot = coords.cursed_place_rot
-                self.place_rot_tolerance = coords.cursed_place_rot_tolerance
-                self.place_color = coords.cursed_place_color
-                self.place_color_tolerance = coords.cursed_place_color_tolerance
-            case 4:
-                self.world_sequence = coords.blue_sequence
-                self.place_pos = coords.blue_place_pos
-                self.place_pos_tolerance = coords.blue_place_pos_tolerance
-                self.place_rot = coords.blue_place_rot
-                self.place_rot_tolerance = coords.blue_place_rot_tolerance
-                self.place_color = coords.blue_place_color
-                self.place_color_tolerance = coords.blue_place_color_tolerance
-            case 5:
-                self.world_sequence = coords.underwater_sequence
-                self.place_pos = coords.underwater_place_pos
-                self.place_pos_tolerance = coords.underwater_place_pos_tolerance
-                self.place_rot = coords.underwater_place_rot
-                self.place_rot_tolerance = coords.underwater_place_rot_tolerance
-                self.place_color = coords.underwater_place_color
-                self.place_color_tolerance = coords.underwater_place_color_tolerance
-            case 6:
-                self.world_sequence = coords.swordsman_sequence
-                self.place_pos = coords.swordsman_place_pos
-                self.place_pos_tolerance = coords.swordsman_place_pos_tolerance
-                self.place_rot = coords.swordsman_place_rot
-                self.place_rot_tolerance = coords.swordsman_place_rot_tolerance
-                self.place_color = coords.swordsman_place_color
-                self.place_color_tolerance = coords.swordsman_place_color_tolerance
-            case 7:
-                self.world_sequence = coords.snowy_sequence
-                self.place_pos = coords.snowy_place_pos
-                self.place_pos_tolerance = coords.snowy_place_pos_tolerance
-                self.place_rot = coords.snowy_place_rot
-                self.place_rot_tolerance = coords.snowy_place_rot_tolerance
-                self.place_color = coords.snowy_place_color
-                self.place_color_tolerance = coords.snowy_place_color_tolerance
-            case 8:
-                self.world_sequence = coords.crystal_sequence
-                self.place_pos = coords.crystal_place_pos
-                self.place_pos_tolerance = coords.crystal_place_pos_tolerance
-                self.place_rot = coords.crystal_place_rot
-                self.place_rot_tolerance = coords.crystal_place_rot_tolerance
-                self.place_color = coords.crystal_place_color
-                self.place_color_tolerance = coords.crystal_place_color_tolerance
-            case _:
-                raise ValueError("Invalid world choice")
+        world_map = {
+            1: 'windmill',
+            2: 'haunted',
+            3: 'cursed',
+            4: 'blue',
+            5: 'underwater',
+            6: 'swordsman',
+            7: 'snowy',
+            8: 'crystal'
+        }
+
+        world_prefix = world_map.get(self.world)
+        if world_prefix:
+            self.world_sequence = getattr(coords, f"{world_prefix}_sequence")
+            self.place_pos = getattr(coords, f"{world_prefix}_place_pos")
+            self.place_pos_tolerance = getattr(coords, f"{world_prefix}_place_pos_tolerance")
+            self.place_rot = getattr(coords, f"{world_prefix}_place_rot")
+            self.place_rot_tolerance = getattr(coords, f"{world_prefix}_place_rot_tolerance")
+            self.place_color = getattr(coords, f"{world_prefix}_place_color")
+            self.place_color_tolerance = getattr(coords, f"{world_prefix}_place_color_tolerance")
 
     def teleport(self):
         self.set_foreground()
