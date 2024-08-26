@@ -77,7 +77,15 @@ class RobloxRealmInfinite(RobloxRealmBase):
             if not self.click_nav_rect(self.world_sequence, "Could not find world button"):
                 raise StartupException("Could not find world button")
             time.sleep(0.5)
-            self.click_text("infinitemode")
+            self.click_text("infinitechallenge")
             time.sleep(0.5)
             self.click_text("confirm")
         return True
+
+    def check_over(self):
+        if super().check_over():
+            return True
+        if self.current_wave[0] >= config.wave_stop and type(self) is RobloxRealmInfinite:
+            self.wave_checker.stop()
+            time.sleep(3)
+            return True

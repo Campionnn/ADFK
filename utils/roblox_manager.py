@@ -41,7 +41,11 @@ class RobloxManager:
                 username = config.usernames[list(roblox_pids.keys()).index(pid)]
                 instance = roblox_type(self.roblox_instances, self.controller, username, self.world, self.level, self.custom_sequence, pid, y_addrs)
                 self.roblox_instances[username] = instance
-            pids = {self.roblox_instances[username].pid: self.roblox_instances[username].y_addrs for username in config.usernames}  # keyerror for mismatching pid and username
+            try:
+                pids = {self.roblox_instances[username].pid: self.roblox_instances[username].y_addrs for username in config.usernames}
+            except KeyError:
+                self.logger.error("Invalid Roblox PIDs for usernames")
+                return
             self.logger.info(f"Roblox PIDs: {pids}")
             self.main_instance = self.roblox_instances[config.usernames[0]]
         else:
@@ -408,6 +412,25 @@ class RobloxManager:
                 self.ensure_all_instance()
                 self.all_click_leave()
                 return
+        self.logger.info(f"Starting realm")
+        self.main_instance.start()
+        time.sleep(2)
+        self.logger.info("Going to play position")
+        try:
+            self.main_instance.play()
+        except (PlayException, StartupException):
+            self.all_leave_death()
+            return
+        self.logger.info("Performing custom sequence")
+        try:
+            if not self.main_instance.do_custom_sequence():
+                self.logger.info("Playing again")
+                self.all_play_again()
+                return
+        except (PlayException, StartupException, MemoryException):
+            self.all_leave_death()
+            self.ensure_all_instance()
+            return self.all_enter_infinite()
 
     def all_click_leave(self):
         self.logger.info("Clicking leave for all accounts")
