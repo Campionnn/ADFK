@@ -70,7 +70,7 @@ def main():
     from utils.roblox_types.roblox_story import RobloxStory
     from utils.roblox_types.roblox_tower import RobloxTower
     from utils.roblox_types.roblox_portal import RobloxPortal
-    from utils.roblox_types.roblox_realm_base import RobloxRealmBase
+    from utils.roblox_types.roblox_realm_infinite import RobloxRealmInfinite
 
     keyboard.hook_key(config.kill_key, lambda _: os._exit(0))
 
@@ -129,6 +129,22 @@ def main():
         16: "Do All"
     }
 
+    realm_modes = {
+        1: "Realm Infinite Farming",
+        2: "Realm Story Progression",
+        3: "Realm Story Farming",
+        4: "Realm Challenge/Infinite Farming (alternates)"
+    }
+
+    realm_names = {
+        1: "Ruined City",
+        2: "Aether Gateway",
+        3: "Pantheon Passage",
+        4: "Abyssal Gate",
+        5: "Soulweaver Gate",
+        6: "Cyber Gate"
+    }
+
     print("Choose between the following modes")
     print("1: Infinite Farming")
     print("2: Story Progression")
@@ -148,7 +164,7 @@ def main():
     roblox_pids = None
     custom_sequence = None
     if mode_choice in [1, 2, 3, 4, 5]:
-        print("Enter Roblox PIDs from running macro previously")
+        print("Enter Roblox PIDs from running script previously")
         print("Skips the steps for getting memory addresses on each instance")
         print("Can be found in the logs of the previous run")
         print("Roblox PIDs are no longer valid once the game is closed")
@@ -167,7 +183,7 @@ def main():
                 pass
         logger.info(f"Roblox PIDs: {roblox_pids}")
 
-    if mode_choice in [1, 2, 3, 4]:
+    if mode_choice in [1, 2, 3, 4, 5]:
         print("Choose a custom placement to use")
         print("Leave blank and press enter if you want to use default placement")
         custom_sequences = [f for f in os.listdir("custom-sequence/") if f.endswith(".json")]
@@ -312,14 +328,41 @@ def main():
         print("2: Realm Story Progression")
         print("3: Realm Story Farming")
         print("4: Realm Challenge/Infinite Farming (alternates)")
+        while True:
+            try:
+                realm_input = int(input("Enter choice: "))
+                if realm_input in [1, 2, 3, 4]:
+                    break
+            except ValueError:
+                pass
+        logger.info(f"Realm Choice: {realm_modes[realm_input]}")
 
-        RobloxManager(RobloxRealmBase, roblox_pids=roblox_pids, mode=mode_choice, custom_sequence=custom_sequence)
+        if realm_input == 1:
+            print("Choose which world to farm in")
+            print("1: Ruined City")
+            print("2: Aether Gateway")
+            print("3: Pantheon Passage")
+            print("4: Abyssal Gate")
+            print("5: Soulweaver Gate")
+            print("6: Cyber Gate")
+            while True:
+                try:
+                    world_input = int(input("Enter choice: "))
+                    if world_input in [1, 2, 3, 4, 5, 6]:
+                        break
+                except ValueError:
+                    pass
+            logger.info(f"World Choice: {realm_names[world_input]}")
+
+            RobloxManager(RobloxRealmInfinite, roblox_pids=roblox_pids, mode=mode_choice, world=world_input, custom_sequence=custom_sequence)
+        else:
+            print("Not implemented yet")
 
     elif mode_choice == 6:
         keyboard.unhook_all()
         root = tk.Tk()
         root.geometry("400x500")
-        app = App(root)
+        App(root)
         root.attributes('-topmost', True)
         root.after(100, lambda: root.attributes('-topmost', False))
         root.lift()

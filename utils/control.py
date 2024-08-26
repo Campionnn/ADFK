@@ -81,7 +81,7 @@ class Control:
             diff -= 360
         return diff
 
-    def turn_towards_yaw(self, pid, y_addrs, degree, tolerance=10, min_amount=0.4):
+    def turn_towards_yaw(self, pid, y_addrs, degree, tolerance=5, min_amount=0.4):
         error = 0
         while True:
             rot = memory.get_current_rot(pid, y_addrs)
@@ -90,7 +90,7 @@ class Control:
                 self.reset_look()
                 time.sleep(0.1)
                 continue
-            if error >= 5:
+            else:
                 error = 0
             diff = self.calculate_degree_difference(rot[1], degree)
             if abs(diff) <= tolerance:
@@ -132,8 +132,7 @@ class Control:
             if abs(current_x - final_x) < tolerance and abs(current_z - final_z) < tolerance:
                 self.reset_move()
                 return True
-            final_rot = self.calculate_degree_pos(current_x, current_z, final_x, final_z)
-            self.turn_towards_yaw(pid, y_addrs, final_rot)
+            self.turn_towards_yaw(pid, y_addrs, self.calculate_degree_pos(current_x, current_z, final_x, final_z))
             distance = self.calculate_distance(current_x, current_z, final_x, final_z)
             amount = max(min((distance / 15), max_speed), min_speed)
             if jump:

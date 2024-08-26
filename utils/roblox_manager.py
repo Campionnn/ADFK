@@ -10,7 +10,7 @@ from utils.roblox_types.roblox_infinite import RobloxInfinite
 from utils.roblox_types.roblox_story import RobloxStory
 from utils.roblox_types.roblox_tower import RobloxTower
 from utils.roblox_types.roblox_portal import RobloxPortal
-from utils.roblox_types.roblox_realm_base import RobloxRealmBase
+from utils.roblox_types.roblox_realm_infinite import RobloxRealmInfinite
 from utils.memory import get_pids_by_name
 try:
     import config_personal as config
@@ -41,11 +41,11 @@ class RobloxManager:
                 username = config.usernames[list(roblox_pids.keys()).index(pid)]
                 instance = roblox_type(self.roblox_instances, self.controller, username, self.world, self.level, self.custom_sequence, pid, y_addrs)
                 self.roblox_instances[username] = instance
-            pids = {self.roblox_instances[username].pid: self.roblox_instances[username].y_addrs for username in config.usernames}
+            pids = {self.roblox_instances[username].pid: self.roblox_instances[username].y_addrs for username in config.usernames}  # keyerror for mismatching pid and username
             self.logger.info(f"Roblox PIDs: {pids}")
             self.main_instance = self.roblox_instances[config.usernames[0]]
         else:
-            if issubclass(roblox_type, (RobloxInfinite, RobloxStory, RobloxPortal, RobloxRealmBase)):
+            if issubclass(roblox_type, (RobloxInfinite, RobloxStory, RobloxPortal, RobloxRealmInfinite)):
                 self.all_start_instance()
             elif issubclass(roblox_type, RobloxTower):
                 self.all_start_instance([config.usernames[0]])
@@ -169,14 +169,13 @@ class RobloxManager:
             return self.enter_tower()
         elif type(self.main_instance) is RobloxPortal:
             return self.all_enter_portal()
-        elif type(self.main_instance) is RobloxRealmBase:
-            return self.all_enter_realm_base()
+        elif type(self.main_instance) is RobloxRealmInfinite:
+            return self.all_enter_realm_infinite()
         else:
             raise StartupException("Invalid roblox type")
 
     def all_enter_infinite(self):
         assert type(self.main_instance) is RobloxInfinite
-        self.main_instance: RobloxInfinite  # type hint to suppress warnings
         self.logger.info(f"Entering infinite for all accounts. World: {self.world}")
         self.logger.info("Teleporting to play position")
         for username in config.usernames:
@@ -284,7 +283,6 @@ class RobloxManager:
 
     def enter_tower(self):
         assert type(self.main_instance) is RobloxTower
-        self.main_instance: RobloxTower  # type hint to suppress warnings
         self.logger.info(f"Entering Tower of Eternity for main account")
         self.logger.info("Teleporting to tower enter position")
         try:
@@ -326,7 +324,6 @@ class RobloxManager:
 
     def all_enter_portal(self):
         assert type(self.main_instance) is RobloxPortal
-        self.main_instance: RobloxPortal  # type hint to suppress warnings
         self.logger.info(f"Entering portal for all accounts")
         self.logger.info("Going to portal open position")
         for username in config.usernames:
@@ -381,11 +378,18 @@ class RobloxManager:
             self.ensure_all_instance()
             return self.all_enter_portal()
 
-    def all_enter_realm_base(self):
-        assert type(self.main_instance) is RobloxRealmBase
-        self.main_instance: RobloxRealmBase  # type hint to suppress warnings
+    def all_enter_realm_infinite(self):
+        assert type(self.main_instance) is RobloxRealmInfinite
         self.logger.info(f"Entering realm for all accounts")
-        self.logger.info("Going to realm enter position")
+        for username in config.usernames:
+            instance = self.roblox_instances[username]
+            try:
+                instance.enter_realm()
+            except StartupException:
+                instance.close_instance()
+                self.ensure_all_instance()
+                return
+        self.logger.info("Going to realm story position")
         for username in config.usernames:
             instance = self.roblox_instances[username]
             try:
@@ -394,7 +398,6 @@ class RobloxManager:
                 instance.close_instance()
                 self.ensure_all_instance()
                 return
-        return
         self.logger.info("Entering realm")
         for username in config.usernames:
             instance = self.roblox_instances[username]

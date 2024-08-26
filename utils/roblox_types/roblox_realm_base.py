@@ -36,35 +36,20 @@ class RobloxRealmBase(RobloxBase):
             self.place_color = getattr(coords, f"{world_prefix}_place_color")
             self.place_color_tolerance = getattr(coords, f"{world_prefix}_place_color_tolerance")
 
-    def teleport(self):
+    def teleport(self, room=1):
+        pass
+
+    def enter_realm(self, depth=0):
         self.set_foreground()
         time.sleep(0.5)
         self.wait_game_load("main")
         self.close_menu()
+        if depth > 2:
+            raise StartupException("Could not travel to Athenyx Realm")
         try:
             pos = memory.get_current_pos(self.pid, self.y_addrs)
-            if pos[1] <= -100 and self.username != config.usernames[0]:
-                self.controller.move_forward(-1)
-                time.sleep(1)
-                self.controller.reset()
-                time.sleep(0.1)
-                keyboard.send("e")
-                time.sleep(0.1)
-                keyboard.send("e")
-                time.sleep(0.1)
-                self.click_text("leave")
-                time.sleep(1)
-                self.wait_game_load("main")
-                self.close_menu()
-                self.travel_realm()
-            elif pos[1] > -100:
-                self.travel_realm()
-        except MemoryException:
-            raise StartupException("Could not teleport to Athenyx Realm")
-
-    def travel_realm(self):
-        try:
-            pos = memory.get_current_pos(self.pid, self.y_addrs)
+            if pos[1] <= -100:
+                return True
             attempts = 0
             while self.controller.calculate_distance(pos[0], pos[2], coords.realm_travel_pos[0], coords.realm_travel_pos[1]) > 135:
                 if attempts > 2:
@@ -88,22 +73,64 @@ class RobloxRealmBase(RobloxBase):
             raise StartupException("Could not travel to Athenyx Realm")
         time.sleep(0.5)
         if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.realm_travel_pos[0], coords.realm_travel_pos[1], coords.realm_travel_pos_tolerance):
-            return self.travel_realm()
+            return self.enter_realm(depth + 1)
         time.sleep(0.1)
         keyboard.send("e")
         time.sleep(0.1)
         keyboard.send("e")
         time.sleep(0.2)
-        self.click_text("traveltoatheynx")  # why did they misspell it here x_x
+        if not self.click_text("traveltoatheynx"):  # why did they misspell it here x_x
+            return self.enter_realm(depth + 1)
         time.sleep(0.2)
-        if self.username != config.usernames[0]:
-            self.click_text("joinfriend")
+        if self.username == config.usernames[0]:
+            if not self.click_text("teleport"):
+                return self.enter_realm(depth + 1)
+            return True
+        else:
+            if not self.click_text("joinfriend"):
+                return self.enter_realm(depth + 1)
             time.sleep(0.1)
-            self.click_text("typehere")
+            if not self.click_text("typehere"):
+                return self.enter_realm(depth + 1)
             time.sleep(0.1)
             keyboard.write(config.usernames[0])
             time.sleep(0.1)
-        self.click_text("teleport")
+            if not self.click_text("teleport"):
+                return self.enter_realm(depth + 1)
+            time.sleep(2)
+            if self.find_text("traveltoatheynx"):
+                raise StartupException("Main account not in Athenyx Realm")
+            return True
+
+    def leave_realm(self):
+        self.set_foreground()
+        time.sleep(0.5)
+        self.wait_game_load("main")
+        self.close_menu()
+        try:
+            pos = memory.get_current_pos(self.pid, self.y_addrs)
+            if pos[1] <= -100:
+                self.controller.move_forward(-1)
+                time.sleep(1)
+                self.controller.reset()
+                time.sleep(0.1)
+                keyboard.send("e")
+                time.sleep(0.1)
+                keyboard.send("e")
+                time.sleep(0.1)
+                if not self.click_text("leave"):
+                    if not self.fast_travel("summon"):
+                        raise StartupException("Could not fast travel to summon")
+                    self.controller.go_to_pos(self.pid, self.y_addrs, coords.realm_leave_pos[0], coords.realm_leave_pos[1], coords.realm_leave_pos_tolerance)
+                    time.sleep(0.1)
+                    keyboard.send("e")
+                    time.sleep(0.1)
+                    keyboard.send("e")
+                    if not self.click_text("leave"):
+                        raise StartupException("Could not leave realm")
+        except MemoryException:
+            raise StartupException("Could not travel to Athenyx Realm")
+
 
     def enter(self, depth=0):
         pass

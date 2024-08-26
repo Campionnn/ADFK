@@ -186,7 +186,7 @@ class RobloxBase(ABC):
             screen = self.screenshot()
             match during:
                 case "main":
-                    if ocr.find_text(screen, "units") is not None:
+                    if ocr.find_game_load(screen):
                         return True
                 case "story":
                     money = ocr.read_current_money(screen)
@@ -198,10 +198,35 @@ class RobloxBase(ABC):
             case "story":
                 raise StartupException("Could not detect story load")
 
-    def click_text(self, text, log=True, numbers=False):
+    def find_text(self, text):
+        match text:
+            case "start":
+                return ocr.find_start(self.screenshot())
+            case "$":
+                return ocr.find_sell(self.screenshot())
+            case "search":
+                return ocr.find_search(self.screenshot())
+            case "typehere":
+                return ocr.find_type_here(self.screenshot())
+            case "openportal":
+                return ocr.find_open_portal(self.screenshot())
+            case "playagain":
+                return ocr.find_play_again(self.screenshot())
+            case "backtolobby":
+                return ocr.find_back_to_lobby(self.screenshot())
+            case "teleport":
+                return ocr.find_teleport(self.screenshot())
+            case "joinfriend":
+                return ocr.find_join_friend(self.screenshot())
+            case "panicleave":
+                return ocr.find_panic_leave(self.screenshot())
+            case _:
+                return ocr.find_text(self.screenshot(), text)
+
+    def click_text(self, text, log=True):
         if log:
             self.logger.info(f"Clicking text \"{text}\" for {self.username}")
-        text_coords = ocr.find_text(self.screenshot(), text, numbers)
+        text_coords = self.find_text(text)
         if text_coords is None:
             return False
         autoit.mouse_click("left", text_coords[0], text_coords[1])
@@ -335,6 +360,14 @@ class RobloxBase(ABC):
 
     @abstractmethod
     def teleport(self):
+        pass
+
+    @abstractmethod
+    def enter_realm(self, depth=0):
+        pass
+
+    @abstractmethod
+    def leave_realm(self):
         pass
 
     @abstractmethod
@@ -660,9 +693,6 @@ class RobloxBase(ABC):
                 pass
             time.sleep(0.5)
         self.set_foreground()
-
-    def find_text(self, text):
-        return ocr.find_text(self.screenshot(), text)
 
     def leave_death(self):
         self.set_foreground()

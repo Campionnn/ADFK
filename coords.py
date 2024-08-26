@@ -26,6 +26,8 @@ fast_travel_sequence = "d"
 world_sequence = "a" + "s"
 # Settings button
 settings_sequence = "w"*2 + "a"*2
+# Friends only checkbox
+friends_only_sequence = "s"*1 + "a"*2
 
 
 # Lobby coordinates
@@ -173,15 +175,37 @@ lunar_portal_place_color_tolerance = 15
 # Athenyx Realm Coordinates
 realm_travel_pos = [37.011085510253906, -447.31707763671875]
 realm_travel_pos_tolerance = 5.0
+realm_leave_pos = [13.207940101623535, -281.2611999511719]
+realm_leave_pos_tolerance = 5.0
+realm_story_pos_a = [-162.2193145751953, -368.95025634765625]
+realm_story_pos_b = [-132.364013671875, -368.4951171875]
+realm_story_pos_c = [-101.27641296386719, -368.6451416015625]
+realm_story_pos_1 = [-162.3717498779297, -344.5025634765625]
+realm_story_pos_2 = [-163.2357635498047, -392.68572998046875]
+realm_story_pos_3 = [-131.53485107421875, -344.5025634765625]
+realm_story_pos_4 = [-132.38890075683594, -392.68572998046875]
+realm_story_pos_5 = [-100.66180419921875, -344.5025634765625]
+realm_story_pos_6 = [-101.49835968017578, -392.68572998046875]
+realm_challenge_pos_a = []
+realm_challenge_pos_b = []
+realm_challenge_pos_c = []
+realm_challenge_pos_1 = []
+realm_challenge_pos_2 = []
+realm_challenge_pos_3 = []
+realm_challenge_pos_4 = []
+realm_challenge_pos_5 = []
+realm_challenge_pos_6 = []
+realm_play_pos_tolerance = 5.0
+realm_enter_pos_tolerance = 5.0
 
 # Ruined City
 ruined_sequence = "a"*2
-ruined_place_pos = [0.0, 0.0]
+ruined_place_pos = [931.572021484375, 3070.303466796875]
 ruined_place_pos_tolerance = 5.0
-ruined_place_rot = 0
+ruined_place_rot = 270
 ruined_place_rot_tolerance = 1.0
-ruined_place_color = (0, 0, 0)
-ruined_place_color_tolerance = 0
+ruined_place_color = (180, 120, 150)
+ruined_place_color_tolerance = 20
 
 # Aether Gateway
 aether_sequence = "a"*2 + "s"*1
