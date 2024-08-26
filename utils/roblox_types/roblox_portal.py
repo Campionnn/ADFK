@@ -38,44 +38,22 @@ class RobloxPortal(RobloxBase):
         self.set_coords()
 
     def set_coords(self):
-        match self.world:
-            case 1:
-                self.place_pos = coords.demon_portal_place_pos
-                self.place_pos_tolerance = coords.demon_portal_place_pos_tolerance
-                self.place_rot = coords.demon_portal_place_rot
-                self.place_rot_tolerance = coords.demon_portal_place_rot_tolerance
-                self.place_color = coords.demon_portal_place_color
-                self.place_color_tolerance = coords.demon_portal_place_color_tolerance
-            case 2:
-                self.place_pos = coords.cursed_portal_place_pos
-                self.place_pos_tolerance = coords.cursed_portal_place_pos_tolerance
-                self.place_rot = coords.cursed_portal_place_rot
-                self.place_rot_tolerance = coords.cursed_portal_place_rot_tolerance
-                self.place_color = coords.cursed_portal_place_color
-                self.place_color_tolerance = coords.cursed_portal_place_color_tolerance
-            case 3:
-                self.place_pos = coords.ancient_portal_place_pos
-                self.place_pos_tolerance = coords.ancient_portal_place_pos_tolerance
-                self.place_rot = coords.ancient_portal_place_rot
-                self.place_rot_tolerance = coords.ancient_portal_place_rot_tolerance
-                self.place_color = coords.ancient_portal_place_color
-                self.place_color_tolerance = coords.ancient_portal_place_color_tolerance
-            case 4:
-                self.place_pos = coords.solar_portal_place_pos
-                self.place_pos_tolerance = coords.solar_portal_place_pos_tolerance
-                self.place_rot = coords.solar_portal_place_rot
-                self.place_rot_tolerance = coords.solar_portal_place_rot_tolerance
-                self.place_color = coords.solar_portal_place_color
-                self.place_color_tolerance = coords.solar_portal_place_color_tolerance
-            case 5:
-                self.place_pos = coords.lunar_portal_place_pos
-                self.place_pos_tolerance = coords.lunar_portal_place_pos_tolerance
-                self.place_rot = coords.lunar_portal_place_rot
-                self.place_rot_tolerance = coords.lunar_portal_place_rot_tolerance
-                self.place_color = coords.lunar_portal_place_color
-                self.place_color_tolerance = coords.lunar_portal_place_color_tolerance
-            case _:
-                raise ValueError("Invalid portal choice")
+        portal_map = {
+            1: 'demon_portal',
+            2: 'cursed_portal',
+            3: 'ancient_portal',
+            4: 'solar_portal',
+            5: 'lunar_portal'
+        }
+
+        portal_prefix = portal_map.get(self.world)
+        if portal_prefix:
+            self.place_pos = getattr(coords, f"{portal_prefix}_place_pos")
+            self.place_pos_tolerance = getattr(coords, f"{portal_prefix}_place_pos_tolerance")
+            self.place_rot = getattr(coords, f"{portal_prefix}_place_rot")
+            self.place_rot_tolerance = getattr(coords, f"{portal_prefix}_place_rot_tolerance")
+            self.place_color = getattr(coords, f"{portal_prefix}_place_color")
+            self.place_color_tolerance = getattr(coords, f"{portal_prefix}_place_color_tolerance")
 
     def teleport(self):
         self.set_foreground()
@@ -153,7 +131,7 @@ class RobloxPortal(RobloxBase):
         time.sleep(1)
         if search is not None:
             self.click_text("search")
-            time.sleep(0.2)
+            time.sleep(0.1)
             keyboard.write(search)
             time.sleep(0.1)
         rect = self.get_window_rect()

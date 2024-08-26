@@ -54,6 +54,7 @@ class RobloxBase(ABC):
         self.current_wave = [0, 0.0, 0]
         self.afk_time = 0.0
         self.wave_checker = None
+        self.sell_flag = False
 
     def start_account(self):
         self.pid = None
@@ -186,7 +187,7 @@ class RobloxBase(ABC):
             screen = self.screenshot()
             match during:
                 case "main":
-                    if ocr.find_text(screen, "units") is not None:
+                    if ocr.find_game_load(screen):
                         return True
                 case "story":
                     money = ocr.read_current_money(screen)
@@ -198,10 +199,35 @@ class RobloxBase(ABC):
             case "story":
                 raise StartupException("Could not detect story load")
 
-    def click_text(self, text, log=True, numbers=False):
+    def find_text(self, text):
+        match text:
+            case "start":
+                return ocr.find_start(self.screenshot())
+            case "$":
+                return ocr.find_sell(self.screenshot())
+            case "search":
+                return ocr.find_search(self.screenshot())
+            case "typehere":
+                return ocr.find_type_here(self.screenshot())
+            case "openportal":
+                return ocr.find_open_portal(self.screenshot())
+            case "playagain":
+                return ocr.find_play_again(self.screenshot())
+            case "backtolobby":
+                return ocr.find_back_to_lobby(self.screenshot())
+            case "teleport":
+                return ocr.find_teleport(self.screenshot())
+            case "joinfriend":
+                return ocr.find_join_friend(self.screenshot())
+            case "panicleave":
+                return ocr.find_panic_leave(self.screenshot())
+            case _:
+                return ocr.find_text(self.screenshot(), text)
+
+    def click_text(self, text, log=True):
         if log:
             self.logger.info(f"Clicking text \"{text}\" for {self.username}")
-        text_coords = ocr.find_text(self.screenshot(), text, numbers)
+        text_coords = self.find_text(text)
         if text_coords is None:
             return False
         autoit.mouse_click("left", text_coords[0], text_coords[1])
@@ -337,6 +363,12 @@ class RobloxBase(ABC):
     def teleport(self):
         pass
 
+    def enter_realm(self, depth=0):
+        pass
+
+    def leave_realm(self):
+        pass
+
     @abstractmethod
     def enter(self, depth=0):
         pass
@@ -383,9 +415,15 @@ class RobloxBase(ABC):
         self.placed_towers = {}
         self.invalid_towers = []
         self.current_wave = [0, 0.0, 0]
+        self.sell_flag = False
         self.set_foreground()
         time.sleep(1)
         self.wait_game_load("story")
+        for username in config.usernames:
+            self.roblox_instances[username].set_foreground()
+            time.sleep(0.05)
+        self.set_foreground()
+        time.sleep(0.1)
         self.spiral()
         self.go_to_play()
         self.controller.turn_towards_yaw(self.pid, self.y_addrs, self.place_rot, self.place_rot_tolerance, 0.2)
@@ -418,6 +456,12 @@ class RobloxBase(ABC):
         self.wave_checker = RepeatedTimer(1, self.check_wave)
         self.afk_time = time.time()
         for action in self.custom_sequence.get('actions'):
+            if self.sell_flag:
+                self.logger.info("Selling all towers")
+                for tower_id in list(self.placed_towers.keys()):
+                    self.sell_tower(tower_id)
+                self.sell_flag = False
+                break
             if action.get('type') == 'place':
                 for tower_id in action.get("ids"):
                     self.check_afk()
@@ -455,6 +499,17 @@ class RobloxBase(ABC):
                     self.check_afk()
                     if not self.sell_tower(tower_id):
                         return False
+            time.sleep(0.5)
+        while True:
+            self.check_afk()
+            if self.check_over():
+                return False
+            if self.sell_flag:
+                self.logger.info("Selling all towers")
+                for tower_id in list(self.placed_towers.keys()):
+                    self.sell_tower(tower_id)
+                self.sell_flag = False
+                break
             time.sleep(0.5)
         while True:
             self.check_afk()
@@ -622,6 +677,7 @@ class RobloxBase(ABC):
                 time.sleep(0.5)
                 if self.click_text("sell"):
                     self.logger.info(f"Sold tower with id {tower_id}")
+                    self.placed_towers.pop(tower_id)
                     return True
 
     def check_over(self):
@@ -656,9 +712,6 @@ class RobloxBase(ABC):
             time.sleep(0.5)
         self.set_foreground()
 
-    def find_text(self, text):
-        return ocr.find_text(self.screenshot(), text)
-
     def leave_death(self):
         self.set_foreground()
         time.sleep(1)
@@ -680,7 +733,8 @@ class RobloxBase(ABC):
         self.set_foreground()
         time.sleep(1)
         start = time.time()
-        while not self.click_text("playagain") and time.time() - start < 7:
+        self.logger.info(f"Clicking text \"playagain\" for {self.username}")
+        while not self.click_text("playagain", False) and time.time() - start < 7:
             time.sleep(0.5)
 
     def leave_wave(self):
