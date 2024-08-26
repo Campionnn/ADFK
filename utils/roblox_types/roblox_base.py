@@ -531,6 +531,8 @@ class RobloxBase(ABC):
         count = 0
         while current_money is None or current_money < cost:
             time.sleep(0.1)
+            if self.sell_flag:
+                return True
             self.check_afk()
             if time.time() - start > 60:
                 self.logger.warning(f"Timed out placing tower: {tower_id}")
@@ -546,6 +548,8 @@ class RobloxBase(ABC):
         placed_towers = list(self.placed_towers.values())
         invalid_towers = []
         for x, y in spiral_coords:
+            if self.sell_flag:
+                return True
             if count != 0 and count % 3 == 0:
                 if self.check_over():
                     return False
@@ -585,6 +589,8 @@ class RobloxBase(ABC):
         start = time.time()
         count = 0
         while True:
+            if self.sell_flag:
+                return True
             self.check_afk()
             if time.time() - start > 150:
                 self.logger.warning(f"Timed out upgrading tower: {tower_id}")
@@ -624,6 +630,8 @@ class RobloxBase(ABC):
         self.logger.info(f"Waiting for {amount} money")
         count = 0
         while True:
+            if self.sell_flag:
+                return True
             self.check_afk()
             if count % 10 == 0 and self.check_over():
                 return False
@@ -639,6 +647,8 @@ class RobloxBase(ABC):
         count = 0
         start = time.time()
         while time.time() - start < seconds:
+            if self.sell_flag:
+                return True
             self.check_afk()
             if count % 10 == 0 and self.check_over():
                 return False
@@ -651,6 +661,8 @@ class RobloxBase(ABC):
         self.logger.info(f"Waiting for wave {wave}")
         count = 0
         while True:
+            if self.sell_flag:
+                return True
             self.check_afk()
             if count % 10 == 0 and self.check_over():
                 return False
