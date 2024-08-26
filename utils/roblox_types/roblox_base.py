@@ -363,11 +363,9 @@ class RobloxBase(ABC):
     def teleport(self):
         pass
 
-    @abstractmethod
     def enter_realm(self, depth=0):
         pass
 
-    @abstractmethod
     def leave_realm(self):
         pass
 
@@ -459,8 +457,10 @@ class RobloxBase(ABC):
         self.afk_time = time.time()
         for action in self.custom_sequence.get('actions'):
             if self.sell_flag:
+                self.logger.info("Selling all towers")
                 for tower_id in list(self.placed_towers.keys()):
                     self.sell_tower(tower_id)
+                self.sell_flag = False
                 break
             if action.get('type') == 'place':
                 for tower_id in action.get("ids"):
@@ -499,6 +499,17 @@ class RobloxBase(ABC):
                     self.check_afk()
                     if not self.sell_tower(tower_id):
                         return False
+            time.sleep(0.5)
+        while True:
+            self.check_afk()
+            if self.check_over():
+                return False
+            if self.sell_flag:
+                self.logger.info("Selling all towers")
+                for tower_id in list(self.placed_towers.keys()):
+                    self.sell_tower(tower_id)
+                self.sell_flag = False
+                break
             time.sleep(0.5)
         while True:
             self.check_afk()
