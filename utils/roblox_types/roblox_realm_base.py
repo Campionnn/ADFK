@@ -131,7 +131,6 @@ class RobloxRealmBase(RobloxBase):
         except MemoryException:
             raise StartupException("Could not travel to Athenyx Realm")
 
-
     def enter(self, depth=0):
         pass
 

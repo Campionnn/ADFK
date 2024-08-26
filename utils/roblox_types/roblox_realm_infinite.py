@@ -64,8 +64,9 @@ class RobloxRealmInfinite(RobloxRealmBase):
             return self.enter(depth + 1)
         if self.username == config.usernames[0]:
             start = time.time()
+            self.logger.info("Checking if main account joined random")
             while time.time() - start < 2:
-                if self.click_text("panicleave"):
+                if self.click_text("panicleave", False):
                     time.sleep(10)
                     self.teleport()
                     return self.enter(depth + 1)
@@ -87,5 +88,5 @@ class RobloxRealmInfinite(RobloxRealmBase):
             return True
         if self.current_wave[0] >= config.wave_stop and type(self) is RobloxRealmInfinite:
             self.wave_checker.stop()
-            time.sleep(3)
-            return True
+            self.sell_flag = True
+            return False

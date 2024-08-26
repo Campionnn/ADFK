@@ -54,6 +54,7 @@ class RobloxBase(ABC):
         self.current_wave = [0, 0.0, 0]
         self.afk_time = 0.0
         self.wave_checker = None
+        self.sell_flag = False
 
     def start_account(self):
         self.pid = None
@@ -416,12 +417,13 @@ class RobloxBase(ABC):
         self.placed_towers = {}
         self.invalid_towers = []
         self.current_wave = [0, 0.0, 0]
+        self.sell_flag = False
         self.set_foreground()
         time.sleep(1)
         self.wait_game_load("story")
         for username in config.usernames:
             self.roblox_instances[username].set_foreground()
-            time.sleep(0.1)
+            time.sleep(0.05)
         self.set_foreground()
         time.sleep(0.1)
         self.spiral()
@@ -456,6 +458,10 @@ class RobloxBase(ABC):
         self.wave_checker = RepeatedTimer(1, self.check_wave)
         self.afk_time = time.time()
         for action in self.custom_sequence.get('actions'):
+            if self.sell_flag:
+                for tower_id in list(self.placed_towers.keys()):
+                    self.sell_tower(tower_id)
+                break
             if action.get('type') == 'place':
                 for tower_id in action.get("ids"):
                     self.check_afk()
@@ -660,6 +666,7 @@ class RobloxBase(ABC):
                 time.sleep(0.5)
                 if self.click_text("sell"):
                     self.logger.info(f"Sold tower with id {tower_id}")
+                    self.placed_towers.pop(tower_id)
                     return True
 
     def check_over(self):
@@ -715,7 +722,8 @@ class RobloxBase(ABC):
         self.set_foreground()
         time.sleep(1)
         start = time.time()
-        while not self.click_text("playagain") and time.time() - start < 7:
+        self.logger.info(f"Clicking text \"playagain\" for {self.username}")
+        while not self.click_text("playagain", False) and time.time() - start < 7:
             time.sleep(0.5)
 
     def leave_wave(self):

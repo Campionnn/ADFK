@@ -415,22 +415,22 @@ class RobloxManager:
         self.logger.info(f"Starting realm")
         self.main_instance.start()
         time.sleep(2)
-        self.logger.info("Going to play position")
-        try:
-            self.main_instance.play()
-        except (PlayException, StartupException):
-            self.all_leave_death()
-            return
-        self.logger.info("Performing custom sequence")
-        try:
-            if not self.main_instance.do_custom_sequence():
-                self.logger.info("Playing again")
-                self.all_play_again()
+        while True:
+            self.logger.info("Going to play position")
+            try:
+                self.main_instance.play()
+            except (PlayException, StartupException):
+                self.all_leave_death()
                 return
-        except (PlayException, StartupException, MemoryException):
-            self.all_leave_death()
-            self.ensure_all_instance()
-            return self.all_enter_infinite()
+            self.logger.info("Performing custom sequence")
+            try:
+                if not self.main_instance.do_custom_sequence():
+                    self.logger.info("Playing again")
+                    self.all_play_again()
+            except (PlayException, StartupException, MemoryException):
+                self.all_leave_death()
+                self.ensure_all_instance()
+                return self.all_enter_infinite()
 
     def all_click_leave(self):
         self.logger.info("Clicking leave for all accounts")
