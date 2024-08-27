@@ -75,12 +75,12 @@ class RobloxInfinite(RobloxBase):
             raise StartupException("Could not teleport to story")
 
     def enter(self, depth=0):
+        if depth > 2:
+            raise StartupException("Could not go to infinite enter position")
         self.logger.info(f"Entering infinite for {self.username}")
         self.set_foreground()
         time.sleep(1)
         if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_enter_pos[0], coords.story_enter_pos[1], coords.story_enter_pos_tolerance):
-            if depth > 2:
-                raise StartupException("Could not go to infinite enter position")
             self.teleport()
             return self.enter(depth + 1)
         if self.username == config.usernames[0]:
