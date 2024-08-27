@@ -72,7 +72,7 @@ class RobloxRealmInfinite(RobloxRealmBase):
                     return self.enter(depth + 1)
             self.controller.zoom_in()
             self.controller.zoom_out(0.25)
-            if not self.click_nav_rect(coords.friends_only_sequence, "Could not find friends only checkbox"):
+            if not self.click_text("friendsonly"):
                 raise StartupException("Could not find friends only checkbox")
             time.sleep(0.5)
             if not self.click_nav_rect(self.world_sequence, "Could not find world button"):

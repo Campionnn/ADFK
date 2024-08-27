@@ -221,6 +221,8 @@ class RobloxBase(ABC):
                 return ocr.find_join_friend(self.screenshot())
             case "panicleave":
                 return ocr.find_panic_leave(self.screenshot())
+            case "friendsonly":
+                return ocr.find_friends_only(self.screenshot())
             case _:
                 return ocr.find_text(self.screenshot(), text)
 

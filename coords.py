@@ -26,8 +26,6 @@ fast_travel_sequence = "d"
 world_sequence = "a" + "s"
 # Settings button
 settings_sequence = "w"*2 + "a"*2
-# Friends only checkbox
-friends_only_sequence = "s"*1 + "a"*2
 
 
 # Lobby coordinates
