@@ -474,6 +474,8 @@ class RobloxBase(ABC):
                     self.logger.info(f"Upgrading towers with id {action.get('ids')} continuously")
                     while True:
                         for tower_id in action.get("ids"):
+                            if self.sell_flag:
+                                break
                             self.check_afk()
                             if not self.upgrade_tower(tower_id, True):
                                 return False
@@ -501,7 +503,7 @@ class RobloxBase(ABC):
                     self.check_afk()
                     if not self.sell_tower(tower_id):
                         return False
-            time.sleep(0.5)
+            time.sleep(0.1)
         while True:
             self.check_afk()
             if self.check_over():
