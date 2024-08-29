@@ -59,7 +59,7 @@ class RobloxRealmInfinite(RobloxRealmBase):
         self.logger.info(f"Entering infinite for {self.username}")
         self.set_foreground()
         time.sleep(1)
-        if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.realm_story_pos_1[0], coords.realm_story_pos_1[1], coords.realm_enter_pos_tolerance, timeout=3):
+        if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.realm_story_pos_1[0], coords.realm_story_pos_1[1], coords.realm_enter_pos_tolerance, timeout=5):
             self.teleport()
             return self.enter(depth + 1)
         if self.username == config.usernames[0]:
