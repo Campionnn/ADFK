@@ -393,7 +393,7 @@ class RobloxManager:
                 instance.close_instance()
                 self.ensure_all_instance()
                 return
-        self.logger.info("Going to realm story position")
+        self.logger.info("Going to realm infinite position")
         for username in config.usernames:
             instance = self.roblox_instances[username]
             try:
@@ -402,7 +402,7 @@ class RobloxManager:
                 instance.close_instance()
                 self.ensure_all_instance()
                 return
-        self.logger.info("Entering realm")
+        self.logger.info("Entering realm infinite select area")
         for username in config.usernames:
             instance = self.roblox_instances[username]
             try:
@@ -412,7 +412,7 @@ class RobloxManager:
                 self.ensure_all_instance()
                 self.all_click_leave()
                 return
-        self.logger.info(f"Starting realm")
+        self.logger.info(f"Starting realm infinite")
         self.main_instance.start()
         time.sleep(2)
         while True:
