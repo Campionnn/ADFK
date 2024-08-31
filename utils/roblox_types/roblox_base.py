@@ -614,6 +614,9 @@ class RobloxBase(ABC):
                 if not skip:
                     self.logger.info(f"Upgraded tower with id {tower_id}")
                 return True
+            else:
+                if count != 0 and count % 10 == 0:
+                    autoit.mouse_click("left", tower_coords[0], tower_coords[1])
             time.sleep(0.1)
             count += 1
 
