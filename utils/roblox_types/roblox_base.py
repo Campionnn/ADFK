@@ -433,6 +433,10 @@ class RobloxBase(ABC):
         time.sleep(1)
         self.controller.reset_look()
         self.controller.zoom_out(1)
+        self.wait_game_load("story")
+        self.logger.info("Clicking speed up")
+        speed_rect = ocr.find_speed_up(self.screenshot(), config.speed_up)
+        autoit.mouse_click("left", speed_rect[0], speed_rect[1])
 
     def go_to_play(self):
         self.cont_go_to_pos(self.place_pos[0], self.place_pos[1], self.place_pos_tolerance, jump=True, timeout=15)
@@ -503,7 +507,7 @@ class RobloxBase(ABC):
                     self.check_afk()
                     if not self.sell_tower(tower_id):
                         return False
-            time.sleep(0.1)
+            time.sleep(0.2)
         while True:
             self.check_afk()
             if self.check_over():

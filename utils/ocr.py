@@ -217,12 +217,34 @@ def find_friends_only(image_input: np.ndarray):
             return x - w // 3, y + h // 2
 
 
-def find_fast_travel(image_input: np.ndarray, location, tolerance=50, ratio=3, use_mask=False):
+def find_speed_up(image_input: np.ndarray, speed):
+    speed_map = {"1x": 1, "2x": 2, "3x": 3}
+    image = image_input.copy()
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    _, thresh = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY_INV)
+    thresh = thresh[:thresh.shape[0] // 15, thresh.shape[1] // 3:thresh.shape[1] // 3 * 2]
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = sorted(contours, key=lambda i: cv2.boundingRect(i)[0])
+    for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        contour_crop = thresh[y + int(h * 0.2):y + int(h * 0.8), x + int(w * 0.2):x + int(w * 0.8)]
+        tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+        result = pytesseract.image_to_data(contour_crop, config=tesseract_config, timeout=5)
+        result = result.split('\n')
+        for line in result:
+            line = line.split('\t')
+            if len(line) == 12 and line[11].lower() in speed_map:
+                found_speed = speed_map.get(line[11].lower())
+                diff = speed - found_speed
+                return x + w // 2 + (diff * int(w * 0.9)) + (image.shape[1] // 3), y + h // 2
+    return None
+
+
+def find_fast_travel(image_input: np.ndarray, location, ratio=3, use_mask=False):
     image = image_input.copy()
     crop = image[:image.shape[0] // ratio, :image.shape[1] // ratio]
-    color = (255, 255, 255)
-    lower = np.array([color[0] - tolerance, color[1] - tolerance, color[2] - tolerance])
-    upper = np.array([color[0], color[1], color[2]])
+    lower = np.array([205, 205, 205])
+    upper = np.array([255, 255, 255])
     mask = cv2.inRange(crop, lower, upper)
     crop[mask == 255] = [255, 255, 255]
     crop[mask != 255] = [0, 0, 0]
