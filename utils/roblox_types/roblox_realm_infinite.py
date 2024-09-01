@@ -60,6 +60,8 @@ class RobloxRealmInfinite(RobloxRealmBase):
         self.set_foreground()
         time.sleep(1)
         if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.realm_story_pos_1[0], coords.realm_story_pos_1[1], coords.realm_enter_pos_tolerance, timeout=5):
+            self.click_text("leave")
+            self.fast_travel("summon")
             self.teleport()
             return self.enter(depth + 1)
         if self.username == config.usernames[0]:

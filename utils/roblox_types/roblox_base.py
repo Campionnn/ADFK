@@ -55,6 +55,7 @@ class RobloxBase(ABC):
         self.afk_time = 0.0
         self.wave_checker = None
         self.sell_flag = False
+        self.speed_up_attempts = 0
 
     def start_account(self):
         self.pid = None
@@ -418,6 +419,7 @@ class RobloxBase(ABC):
         self.invalid_towers = []
         self.current_wave = [0, 0.0, 0]
         self.sell_flag = False
+        self.speed_up_attempts = 0
         self.set_foreground()
         time.sleep(1)
         self.wait_game_load("story")
@@ -434,9 +436,6 @@ class RobloxBase(ABC):
         self.controller.reset_look()
         self.controller.zoom_out(1)
         self.wait_game_load("story")
-        self.logger.info("Clicking speed up")
-        speed_rect = ocr.find_speed_up(self.screenshot(), config.speed_up)
-        autoit.mouse_click("left", speed_rect[0], speed_rect[1])
 
     def go_to_play(self):
         self.cont_go_to_pos(self.place_pos[0], self.place_pos[1], self.place_pos_tolerance, jump=True, timeout=15)
@@ -703,7 +702,17 @@ class RobloxBase(ABC):
                     self.placed_towers.pop(tower_id)
                     return True
 
+    def speed_up(self):
+        speed_rect = ocr.find_speed_up(self.screenshot(), config.speed_up)
+        if speed_rect is not None:
+            autoit.mouse_click("left", speed_rect[0], speed_rect[1])
+            self.speed_up_attempts += 10
+
     def check_over(self):
+        if self.speed_up_attempts < 50:
+            if self.speed_up_attempts % 5 == 0:
+                self.speed_up()
+            self.speed_up_attempts += 1
         if self.find_text("backtolobby") is not None:
             return True
         if self.current_wave[1] != 0 and time.time() - self.current_wave[1] > 300:
@@ -749,7 +758,7 @@ class RobloxBase(ABC):
         time.sleep(1)
         start = time.time()
         self.logger.info(f"Clicking text \"playnext\" for {self.username}")
-        while not self.click_text("playnext", False) and time.time() - start < 7:
+        while not self.click_text("playnext", False) and time.time() - start < 5:
             time.sleep(0.5)
 
     def play_again(self):
@@ -757,7 +766,7 @@ class RobloxBase(ABC):
         time.sleep(1)
         start = time.time()
         self.logger.info(f"Clicking text \"playagain\" for {self.username}")
-        while not self.click_text("playagain", False) and time.time() - start < 7:
+        while not self.click_text("playagain", False) and time.time() - start < 5:
             time.sleep(0.5)
 
     def leave_wave(self):

@@ -67,13 +67,10 @@ class RobloxRealmBase(RobloxBase):
                 pos = memory.get_current_pos(self.pid, self.y_addrs)
                 attempts += 1
             time.sleep(0.25)
-            if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.realm_travel_pos[0],coords.realm_travel_pos[1], coords.realm_travel_pos_tolerance):
-                return self.teleport()
+            if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.realm_travel_pos[0], coords.realm_travel_pos[1], coords.realm_travel_pos_tolerance):
+                return self.enter_realm(depth + 1)
         except MemoryException:
             raise StartupException("Could not travel to Athenyx Realm")
-        time.sleep(0.5)
-        if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.realm_travel_pos[0], coords.realm_travel_pos[1], coords.realm_travel_pos_tolerance):
-            return self.enter_realm(depth + 1)
         time.sleep(0.1)
         keyboard.send("e")
         time.sleep(0.1)
