@@ -141,7 +141,7 @@ class Control:
                 self.reset_move()
                 return True
             final_rot = self.calculate_degree_pos(current_x, current_z, final_x, final_z)
-            if abs(self.calculate_degree_difference(memory.get_current_rot(pid, y_addrs)[1], final_rot)) > 5:
+            if abs(self.calculate_degree_difference(current_pos[4], final_rot)) > 5:
                 self.turn_towards_yaw(pid, y_addrs, final_rot, 2, 0.3)
             distance = self.calculate_distance(current_x, current_z, final_x, final_z)
             amount = max(min((distance / 15), max_speed), min_speed)
