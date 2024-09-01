@@ -207,45 +207,45 @@ ruined_place_color_tolerance = 20
 
 # Aether Gateway
 aether_sequence = "a"*2 + "s"*1
-aether_place_pos = [0.0, 0.0]
+aether_place_pos = [14.28581428527832, -51.13459777832031]
 aether_place_pos_tolerance = 5.0
-aether_place_rot = 0
+aether_place_rot = 180
 aether_place_rot_tolerance = 1.0
-aether_place_color = (0, 0, 0)
-aether_place_color_tolerance = 0
+aether_place_color = (100, 90, 200)
+aether_place_color_tolerance = 5
 
 # Pantheon Passage
 pantheon_sequence = "a"*2 + "s"*2
-pantheon_place_pos = [0.0, 0.0]
+pantheon_place_pos = [11.549433708190918, -88.3564224243164]
 pantheon_place_pos_tolerance = 5.0
-pantheon_place_rot = 0
+pantheon_place_rot = 270
 pantheon_place_rot_tolerance = 1.0
-pantheon_place_color = (0, 0, 0)
-pantheon_place_color_tolerance = 0
+pantheon_place_color = (90, 90, 200)
+pantheon_place_color_tolerance = 10
 
 # Abyssal Gate
 abyssal_sequence = "a"*2 + "s"*3
-abyssal_place_pos = [0.0, 0.0]
+abyssal_place_pos = [0.2595725953578949, 23.31028938293457]
 abyssal_place_pos_tolerance = 5.0
-abyssal_place_rot = 0
+abyssal_place_rot = 180
 abyssal_place_rot_tolerance = 1.0
-abyssal_place_color = (0, 0, 0)
-abyssal_place_color_tolerance = 0
+abyssal_place_color = (100, 60, 120)
+abyssal_place_color_tolerance = 5
 
 # Soulweaver Gate
 soulweaver_sequence = "a"*2 + "s"*4
-soulweaver_place_pos = [0.0, 0.0]
+soulweaver_place_pos = [-192.88308715820312, -40.521629333496094]
 soulweaver_place_pos_tolerance = 5.0
-soulweaver_place_rot = 0
+soulweaver_place_rot = 180
 soulweaver_place_rot_tolerance = 1.0
-soulweaver_place_color = (0, 0, 0)
-soulweaver_place_color_tolerance = 0
+soulweaver_place_color = (50, 40, 60)
+soulweaver_place_color_tolerance = 5
 
 # Cyber Gate
 cyber_sequence = "a"*2 + "s"*5
-cyber_place_pos = [0.0, 0.0]
+cyber_place_pos = [21.188535690307617, -19.644412994384766]
 cyber_place_pos_tolerance = 5.0
-cyber_place_rot = 0
+cyber_place_rot = 180
 cyber_place_rot_tolerance = 1.0
-cyber_place_color = (0, 0, 0)
-cyber_place_color_tolerance = 0
+cyber_place_color = (150, 60, 130)
+cyber_place_color_tolerance = 5
