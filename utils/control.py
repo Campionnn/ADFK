@@ -61,6 +61,13 @@ class Control:
         self.gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
         self.gamepad.update()
 
+    def dash(self):
+        self.gamepad.right_trigger_float(value_float=1)
+        self.gamepad.update()
+        time.sleep(0.1)
+        self.gamepad.right_trigger_float(value_float=0)
+        self.gamepad.update()
+
     def zoom_in(self, duration=2):
         self.logger.debug("Zooming in")
         keyboard.press("i")
@@ -126,6 +133,7 @@ class Control:
         if abs(current_x - final_x) > tolerance and abs(current_z - final_z) > tolerance:
             self.turn_towards_yaw(pid, y_addrs, self.calculate_degree_pos(current_x, current_z, final_x, final_z), 2, 0.3)
         start = time.time()
+        count = 0
         while time.time() - start < timeout:
             current_x = current_pos[0]
             current_z = current_pos[2]
@@ -139,11 +147,14 @@ class Control:
             amount = max(min((distance / 15), max_speed), min_speed)
             if jump:
                 self.jump()
+                if distance > 100 and count > 5:
+                    self.dash()
             self.move_forward(amount)
             time.sleep(0.1)
             if slow:
                 self.reset_move()
             current_pos = memory.get_current_info(pid, y_addrs)
+            count += 1
         self.logger.warning("Timed out while moving to position")
         self.reset_move()
         return False
