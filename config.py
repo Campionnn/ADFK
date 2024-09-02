@@ -8,8 +8,10 @@ logging_level = "debug"
 tesseract_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 # Which wave to stop at and leave the game during infinite ex: 31
 wave_stop = 31
-# What speed to make the game ex: 1, 2, 3
-speed_up = 1
+# What speed to make the game for main account ex: 1, 2, 3
+speed_main = 2
+# Default speed for accounts that are not main account ex: 1, 2, 3
+speed_default = 2
 
 # Next 3 settings are only used when not using a custom sequence
 # Tower hotkey that you want main account to use ex: "1"

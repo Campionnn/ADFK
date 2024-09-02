@@ -133,13 +133,17 @@ class RobloxManager:
     def kill_all_roblox(self):
         self.logger.warning("Killing all bad Roblox instances")
         pids = get_pids_by_name(self.roblox_exe)
+        count = 0
         while len(pids) > 0:
+            if count > 5:
+                break
             for pid in pids:
                 if pid not in [instance.pid for instance in self.roblox_instances.values()]:
                     try:
                         os.kill(pid, 15)
                     except OSError:
                         pass
+            count += 1
             time.sleep(1)
             pids = get_pids_by_name(self.roblox_exe)
         time.sleep(5)
@@ -339,36 +343,38 @@ class RobloxManager:
                 self.ensure_all_instance()
                 return
         self.logger.info("Entering portal")
-        for username in config.usernames:
-            instance = self.roblox_instances[username]
-            try:
-                instance.enter()
-            except (StartupException, MemoryException):
-                instance.close_instance()
-                self.ensure_all_instance()
-                self.all_click_leave()
-                return
-        self.logger.info(f"Starting portal")
-        found = False
-        for username in config.usernames:
-            instance = self.roblox_instances[username]
-            try:
-                if instance.start():
-                    found = True
-                    break
-            except StartupException:
-                instance.close_instance()
-                self.ensure_all_instance()
-                return
-        if not found:
-            self.logger.warning("Failed to start portal. Retrying")
+        try:
+            host = self.main_instance.enter()
+        except (StartupException, MemoryException):
+            self.main_instance.close_instance()
+            self.ensure_all_instance()
             self.all_click_leave()
+            return
+        for username in config.usernames[1:]:
+            instance = self.roblox_instances[username]
+            if instance.username != host:
+                try:
+                    instance.enter()
+                except (StartupException, MemoryException):
+                    instance.close_instance()
+                    self.ensure_all_instance()
+                    self.all_click_leave()
+                    return
+        self.logger.info(f"Starting portal")
+        try:
+            if not self.roblox_instances.get(host).start():
+                self.logger.warning("Failed to start portal. Retrying")
+                self.all_click_leave()
+                self.ensure_all_instance()
+                return
+        except StartupException:
+            self.roblox_instances.get(host).close_instance()
             self.ensure_all_instance()
             return
         time.sleep(2)
         self.logger.info("Going to play position")
         try:
-            self.main_instance.play()
+            self.main_instance.play(host)
         except (PlayException, StartupException):
             self.all_leave_death()
             return
@@ -431,6 +437,7 @@ class RobloxManager:
                 self.all_leave_death()
                 self.ensure_all_instance()
                 return self.all_enter_infinite()
+            self.main_instance.wave_checker.stop()
 
     def all_click_leave(self):
         self.logger.info("Clicking leave for all accounts")

@@ -121,7 +121,7 @@ class Control:
     def calculate_distance(self, x1, z1, x2, z2):
         return math.sqrt((x2 - x1) ** 2 + (z2 - z1) ** 2)
 
-    def go_to_pos(self, pid, y_addrs, final_x, final_z, tolerance, jump=False, slow=False, timeout=10):
+    def go_to_pos(self, pid, y_addrs, final_x, final_z, tolerance, jump=False, dash=False, slow=False, timeout=10):
         min_speed = 0.4 if not slow else 0.2
         max_speed = 1.0 if not slow else 0.3
         current_pos = memory.get_current_info(pid, y_addrs)
@@ -147,7 +147,7 @@ class Control:
             amount = max(min((distance / 15), max_speed), min_speed)
             if jump:
                 self.jump()
-                if distance > 100 and count > 5:
+                if dash and distance > 50 and count > 5:
                     self.dash()
             self.move_forward(amount)
             time.sleep(0.1)

@@ -80,9 +80,18 @@ class RobloxRealmInfinite(RobloxRealmBase):
             if not self.click_nav_rect(self.world_sequence, "Could not find world button"):
                 raise StartupException("Could not find world button")
             time.sleep(0.5)
-            self.click_text("infinitechallenge")
+            if not self.click_text("infinitechallenge"):
+                if not self.click_text("infinite"):
+                    self.click_text("leave")
+                    self.fast_travel("summon")
+                    self.teleport()
+                    self.enter(depth + 1)
             time.sleep(0.5)
-            self.click_text("confirm")
+            if not self.click_text("confirm"):
+                self.click_text("leave")
+                self.fast_travel("summon")
+                self.teleport()
+                self.enter(depth + 1)
         return True
 
     def check_over(self):

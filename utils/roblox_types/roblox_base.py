@@ -56,6 +56,7 @@ class RobloxBase(ABC):
         self.wave_checker = None
         self.sell_flag = False
         self.speed_up_attempts = 0
+        self.host = ""
 
     def start_account(self):
         self.pid = None
@@ -414,12 +415,13 @@ class RobloxBase(ABC):
             self.anti_afk()
             self.afk_time = time.time()
 
-    def play(self):
+    def play(self, host=None):
         self.placed_towers = {}
         self.invalid_towers = []
         self.current_wave = [0, 0.0, 0]
         self.sell_flag = False
         self.speed_up_attempts = 0
+        self.host = host or self.username
         self.set_foreground()
         time.sleep(1)
         self.wait_game_load("story")
@@ -444,12 +446,12 @@ class RobloxBase(ABC):
         self.cont_go_to_pos(self.place_pos[0], self.place_pos[1], self.place_pos_tolerance/10, slow=True)
         self.controller.reset()
 
-    def cont_go_to_pos(self, x, z, tolerance, jump=False, slow=False, timeout=10):
+    def cont_go_to_pos(self, x, z, tolerance, jump=False, dash=False, slow=False, timeout=10):
         attempts = 0
         while True:
             if attempts > 2:
                 raise PlayException("Failed to go to position")
-            if not self.controller.go_to_pos(self.pid, self.y_addrs, x, z, tolerance, jump, slow, timeout):
+            if not self.controller.go_to_pos(self.pid, self.y_addrs, x, z, tolerance, jump, dash, slow, timeout):
                 self.controller.unstuck(self.pid, self.y_addrs)
                 attempts += 1
             else:
@@ -703,10 +705,16 @@ class RobloxBase(ABC):
                     return True
 
     def speed_up(self):
-        speed_rect = ocr.find_speed_up(self.screenshot(), config.speed_up)
+        if self.host != self.username:
+            host = self.roblox_instances.get(self.host)
+            host.set_foreground()
+            time.sleep(0.1)
+        speed_rect = ocr.find_speed_up(self.screenshot(), config.speed_main if self.host == config.usernames[0] else config.speed_default)
         if speed_rect is not None:
             autoit.mouse_click("left", speed_rect[0], speed_rect[1])
             self.speed_up_attempts += 10
+        if self.host != self.username:
+            self.set_foreground()
 
     def check_over(self):
         if self.speed_up_attempts < 50:

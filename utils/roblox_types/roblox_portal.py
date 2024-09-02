@@ -86,10 +86,12 @@ class RobloxPortal(RobloxBase):
             raise StartupException("Could not find portal")
 
     def enter(self, depth=0):
+        host = ""
         if self.username == config.usernames[0]:
             if self.level > 10:
                 self.logger.info(f"Looking for best {self.portal_names.get(self.world)} to open")
-                if not self.open_best_portal():
+                host = self.open_best_portal()
+                if host == "":
                     raise StartupException("Could not find portal to open")
             else:
                 self.logger.info(f"Looking for {self.rarity_names.get(self.level)} {self.portal_names.get(self.world)} to open")
@@ -100,24 +102,27 @@ class RobloxPortal(RobloxBase):
                         raise StartupException("Could not find portal to open")
                     for username in config.usernames:
                         if self.roblox_instances[username].open_portal():
+                            host = username
                             found = True
                             break
                     attempts += 1
-        self.set_foreground()
-        time.sleep(0.5)
-        self.close_menu()
-        time.sleep(0.1)
-        self.controller.move_forward(0.4)
-        time.sleep(0.25)
-        self.controller.reset()
-        time.sleep(0.1)
-        keyboard.press("e")
-        time.sleep(0.1)
-        keyboard.release("e")
-        time.sleep(0.1)
-        keyboard.press("e")
-        time.sleep(2.5)
-        keyboard.release("e")
+        if host != self.username:
+            self.set_foreground()
+            time.sleep(0.5)
+            self.close_menu()
+            time.sleep(0.1)
+            self.controller.move_forward(0.4)
+            time.sleep(0.25)
+            self.controller.reset()
+            time.sleep(0.1)
+            keyboard.press("e")
+            time.sleep(0.1)
+            keyboard.release("e")
+            time.sleep(0.1)
+            keyboard.press("e")
+            time.sleep(2.5)
+            keyboard.release("e")
+        return host
 
     def open_inventory(self, search=None):
         self.set_foreground()
@@ -128,7 +133,7 @@ class RobloxPortal(RobloxBase):
         self.close_menu()
         time.sleep(0.1)
         self.click_text("items")
-        time.sleep(1)
+        time.sleep(0.5)
         if search is not None:
             self.click_text("search")
             time.sleep(0.1)
@@ -185,11 +190,11 @@ class RobloxPortal(RobloxBase):
             attempts = 0
             while True:
                 if attempts > 3:
-                    return False
+                    return ""
                 if best_instance.open_portal(best_portal):
-                    return True
+                    return best_instance.username
                 attempts += 1
-        return False
+        return ""
 
     def get_best_portal(self):
         self.open_inventory(self.portal_names.get(self.world))

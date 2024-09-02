@@ -229,14 +229,17 @@ def find_speed_up(image_input: np.ndarray, speed):
         x, y, w, h = cv2.boundingRect(contour)
         contour_crop = thresh[y + int(h * 0.2):y + int(h * 0.8), x + int(w * 0.2):x + int(w * 0.8)]
         tesseract_config = f'--psm 6 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-        result = pytesseract.image_to_data(contour_crop, config=tesseract_config, timeout=5)
-        result = result.split('\n')
-        for line in result:
-            line = line.split('\t')
-            if len(line) == 12 and line[11].lower() in speed_map:
-                found_speed = speed_map.get(line[11].lower())
-                diff = speed - found_speed
-                return x + w // 2 + (diff * int(w * 0.9)) + (image.shape[1] // 3), y + h // 2
+        try:
+            result = pytesseract.image_to_data(contour_crop, config=tesseract_config, timeout=5)
+            result = result.split('\n')
+            for line in result:
+                line = line.split('\t')
+                if len(line) == 12 and line[11].lower() in speed_map:
+                    found_speed = speed_map.get(line[11].lower())
+                    diff = speed - found_speed
+                    return x + w // 2 + (diff * int(w * 0.9)) + (image.shape[1] // 3), y + h // 2
+        except SystemError:
+            continue
     return None
 
 
