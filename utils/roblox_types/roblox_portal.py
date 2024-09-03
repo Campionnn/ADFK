@@ -149,28 +149,22 @@ class RobloxPortal(RobloxBase):
             level = self.level
         self.open_inventory(self.portal_names.get(self.world))
         rect = self.get_window_rect()
-        previous_text = ""
-        new_text = "o.o"
-        while difflib.SequenceMatcher(None, previous_text, new_text).ratio() < 0.8:
-            previous_text = new_text
-            portal_coords = ocr.find_portal(self.screenshot(), level)
-            if portal_coords is not None:
-                autoit.mouse_click("left", portal_coords[0], portal_coords[1])
-                time.sleep(0.1)
-                autoit.mouse_move(int(rect[2]//8*4.8), rect[3]//2)
+        portal_coords = ocr.find_portal(self.screenshot(), level)
+        if portal_coords is not None:
+            autoit.mouse_click("left", portal_coords[0], portal_coords[1])
+            time.sleep(0.1)
+            autoit.mouse_move(int(rect[2]//8*4.8), rect[3]//2)
+            time.sleep(0.5)
+            if not self.click_text("use"):
+                self.close_menu()
+                return False
+            time.sleep(0.5)
+            if not self.click_text("openportal"):
+                self.click_text("back")
                 time.sleep(0.5)
-                if not self.click_text("use"):
-                    self.close_menu()
-                    return False
-                time.sleep(0.5)
-                if not self.click_text("openportal"):
-                    self.click_text("back")
-                    time.sleep(0.5)
-                    self.close_menu()
-                    return False
-                return True
-            autoit.mouse_wheel("down", 3)
-            new_text = ocr.find_all_text(self.screenshot())
+                self.close_menu()
+                return False
+            return True
         self.logger.info(f"Could not find portal for {self.username}")
         self.close_menu()
         return False
@@ -198,21 +192,11 @@ class RobloxPortal(RobloxBase):
 
     def get_best_portal(self):
         self.open_inventory(self.portal_names.get(self.world))
-        previous_text = ""
-        new_text = "o.o"
         best_portal = 0
-        while difflib.SequenceMatcher(None, previous_text, new_text).ratio() < 0.8:
-            previous_text = new_text
-            rarity = ocr.find_best_portal(self.screenshot(), self.level - 11)
-            if rarity is not None:
-                if self.level - 11 >= rarity > best_portal:
-                    best_portal = rarity
-                    if best_portal == self.level - 11:
-                        break
-            autoit.mouse_wheel("down", 3)
-            rect = self.get_window_rect()
-            autoit.mouse_move(int(rect[2] // 8 * 4.8), rect[3] // 2)
-            new_text = ocr.find_all_text(self.screenshot())
+        rarity = ocr.find_best_portal(self.screenshot(), self.level - 11)
+        if rarity is not None:
+            if self.level - 11 >= rarity > best_portal:
+                best_portal = rarity
         if best_portal == 0:
             self.logger.info(f"Could not find portal for {self.username}")
         else:

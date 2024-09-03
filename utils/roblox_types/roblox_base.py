@@ -706,10 +706,11 @@ class RobloxBase(ABC):
 
     def speed_up(self):
         if self.host != self.username:
-            host = self.roblox_instances.get(self.host)
-            host.set_foreground()
+            self.roblox_instances.get(self.host).set_foreground()
             time.sleep(0.1)
-        speed_rect = ocr.find_speed_up(self.screenshot(), config.speed_main if self.host == config.usernames[0] else config.speed_default)
+        speed = config.speed_main if self.host == config.usernames[0] else config.speed_default
+        self.logger.info(f"Setting speed to {speed}x")
+        speed_rect = ocr.find_speed_up(self.screenshot(), speed)
         if speed_rect is not None:
             autoit.mouse_click("left", speed_rect[0], speed_rect[1])
             self.speed_up_attempts += 10
