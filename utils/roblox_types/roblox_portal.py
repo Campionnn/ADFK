@@ -126,9 +126,6 @@ class RobloxPortal(RobloxBase):
 
     def open_inventory(self, search=None):
         self.set_foreground()
-        time.sleep(0.5)
-        self.controller.zoom_in()
-        self.controller.zoom_out(0.25)
         time.sleep(0.1)
         self.close_menu()
         time.sleep(0.1)

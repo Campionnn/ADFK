@@ -12,6 +12,10 @@ wave_stop = 31
 speed_main = 2
 # Default speed for accounts that are not main account ex: 1, 2, 3
 speed_default = 2
+# Discord webhook link that occasionally sends screenshots of the game
+discord_webhook = ""
+# Screenshot quality. Lower numbers means less quality ex: 50
+screenshot_quality = 50
 
 # Next 3 settings are only used when not using a custom sequence
 # Tower hotkey that you want main account to use ex: "1"

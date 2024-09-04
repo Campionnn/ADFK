@@ -10,6 +10,7 @@ import pywinauto
 import requests
 from abc import ABC, abstractmethod
 from PIL import ImageGrab
+from threading import Thread
 
 try:
     import config_personal as config
@@ -57,6 +58,7 @@ class RobloxBase(ABC):
         self.sell_flag = False
         self.speed_up_attempts = 0
         self.host = ""
+        self.screenshot_count = 0
 
     def start_account(self):
         self.pid = None
@@ -179,7 +181,16 @@ class RobloxBase(ABC):
             time.sleep(0.5)
             return self.screenshot()
         screen_np = np.array(screen)
-        return cv2.cvtColor(screen_np, cv2.COLOR_RGB2BGR)
+        screen_np = cv2.cvtColor(screen_np, cv2.COLOR_RGB2BGR)
+        Thread(target=self.screenshot_webhook, args=(screen_np,)).start()
+        return screen_np
+
+    def screenshot_webhook(self, screen_np):
+        if self.screenshot_count % 10 == 0:
+            _, compressed_image = cv2.imencode(".jpg", screen_np, [int(cv2.IMWRITE_JPEG_QUALITY), config.screenshot_quality])
+            compressed_image = compressed_image.tobytes()
+            requests.post(config.discord_webhook, files={"file": ("image.jpg", compressed_image, "image/jpeg")})
+        self.screenshot_count += 1
 
     def wait_game_load(self, during):
         self.logger.debug(f"Waiting for game to load for {self.username}")
@@ -639,6 +650,7 @@ class RobloxBase(ABC):
                 return True
 
     def wait_money(self, amount):
+        amount = amount * getattr(self, "cost_multiplier", 1)
         self.logger.info(f"Waiting for {amount} money")
         count = 0
         while True:
