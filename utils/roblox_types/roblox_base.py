@@ -8,6 +8,7 @@ import keyboard
 import psutil
 import pywinauto
 import requests
+import random
 from abc import ABC, abstractmethod
 from PIL import ImageGrab
 from threading import Thread
@@ -58,7 +59,6 @@ class RobloxBase(ABC):
         self.sell_flag = False
         self.speed_up_attempts = 0
         self.host = ""
-        self.screenshot_count = 0
 
     def start_account(self):
         self.pid = None
@@ -186,11 +186,10 @@ class RobloxBase(ABC):
         return screen_np
 
     def screenshot_webhook(self, screen_np):
-        if self.screenshot_count % 10 == 0:
+        if random.randint(0, 9) == 0:
             _, compressed_image = cv2.imencode(".jpg", screen_np, [int(cv2.IMWRITE_JPEG_QUALITY), config.screenshot_quality])
             compressed_image = compressed_image.tobytes()
             requests.post(config.discord_webhook, files={"file": ("image.jpg", compressed_image, "image/jpeg")})
-        self.screenshot_count += 1
 
     def wait_game_load(self, during):
         self.logger.debug(f"Waiting for game to load for {self.username}")
