@@ -182,7 +182,8 @@ class RobloxBase(ABC):
             return self.screenshot()
         screen_np = np.array(screen)
         screen_np = cv2.cvtColor(screen_np, cv2.COLOR_RGB2BGR)
-        Thread(target=self.screenshot_webhook, args=(screen_np,)).start()
+        if config.discord_webhook != "":
+            Thread(target=self.screenshot_webhook, args=(screen_np,)).start()
         return screen_np
 
     def screenshot_webhook(self, screen_np):
