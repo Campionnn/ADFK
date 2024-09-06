@@ -355,11 +355,11 @@ def read_current_money(image_input: np.ndarray):
         return None
     try:
         crop = gray[y:y + h, x:x + w]
-        text = str(pytesseract.image_to_string(crop, config='--psm 8 --oem 3 -c tessedit_char_whitelist={NUMBERS}', timeout=5)).strip()
+        text = str(pytesseract.image_to_string(crop, config=f'--psm 8 --oem 3 -c tessedit_char_whitelist={NUMBERS}', timeout=5)).strip()
         if text == "":
             return None
         return int(text)
-    except SystemError:
+    except (SystemError, ValueError):
         return None
 
 
