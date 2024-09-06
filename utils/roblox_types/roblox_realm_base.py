@@ -130,8 +130,3 @@ class RobloxRealmBase(RobloxBase):
 
     def enter(self, depth=0):
         pass
-
-    def start(self):
-        self.set_foreground()
-        time.sleep(0.5)
-        self.click_text("start")

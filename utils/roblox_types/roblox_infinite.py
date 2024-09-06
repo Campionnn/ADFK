@@ -94,11 +94,6 @@ class RobloxInfinite(RobloxBase):
             self.click_text("confirm")
         return True
 
-    def start(self):
-        self.set_foreground()
-        time.sleep(0.5)
-        self.click_text("start")
-
     def check_over(self):
         if super().check_over():
             return True

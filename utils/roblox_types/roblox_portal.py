@@ -201,11 +201,6 @@ class RobloxPortal(RobloxBase):
         self.close_menu()
         return best_portal
 
-    def start(self):
-        self.set_foreground()
-        time.sleep(0.5)
-        return self.click_text("start")
-
     def go_to_play(self):
         if self.world == 4:
             pos = memory.get_current_pos(self.pid, self.y_addrs)

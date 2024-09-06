@@ -434,9 +434,9 @@ class RobloxBase(ABC):
     def enter(self, depth=0):
         pass
 
-    @abstractmethod
     def start(self):
-        pass
+        self.set_foreground()
+        return self.click_text("start")
 
     def spiral(self):
         spiral_coords = []
