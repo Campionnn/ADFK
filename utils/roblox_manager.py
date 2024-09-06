@@ -19,11 +19,10 @@ except ImportError:
 
 
 class RobloxManager:
-    def __init__(self, roblox_type: Type[RobloxBase], roblox_pids=None, mode=1, world=1, level=None, custom_sequence=None):
+    def __init__(self, roblox_type: Type[RobloxBase], roblox_pids=None, world=1, level=None, custom_sequence=None):
         self.roblox_type = roblox_type
         self.logger = logging.getLogger("ADFK")
         self.controller = Control()
-        self.mode = mode
         self.world = world
         self.level = level
         self.custom_sequence = custom_sequence
@@ -57,6 +56,7 @@ class RobloxManager:
                 self.logger.error("Invalid roblox type")
                 raise StartupException("Invalid roblox type")
 
+    def start(self):
         while True:
             if self.all_enter():
                 break

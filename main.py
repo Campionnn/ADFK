@@ -227,7 +227,8 @@ def main():
                 pass
         logger.info(f"World Choice: {world_names[world_input]}")
 
-        RobloxManager(RobloxInfinite, roblox_pids=roblox_pids, mode=mode_choice, world=world_input, custom_sequence=custom_sequence)
+        roblox_manager = RobloxManager(RobloxInfinite, roblox_pids=roblox_pids, world=world_input, custom_sequence=custom_sequence)
+        roblox_manager.start()
 
     elif mode_choice == 2:
         print("Choose which world to start story progression in")
@@ -264,12 +265,14 @@ def main():
                 pass
         logger.info(f"Chapter Choice: Chapter {chapter_input}")
 
-        RobloxManager(RobloxStory, roblox_pids=roblox_pids, mode=mode_choice, world=world_input, level=chapter_input, custom_sequence=custom_sequence)
+        roblox_manager = RobloxManager(RobloxStory, roblox_pids=roblox_pids, world=world_input, level=chapter_input, custom_sequence=custom_sequence)
+        roblox_manager.start()
 
     elif mode_choice == 3:
         if roblox_pids is not None:
             roblox_pids = {list(roblox_pids.keys())[0]: list(roblox_pids.values())[0]}
-        RobloxManager(RobloxTower, roblox_pids=roblox_pids, mode=mode_choice, world=0, custom_sequence=custom_sequence)
+        roblox_manager = RobloxManager(RobloxTower, roblox_pids=roblox_pids, world=0, custom_sequence=custom_sequence)
+        roblox_manager.start()
 
     elif mode_choice == 4:
         print("Choose which portal to auto complete")
@@ -320,7 +323,8 @@ def main():
             rarity_input = rarity_input + 11
             logger.info(f"Rarity Stop: {rarity_names2[rarity_input]}")
 
-        RobloxManager(RobloxPortal, roblox_pids=roblox_pids, mode=mode_choice, world=portal_input, level=rarity_input, custom_sequence=custom_sequence)
+        roblox_manager = RobloxManager(RobloxPortal, roblox_pids=roblox_pids, world=portal_input, level=rarity_input, custom_sequence=custom_sequence)
+        roblox_manager.start()
 
     elif mode_choice == 5:
         print("Choose which mode to do in Athenyx Realm")
@@ -354,7 +358,8 @@ def main():
                     pass
             logger.info(f"World Choice: {realm_names[world_input]}")
 
-            RobloxManager(RobloxRealmInfinite, roblox_pids=roblox_pids, mode=mode_choice, world=world_input, custom_sequence=custom_sequence)
+            roblox_manager = RobloxManager(RobloxRealmInfinite, roblox_pids=roblox_pids, world=world_input, custom_sequence=custom_sequence)
+            roblox_manager.start()
         else:
             print("Not implemented yet")
 
