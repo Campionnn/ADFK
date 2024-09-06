@@ -8,10 +8,9 @@ import keyboard
 import psutil
 import pywinauto
 import requests
-import random
+import threading
 from abc import ABC, abstractmethod
 from PIL import ImageGrab
-from threading import Thread
 
 try:
     import config_personal as config
@@ -31,6 +30,8 @@ PLACE_ID = "17017769292"
 
 
 class RobloxBase(ABC):
+    last_screenshot = 0
+
     def __init__(self, roblox_instances, controller: control.Control, username, world, level, custom_sequence, pid=None, y_addrs=None):
         self.roblox_instances = roblox_instances
         self.logger = logging.getLogger("ADFK")
@@ -183,14 +184,19 @@ class RobloxBase(ABC):
         screen_np = np.array(screen)
         screen_np = cv2.cvtColor(screen_np, cv2.COLOR_RGB2BGR)
         if config.discord_webhook != "":
-            Thread(target=self.screenshot_webhook, args=(screen_np,)).start()
+            current_time = time.time()
+            if current_time - RobloxBase.last_screenshot >= 30:
+                RobloxBase.last_screenshot = current_time
+                threading.Thread(target=self.screenshot_webhook, args=(screen_np,)).start()
         return screen_np
 
     def screenshot_webhook(self, screen_np):
-        if random.randint(0, 9) == 0:
-            _, compressed_image = cv2.imencode(".jpg", screen_np, [int(cv2.IMWRITE_JPEG_QUALITY), config.screenshot_quality])
+        try:
+            _, compressed_image = cv2.imencode(".jpg", screen_np, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
             compressed_image = compressed_image.tobytes()
             requests.post(config.discord_webhook, files={"file": ("image.jpg", compressed_image, "image/jpeg")})
+        except (requests.exceptions.SSLError, requests.exceptions.RequestException):
+            pass
 
     def wait_game_load(self, during):
         self.logger.debug(f"Waiting for game to load for {self.username}")
@@ -555,7 +561,7 @@ class RobloxBase(ABC):
                 return True
             self.check_afk()
             if time.time() - start > 60:
-                self.logger.warning(f"Timed out placing tower: {tower_id}")
+                self.logger.warning(f"Timed out waiting for money to placing tower: {tower_id}")
                 return True
             if count % 5 == 0 and self.check_over():
                 return False
@@ -651,6 +657,7 @@ class RobloxBase(ABC):
 
     def wait_money(self, amount):
         amount = amount * getattr(self, "cost_multiplier", 1)
+        amount = int(amount) + (amount % 1 > 0)
         self.logger.info(f"Waiting for {amount} money")
         count = 0
         while True:
@@ -730,7 +737,7 @@ class RobloxBase(ABC):
             self.set_foreground()
 
     def check_over(self):
-        if self.speed_up_attempts < 50:
+        if self.speed_up_attempts <= 50:
             if self.speed_up_attempts % 5 == 0:
                 self.speed_up()
             self.speed_up_attempts += 1

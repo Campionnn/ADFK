@@ -14,7 +14,7 @@ speed_main = 2
 speed_default = 2
 # Discord webhook link that occasionally sends screenshots of the game
 discord_webhook = ""
-# Screenshot quality. Lower numbers means less quality ex: 50
+# Screenshot quality from 1-100. Lower numbers means less quality ex: 50
 screenshot_quality = 50
 
 # Next 3 settings are only used when not using a custom sequence
