@@ -480,13 +480,11 @@ class RobloxBase(ABC):
         self.speed_up_attempts = 0
         self.host = host or self.username
         self.set_foreground()
-        time.sleep(1)
         self.wait_game_load("story")
         for username in config.usernames:
             self.roblox_instances[username].set_foreground()
             time.sleep(0.05)
         self.set_foreground()
-        time.sleep(0.1)
         self.spiral()
         self.go_to_play()
         self.controller.turn_towards_yaw(self.pid, self.y_addrs, self.place_rot, self.place_rot_tolerance)
@@ -516,7 +514,6 @@ class RobloxBase(ABC):
 
     def do_custom_sequence(self):
         self.set_foreground()
-        time.sleep(0.5)
         self.wave_checker = RepeatedTimer(1, self.check_wave)
         self.afk_time = time.time()
         for action in self.custom_sequence.get('actions'):
@@ -804,17 +801,14 @@ class RobloxBase(ABC):
             instance = self.roblox_instances.get(username)
             try:
                 instance.set_foreground()
-                time.sleep(1)
                 for i in range(5):
                     instance.controller.jump()
             except StartupException:
                 pass
-            time.sleep(0.5)
         self.set_foreground()
 
     def leave_wave(self):
         self.set_foreground()
-        time.sleep(1)
         if self.username == config.usernames[0]:
             if len(self.invalid_towers) > 0:
                 self.mouse_click(self.invalid_towers[0][0], self.invalid_towers[0][1])

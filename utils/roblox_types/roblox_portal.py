@@ -57,7 +57,6 @@ class RobloxPortal(RobloxBase):
 
     def teleport(self):
         self.set_foreground()
-        time.sleep(0.5)
         self.wait_game_load("main")
         self.close_menu()
         try:
@@ -108,9 +107,7 @@ class RobloxPortal(RobloxBase):
                     attempts += 1
         if host != self.username:
             self.set_foreground()
-            time.sleep(0.5)
             self.close_menu()
-            time.sleep(0.1)
             self.controller.move_forward(0.4)
             time.sleep(0.25)
             self.controller.reset()
@@ -126,9 +123,7 @@ class RobloxPortal(RobloxBase):
 
     def open_inventory(self, search=None):
         self.set_foreground()
-        time.sleep(0.1)
         self.close_menu()
-        time.sleep(0.1)
         self.click_text("items")
         time.sleep(0.5)
         if search is not None:
@@ -139,7 +134,6 @@ class RobloxPortal(RobloxBase):
         rect = self.get_window_rect()
         # move mouse to scrollbar area so doesn't hover over items. might not be reliable
         self.mouse_move(int(rect[2]//8*4.8), rect[3]//2)
-        time.sleep(0.2)
 
     def open_portal(self, level=None):
         if level is None:
