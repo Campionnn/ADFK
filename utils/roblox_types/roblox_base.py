@@ -33,6 +33,8 @@ PLACE_ID = "17017769292"
 
 class RobloxBase(ABC):
     last_screenshot = 0
+    MAX_CONCURRENT_DCS = 5
+    dc_semaphore = threading.Semaphore(MAX_CONCURRENT_DCS)
 
     def __init__(self, roblox_instances, controller: control.Control, username, world, level, custom_sequence, pid=None, y_addrs=None):
         self.roblox_instances = roblox_instances
@@ -198,31 +200,42 @@ class RobloxBase(ABC):
         hwnd = self.get_hwnd()
         if hwnd is None:
             raise StartupException("Could not find hwnd")
-        left, top, right, bottom = win32gui.GetWindowRect(hwnd)
-        width = right - left
-        height = bottom - top
-        window_dc = win32gui.GetWindowDC(hwnd)
-        dc_obj = win32ui.CreateDCFromHandle(window_dc)
-        c_dc = dc_obj.CreateCompatibleDC()
-        data_bit_map = win32ui.CreateBitmap()
-        data_bit_map.CreateCompatibleBitmap(dc_obj, width, height)
-        c_dc.SelectObject(data_bit_map)
-        c_dc.BitBlt((0, 0), (width, height), dc_obj, (0, 0), 13369376)  # win32con.SRCCOPY
-        bmp_str = data_bit_map.GetBitmapBits(True)
-        img = np.frombuffer(bmp_str, dtype='uint8')
-        img.shape = (height, width, 4)
-        img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
-        dc_obj.DeleteDC()
-        c_dc.DeleteDC()
-        win32gui.ReleaseDC(hwnd, window_dc)
-        win32gui.DeleteObject(data_bit_map.GetHandle())
+        img = None
+        dc_obj = None
+        compatible_dc = None
+        window_dc = None
+        data_bit_map = None
+        with RobloxBase.dc_semaphore:
+            try:
+                left, top, right, bottom = win32gui.GetWindowRect(hwnd)
+                width = right - left
+                height = bottom - top
+                window_dc = win32gui.GetWindowDC(hwnd)
+                dc_obj = win32ui.CreateDCFromHandle(window_dc)
+                compatible_dc = dc_obj.CreateCompatibleDC()
+                data_bit_map = win32ui.CreateBitmap()
+                data_bit_map.CreateCompatibleBitmap(dc_obj, width, height)
+                compatible_dc.SelectObject(data_bit_map)
+                compatible_dc.BitBlt((0, 0), (width, height), dc_obj, (0, 0), 13369376)  # win32con.SRCCOPY
+                bmp_str = data_bit_map.GetBitmapBits(True)
+                img = np.frombuffer(bmp_str, dtype='uint8')
+                img.shape = (height, width, 4)
+                img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+            except Exception as e:
+                self.logger.warning(f"Could not take background screenshot: {e}")
+                raise StartupException(f"Could not take background screenshot: {e}")
+            finally:
+                try:
+                    dc_obj.DeleteDC()
+                    compatible_dc.DeleteDC()
+                    win32gui.ReleaseDC(hwnd, window_dc)
+                    win32gui.DeleteObject(data_bit_map.GetHandle())
+                except:
+                    pass
         return img
 
     def screenshot(self):
-        try:
-            screen = self.background_screenshot()
-        except Exception as e:
-            raise StartupException(f"Could not take screenshot: {e}")
+        screen = self.background_screenshot()
         if config.discord_webhook != "":
             current_time = time.time()
             if current_time - RobloxBase.last_screenshot >= 30:
