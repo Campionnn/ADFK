@@ -33,8 +33,7 @@ PLACE_ID = "17017769292"
 
 class RobloxBase(ABC):
     last_screenshot = 0
-    MAX_CONCURRENT_DCS = 5
-    dc_semaphore = threading.Semaphore(MAX_CONCURRENT_DCS)
+    screenshot_lock = threading.Lock()
 
     def __init__(self, roblox_instances, controller: control.Control, username, world, level, custom_sequence, pid=None, y_addrs=None):
         self.roblox_instances = roblox_instances
@@ -205,7 +204,7 @@ class RobloxBase(ABC):
         compatible_dc = None
         window_dc = None
         data_bit_map = None
-        with RobloxBase.dc_semaphore:
+        with RobloxBase.screenshot_lock:
             try:
                 left, top, right, bottom = win32gui.GetWindowRect(hwnd)
                 width = right - left
@@ -774,12 +773,12 @@ class RobloxBase(ABC):
                     return True
 
     def speed_up(self):
-        if self.host != self.username:
-            self.roblox_instances.get(self.host).set_foreground()
-            time.sleep(0.1)
         speed = config.speed_main if self.host == config.usernames[0] else config.speed_default
         self.logger.info(f"Setting speed to {speed}x")
-        speed_rect = ocr.find_speed_up(self.screenshot(), speed)
+        host = self.roblox_instances.get(self.host)
+        speed_rect = ocr.find_speed_up(host.screenshot(), speed)
+        if self.host != self.username:
+            host.set_foreground()
         if speed_rect is not None:
             self.mouse_click(speed_rect[0], speed_rect[1])
             self.speed_up_attempts += 10
