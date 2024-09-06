@@ -105,7 +105,7 @@ class Control:
                 return True
             else:
                 self.reset_move()
-            amount = max(min(abs(diff/90), 1), min_amount)
+            amount = max(min(abs(diff/30), 1), min_amount)
             if diff > 0:
                 self.look_right(amount)
             else:
@@ -144,7 +144,7 @@ class Control:
             if abs(self.calculate_degree_difference(current_pos[4], final_rot)) > 5:
                 self.turn_towards_yaw(pid, y_addrs, final_rot, 2, 0.3)
             distance = self.calculate_distance(current_x, current_z, final_x, final_z)
-            amount = max(min((distance / 15), max_speed), min_speed)
+            amount = max(min((distance / 10), max_speed), min_speed)
             if jump:
                 self.jump()
                 if dash and distance > 50 and count > 5:
