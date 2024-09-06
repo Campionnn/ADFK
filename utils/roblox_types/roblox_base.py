@@ -9,8 +9,10 @@ import psutil
 import pywinauto
 import requests
 import threading
+import win32ui
+import win32gui
+import win32process
 from abc import ABC, abstractmethod
-from PIL import ImageGrab
 
 try:
     import config_personal as config
@@ -175,20 +177,52 @@ class RobloxBase(ABC):
         client_rect = app.top_window().rectangle()
         return client_rect.left, client_rect.top, client_rect.width(), client_rect.height()
 
+    def get_hwnd(self):
+        def callback(hwnd, pids_):
+            _, current_pid = win32process.GetWindowThreadProcessId(hwnd)
+            if current_pid == self.pid:
+                pids_.append(hwnd)
+            return True
+
+        pids = []
+        win32gui.EnumWindows(callback, pids)
+        return pids[0] if pids else None
+
+    def background_screenshot(self):
+        hwnd = self.get_hwnd()
+        if hwnd is None:
+            raise StartupException("Could not find hwnd")
+        left, top, right, bottom = win32gui.GetWindowRect(hwnd)
+        width = right - left
+        height = bottom - top
+        window_dc = win32gui.GetWindowDC(hwnd)
+        dc_obj = win32ui.CreateDCFromHandle(window_dc)
+        c_dc = dc_obj.CreateCompatibleDC()
+        data_bit_map = win32ui.CreateBitmap()
+        data_bit_map.CreateCompatibleBitmap(dc_obj, width, height)
+        c_dc.SelectObject(data_bit_map)
+        c_dc.BitBlt((0, 0), (width, height), dc_obj, (0, 0), 13369376)  # win32con.SRCCOPY
+        bmp_str = data_bit_map.GetBitmapBits(True)
+        img = np.frombuffer(bmp_str, dtype='uint8')
+        img.shape = (height, width, 4)
+        img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+        dc_obj.DeleteDC()
+        c_dc.DeleteDC()
+        win32gui.ReleaseDC(hwnd, window_dc)
+        win32gui.DeleteObject(data_bit_map.GetHandle())
+        return img
+
     def screenshot(self):
         try:
-            screen = ImageGrab.grab()
-        except OSError:
-            time.sleep(0.5)
-            return self.screenshot()
-        screen_np = np.array(screen)
-        screen_np = cv2.cvtColor(screen_np, cv2.COLOR_RGB2BGR)
+            screen = self.background_screenshot()
+        except Exception as e:
+            raise StartupException(f"Could not take screenshot: {e}")
         if config.discord_webhook != "":
             current_time = time.time()
             if current_time - RobloxBase.last_screenshot >= 30:
                 RobloxBase.last_screenshot = current_time
-                threading.Thread(target=self.screenshot_webhook, args=(screen_np,)).start()
-        return screen_np
+                threading.Thread(target=self.screenshot_webhook, args=(screen,)).start()
+        return screen
 
     def screenshot_webhook(self, screen_np):
         try:
