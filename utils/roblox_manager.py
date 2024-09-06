@@ -2,6 +2,7 @@ import os
 import time
 import logging
 import threading
+import concurrent.futures
 from typing import Type
 
 from utils.exceptions import *
@@ -462,31 +463,26 @@ class RobloxManager:
 
     def all_click_text(self, text, skip=False):
         def find_text(username_):
-            text_coords[username_] = self.roblox_instances[username].find_text(text)
+            return username_, self.roblox_instances[username_].find_text(text)
 
         text_coords = {}
-        threads = []
-
-        for username in config.usernames:
-            thread = threading.Thread(target=find_text, args=(username,))
-            thread.start()
-            threads.append(thread)
-
-        for thread in threads:
-            thread.join()
-
         failed_users = []
-        for username in config.usernames:
-            coords = text_coords[username]
-            instance = self.roblox_instances[username]
-            if coords is not None:
-                try:
-                    instance.set_foreground()
-                    instance.mouse_click(coords[0], coords[1])
-                except StartupException:
-                    if not skip:
-                        raise
-                continue
-            failed_users.append(username)
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future_to_username = {executor.submit(find_text, username): username for username in config.usernames}
+
+            for future in concurrent.futures.as_completed(future_to_username):
+                username, coords = future.result()
+                text_coords[username] = coords
+
+                instance = self.roblox_instances[username]
+                if coords is not None:
+                    try:
+                        instance.set_foreground()
+                        instance.mouse_move(coords[0], coords[1])
+                    except StartupException:
+                        if not skip:
+                            raise
+                    continue
+                failed_users.append(username)
 
         return failed_users
