@@ -17,13 +17,14 @@ def check_and_install_modules():
         "numpy": "numpy~=2.1.0",
         "psutil": "psutil~=6.0.0",
         "keyboard": "keyboard~=0.13.5",
+        "mouse": "mouse~=0.7.1",
         "pywinauto": "pywinauto~=0.6.8",
         "pybind11": "pybind11~=2.13.1",
         "setuptools": "setuptools~=73.0.1",
         "vgamepad": "vgamepad~=0.1.0",
         "autoit": "PyAutoIt~=0.6.5",
         "requests": "requests~=2.32.3",
-        "PIL": "pillow~=10.4.0",
+        "win32gui": "pywin32~=306",
         "coloredlogs": "coloredlogs~=15.0.1",
         "colorama": "colorama~=0.4.6"
     }
