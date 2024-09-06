@@ -812,31 +812,6 @@ class RobloxBase(ABC):
             time.sleep(0.5)
         self.set_foreground()
 
-    def leave_death(self):
-        self.set_foreground()
-        time.sleep(1)
-        text_coords = self.find_text("backtolobby")
-        if text_coords is None:
-            return self.leave_wave()
-        self.mouse_click(text_coords[0], text_coords[1])
-        return True
-
-    def play_next(self):
-        self.set_foreground()
-        time.sleep(1)
-        start = time.time()
-        self.logger.info(f"Clicking text \"playnext\" for {self.username}")
-        while not self.click_text("playnext", False) and time.time() - start < 2:
-            time.sleep(0.5)
-
-    def play_again(self):
-        self.set_foreground()
-        time.sleep(1)
-        start = time.time()
-        self.logger.info(f"Clicking text \"playagain\" for {self.username}")
-        while not self.click_text("playagain", False) and time.time() - start < 2:
-            time.sleep(0.5)
-
     def leave_wave(self):
         self.set_foreground()
         time.sleep(1)

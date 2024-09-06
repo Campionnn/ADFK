@@ -1,6 +1,7 @@
 import os
 import time
 import logging
+import threading
 from typing import Type
 
 from utils.exceptions import *
@@ -202,7 +203,7 @@ class RobloxManager:
             except (StartupException, MemoryException):
                 instance.close_instance()
                 self.ensure_all_instance()
-                self.all_click_leave()
+                self.all_leave()
                 return
         self.logger.info(f"Starting story")
         self.main_instance.start()
@@ -247,7 +248,7 @@ class RobloxManager:
                 except (StartupException, MemoryException):
                     instance.close_instance()
                     self.ensure_all_instance()
-                    self.all_click_leave()
+                    self.all_leave()
                     return
             self.logger.debug(f"Starting story")
             self.main_instance.start()
@@ -348,7 +349,7 @@ class RobloxManager:
         except (StartupException, MemoryException):
             self.main_instance.close_instance()
             self.ensure_all_instance()
-            self.all_click_leave()
+            self.all_leave()
             return
         for username in config.usernames[1:]:
             instance = self.roblox_instances[username]
@@ -358,13 +359,13 @@ class RobloxManager:
                 except (StartupException, MemoryException):
                     instance.close_instance()
                     self.ensure_all_instance()
-                    self.all_click_leave()
+                    self.all_leave()
                     return
         self.logger.info(f"Starting portal")
         try:
             if not self.roblox_instances.get(host).start():
                 self.logger.warning("Failed to start portal. Retrying")
-                self.all_click_leave()
+                self.all_leave()
                 self.ensure_all_instance()
                 return
         except StartupException:
@@ -416,7 +417,7 @@ class RobloxManager:
             except (StartupException, MemoryException):
                 instance.close_instance()
                 self.ensure_all_instance()
-                self.all_click_leave()
+                self.all_leave()
                 return
         self.logger.info(f"Starting realm infinite")
         self.main_instance.start()
@@ -439,31 +440,53 @@ class RobloxManager:
                 return self.all_enter_infinite()
             self.main_instance.wave_checker.stop()
 
-    def all_click_leave(self):
+    def all_leave(self):
         self.logger.info("Clicking leave for all accounts")
-        for username in config.usernames:
-            instance = self.roblox_instances[username]
-            try:
-                instance.set_foreground()
-                time.sleep(0.5)
-                instance.click_text("leave")
-                time.sleep(0.5)
-            except StartupException:
-                pass
+        self.all_click_text("leave", skip=True)
 
     def all_leave_death(self):
-        self.logger.info("Leaving for all accounts")
-        for username in config.usernames:
-            if not self.roblox_instances[username].leave_death():
-                self.roblox_instances[username].close_instance()
-        self.ensure_all_instance()
-
-    def all_play_next(self):
-        self.logger.info("Clicking play next for all accounts")
-        for username in config.usernames:
-            self.roblox_instances[username].play_next()
+        self.logger.info("Going back to lobby for all accounts")
+        failed = self.all_click_text("backtolobby")
+        for username in failed:
+            instance = self.roblox_instances[username]
+            if not instance.leave_wave():
+                instance.close_instance()
 
     def all_play_again(self):
         self.logger.info("Clicking play again for all accounts")
+        self.all_click_text("playagain")
+
+    def all_play_next(self):
+        self.logger.info("Clicking play next for all accounts")
+        self.all_click_text("playnext")
+
+    def all_click_text(self, text, skip=False):
+        def find_text(username_):
+            text_coords[username_] = self.roblox_instances[username].find_text(text)
+
+        text_coords = {}
+        threads = []
+
         for username in config.usernames:
-            self.roblox_instances[username].play_again()
+            thread = threading.Thread(target=find_text, args=(username,))
+            thread.start()
+            threads.append(thread)
+
+        for thread in threads:
+            thread.join()
+
+        failed_users = []
+        for username in config.usernames:
+            coords = text_coords[username]
+            instance = self.roblox_instances[username]
+            if coords is not None:
+                try:
+                    instance.set_foreground()
+                    instance.mouse_click(coords[0], coords[1])
+                except StartupException:
+                    if not skip:
+                        raise
+                continue
+            failed_users.append(username)
+
+        return failed_users
