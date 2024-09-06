@@ -81,7 +81,7 @@ class RobloxPortal(RobloxBase):
             time.sleep(0.25)
             if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.portal_play_pos[0], coords.portal_play_pos[1], coords.portal_play_pos_tolerance):
                 return self.teleport()
-            self.controller.turn_towards_yaw(self.pid, self.y_addrs, coords.portal_play_rot, coords.portal_play_rot_tolerance, 0.2)
+            self.controller.turn_towards_yaw(self.pid, self.y_addrs, coords.portal_play_rot, coords.portal_play_rot_tolerance)
         except MemoryException:
             raise StartupException("Could not find portal")
 
@@ -138,7 +138,7 @@ class RobloxPortal(RobloxBase):
             time.sleep(0.1)
         rect = self.get_window_rect()
         # move mouse to scrollbar area so doesn't hover over items. might not be reliable
-        autoit.mouse_move(int(rect[2]//8*4.8), rect[3]//2)
+        self.mouse_move(int(rect[2]//8*4.8), rect[3]//2)
         time.sleep(0.2)
 
     def open_portal(self, level=None):
@@ -148,9 +148,9 @@ class RobloxPortal(RobloxBase):
         rect = self.get_window_rect()
         portal_coords = ocr.find_portal(self.screenshot(), level)
         if portal_coords is not None:
-            autoit.mouse_click("left", portal_coords[0], portal_coords[1])
+            self.mouse_click(portal_coords[0], portal_coords[1])
             time.sleep(0.1)
-            autoit.mouse_move(int(rect[2]//8*4.8), rect[3]//2)
+            self.mouse_move(int(rect[2]//8*4.8), rect[3]//2)
             time.sleep(0.5)
             if not self.click_text("use"):
                 self.close_menu()

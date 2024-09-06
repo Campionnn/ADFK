@@ -88,7 +88,7 @@ class Control:
             diff -= 360
         return diff
 
-    def turn_towards_yaw(self, pid, y_addrs, degree, tolerance, min_amount):
+    def turn_towards_yaw(self, pid, y_addrs, degree, tolerance, min_amount=0.2):
         error = 0
         while True:
             rot = memory.get_current_rot(pid, y_addrs)

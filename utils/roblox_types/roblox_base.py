@@ -176,6 +176,12 @@ class RobloxBase(ABC):
         app = pywinauto.Application().connect(process=self.pid)
         client_rect = app.top_window().rectangle()
         return client_rect.left, client_rect.top, client_rect.width(), client_rect.height()
+    
+    def mouse_click(self, x, y):
+        autoit.mouse_click("left", x, y, speed=2)
+    
+    def mouse_move(self, x, y):
+        autoit.mouse_move(x, y, speed=2)
 
     def get_hwnd(self):
         def callback(hwnd, pids_):
@@ -285,7 +291,7 @@ class RobloxBase(ABC):
         text_coords = self.find_text(text)
         if text_coords is None:
             return False
-        autoit.mouse_click("left", text_coords[0], text_coords[1])
+        self.mouse_click(text_coords[0], text_coords[1])
         return True
 
     def click_nav_rect(self, sequence, error_message, chapter=False):
@@ -302,7 +308,7 @@ class RobloxBase(ABC):
             return None
         x = rect[0] + rect[2] // 2
         y = rect[1] + rect[3] // 2
-        autoit.mouse_click("left", x, y)
+        self.mouse_click(x, y)
         return rect
 
     def find_nav_rect(self, sequence, chapter=False):
@@ -346,7 +352,7 @@ class RobloxBase(ABC):
         image = self.screenshot()
         close_coord = ocr.find_close_menu(image)
         if close_coord is not None:
-            autoit.mouse_click("left", close_coord[0], close_coord[1])
+            self.mouse_click(close_coord[0], close_coord[1])
             return True
         return False
 
@@ -397,7 +403,7 @@ class RobloxBase(ABC):
         if fast_travel_coords is None:
             self.logger.warning(f"Could not find fast travel location: {location}")
             return False
-        autoit.mouse_click("left", fast_travel_coords[0], fast_travel_coords[1])
+        self.mouse_click(fast_travel_coords[0], fast_travel_coords[1])
         return True
 
     def check_fast_travel(self, screen):
@@ -483,7 +489,7 @@ class RobloxBase(ABC):
         time.sleep(0.1)
         self.spiral()
         self.go_to_play()
-        self.controller.turn_towards_yaw(self.pid, self.y_addrs, self.place_rot, self.place_rot_tolerance, 0.2)
+        self.controller.turn_towards_yaw(self.pid, self.y_addrs, self.place_rot, self.place_rot_tolerance)
         self.controller.look_down(1.0)
         time.sleep(1)
         self.controller.reset_look()
@@ -621,9 +627,9 @@ class RobloxBase(ABC):
             if (x, y) not in placed_towers:
                 if depth == 0 and (x, y) in self.invalid_towers:
                     continue
-                autoit.mouse_move(x, y)
+                self.mouse_move(x, y)
                 time.sleep(0.15)
-                autoit.mouse_click("left", x, y)
+                self.mouse_click(x, y)
                 time.sleep(0.15)
                 if not self.check_placement():
                     self.logger.info(f"Placed tower {tower_id} at {x}, {y}")
@@ -644,7 +650,7 @@ class RobloxBase(ABC):
         if tower_coords is None:
             self.logger.warning(f"Failed to find tower with id: {tower_id}")
             return False
-        autoit.mouse_click("left", tower_coords[0], tower_coords[1])
+        self.mouse_click(tower_coords[0], tower_coords[1])
         time.sleep(0.1)
         start = time.time()
         count = 0
@@ -662,13 +668,13 @@ class RobloxBase(ABC):
             screen = self.screenshot()
             upgrade_info = ocr.read_upgrade_cost(screen)
             if upgrade_info is not None:
-                autoit.mouse_click("left", upgrade_info[1], upgrade_info[2])
+                self.mouse_click(upgrade_info[1], upgrade_info[2])
                 if not skip:
                     self.logger.info(f"Upgraded tower with id {tower_id}")
                 return True
             else:
                 if count != 0 and count % 10 == 0:
-                    autoit.mouse_click("left", tower_coords[0], tower_coords[1])
+                    self.mouse_click(tower_coords[0], tower_coords[1])
             time.sleep(0.1)
             count += 1
 
@@ -678,7 +684,7 @@ class RobloxBase(ABC):
         if tower_coords is None:
             self.logger.warning(f"Failed to find tower with id: {tower_id}")
             return False
-        autoit.mouse_click("left", tower_coords[0], tower_coords[1])
+        self.mouse_click(tower_coords[0], tower_coords[1])
         time.sleep(0.1)
         start = time.time()
         while True:
@@ -743,7 +749,7 @@ class RobloxBase(ABC):
         if tower_coords is None:
             self.logger.warning(f"Failed to find tower with id: {tower_id}")
             return False
-        autoit.mouse_click("left", tower_coords[0], tower_coords[1])
+        self.mouse_click(tower_coords[0], tower_coords[1])
         time.sleep(0.1)
         start = time.time()
         while True:
@@ -765,7 +771,7 @@ class RobloxBase(ABC):
         self.logger.info(f"Setting speed to {speed}x")
         speed_rect = ocr.find_speed_up(self.screenshot(), speed)
         if speed_rect is not None:
-            autoit.mouse_click("left", speed_rect[0], speed_rect[1])
+            self.mouse_click(speed_rect[0], speed_rect[1])
             self.speed_up_attempts += 10
         if self.host != self.username:
             self.set_foreground()
@@ -812,7 +818,7 @@ class RobloxBase(ABC):
         text_coords = self.find_text("backtolobby")
         if text_coords is None:
             return self.leave_wave()
-        autoit.mouse_click("left", text_coords[0], text_coords[1])
+        self.mouse_click(text_coords[0], text_coords[1])
         return True
 
     def play_next(self):
@@ -836,10 +842,10 @@ class RobloxBase(ABC):
         time.sleep(1)
         if self.username == config.usernames[0]:
             if len(self.invalid_towers) > 0:
-                autoit.mouse_click("left", self.invalid_towers[0][0], self.invalid_towers[0][1])
+                self.mouse_click(self.invalid_towers[0][0], self.invalid_towers[0][1])
             else:
                 rect = self.get_window_rect()
-                autoit.mouse_click("left", rect[0] + rect[2] // 2, rect[1] + rect[3] // 2)
+                self.mouse_click(rect[0] + rect[2] // 2, rect[1] + rect[3] // 2)
             time.sleep(0.5)
         self.click_nav_rect(coords.settings_sequence, "Could not find settings button")
         time.sleep(0.25)
@@ -851,7 +857,7 @@ class RobloxBase(ABC):
             if fast_travel_coords is None:
                 self.logger.warning(f"Could not find leavegame button")
                 return False
-        autoit.mouse_click("left", fast_travel_coords[0], fast_travel_coords[1])
+        self.mouse_click(fast_travel_coords[0], fast_travel_coords[1])
         time.sleep(0.5)
         self.click_text("leave")
         return True
