@@ -213,16 +213,16 @@ class RobloxManager:
         try:
             self.main_instance.play()
         except (PlayException, StartupException):
-            self.all_leave_death()
+            self.all_back_to_lobby()
             return
         self.logger.info("Performing custom sequence")
         try:
             if not self.main_instance.do_custom_sequence():
                 self.logger.info("Leaving infinite")
-                self.all_leave_death()
+                self.all_back_to_lobby()
                 return
         except (PlayException, StartupException, MemoryException):
-            self.all_leave_death()
+            self.all_back_to_lobby()
             self.ensure_all_instance()
             return self.all_enter_infinite()
 
@@ -259,7 +259,7 @@ class RobloxManager:
                 try:
                     self.main_instance.play()
                 except (PlayException, StartupException):
-                    self.all_leave_death()
+                    self.all_back_to_lobby()
                     return
                 self.logger.info("Performing custom sequence")
                 try:
@@ -274,7 +274,7 @@ class RobloxManager:
                                 continue
                             else:
                                 self.logger.debug("Finished world. Going back to lobby")
-                                self.all_leave_death()
+                                self.all_back_to_lobby()
                                 self.world += 1
                                 self.level = 1
                                 break
@@ -283,10 +283,10 @@ class RobloxManager:
                             self.all_play_again()
                             continue
                         else:
-                            self.all_leave_death()
+                            self.all_back_to_lobby()
                             break
                 except (PlayException, StartupException, MemoryException):
-                    self.all_leave_death()
+                    self.all_back_to_lobby()
                     self.ensure_all_instance()
                     break
         return True
@@ -309,7 +309,7 @@ class RobloxManager:
             try:
                 self.main_instance.play()
             except (PlayException, StartupException):
-                self.all_leave_death()
+                self.all_back_to_lobby()
                 return
             self.logger.info("Performing custom sequence")
             try:
@@ -322,13 +322,13 @@ class RobloxManager:
                             continue
                         else:
                             self.logger.debug("Won but couldn't find play next button")
-                            self.all_leave_death()
+                            self.all_back_to_lobby()
                             break
                     else:
-                        self.all_leave_death()
+                        self.all_back_to_lobby()
                         break
             except (PlayException, StartupException, MemoryException):
-                self.all_leave_death()
+                self.all_back_to_lobby()
                 self.ensure_all_instance()
                 return self.enter_tower()
 
@@ -378,15 +378,15 @@ class RobloxManager:
         try:
             self.main_instance.play(host)
         except (PlayException, StartupException):
-            self.all_leave_death()
+            self.all_back_to_lobby()
             return
         self.logger.info("Performing custom sequence")
         try:
             if not self.main_instance.do_custom_sequence():
-                self.all_leave_death()
+                self.all_back_to_lobby()
                 return
         except (PlayException, StartupException, MemoryException):
-            self.all_leave_death()
+            self.all_back_to_lobby()
             self.ensure_all_instance()
             return self.all_enter_portal()
 
@@ -428,7 +428,7 @@ class RobloxManager:
             try:
                 self.main_instance.play()
             except (PlayException, StartupException):
-                self.all_leave_death()
+                self.all_back_to_lobby()
                 return
             self.logger.info("Performing custom sequence")
             try:
@@ -436,7 +436,7 @@ class RobloxManager:
                     self.logger.info("Playing again")
                     self.all_play_again()
             except (PlayException, StartupException, MemoryException):
-                self.all_leave_death()
+                self.all_back_to_lobby()
                 self.ensure_all_instance()
                 return self.all_enter_infinite()
             self.main_instance.wave_checker.stop()
@@ -445,7 +445,7 @@ class RobloxManager:
         self.logger.info("Clicking leave for all accounts")
         self.all_click_text("leave", skip=True)
 
-    def all_leave_death(self):
+    def all_back_to_lobby(self):
         self.logger.info("Going back to lobby for all accounts")
         failed = self.all_click_text("backtolobby")
         for username in failed:
