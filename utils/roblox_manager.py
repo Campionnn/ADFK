@@ -478,7 +478,7 @@ class RobloxManager:
                 if coords is not None:
                     try:
                         instance.set_foreground()
-                        instance.mouse_move(coords[0], coords[1])
+                        instance.mouse_click(coords[0], coords[1])
                     except StartupException:
                         if not skip:
                             raise
