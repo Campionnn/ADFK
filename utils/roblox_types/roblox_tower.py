@@ -27,7 +27,6 @@ class RobloxTower(RobloxBase):
 
     def teleport(self):
         self.set_foreground()
-        time.sleep(0.5)
         self.wait_game_load("main")
         self.close_menu()
         try:
@@ -57,7 +56,7 @@ class RobloxTower(RobloxBase):
         time.sleep(1)
         self.click_text("play")
         time.sleep(2)
-        self.click_text("start")
+        return self.click_text("start")
 
     def spiral(self):
         super().spiral()

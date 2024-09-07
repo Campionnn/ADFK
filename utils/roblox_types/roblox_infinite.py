@@ -41,7 +41,6 @@ class RobloxInfinite(RobloxBase):
 
     def teleport(self):
         self.set_foreground()
-        time.sleep(0.5)
         self.wait_game_load("main")
         self.close_menu()
         try:
@@ -53,7 +52,7 @@ class RobloxInfinite(RobloxBase):
                 time.sleep(0.25)
                 if not self.fast_travel("story"):
                     self.controller.jump()
-                    time.sleep(0.5)
+                    time.sleep(0.1)
                     self.controller.look_down(1.0)
                     time.sleep(1)
                     self.controller.reset_look()
@@ -79,7 +78,6 @@ class RobloxInfinite(RobloxBase):
             raise StartupException("Could not go to infinite enter position")
         self.logger.info(f"Entering infinite for {self.username}")
         self.set_foreground()
-        time.sleep(1)
         if not self.controller.go_to_pos(self.pid, self.y_addrs, coords.story_enter_pos[0], coords.story_enter_pos[1], coords.story_enter_pos_tolerance):
             self.teleport()
             return self.enter(depth + 1)
@@ -93,11 +91,6 @@ class RobloxInfinite(RobloxBase):
             time.sleep(0.5)
             self.click_text("confirm")
         return True
-
-    def start(self):
-        self.set_foreground()
-        time.sleep(0.5)
-        self.click_text("start")
 
     def check_over(self):
         if super().check_over():

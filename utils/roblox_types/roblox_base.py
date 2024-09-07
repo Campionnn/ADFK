@@ -9,8 +9,10 @@ import psutil
 import pywinauto
 import requests
 import threading
+import win32ui
+import win32gui
+import win32process
 from abc import ABC, abstractmethod
-from PIL import ImageGrab
 
 try:
     import config_personal as config
@@ -31,6 +33,7 @@ PLACE_ID = "17017769292"
 
 class RobloxBase(ABC):
     last_screenshot = 0
+    screenshot_lock = threading.Lock()
 
     def __init__(self, roblox_instances, controller: control.Control, username, world, level, custom_sequence, pid=None, y_addrs=None):
         self.roblox_instances = roblox_instances
@@ -58,6 +61,8 @@ class RobloxBase(ABC):
         self.afk_time = 0.0
         self.wave_checker = None
         self.sell_flag = False
+        self.over_flag = False
+        self.over_lock = threading.Lock()
         self.speed_up_attempts = 0
         self.host = ""
 
@@ -174,21 +179,70 @@ class RobloxBase(ABC):
         app = pywinauto.Application().connect(process=self.pid)
         client_rect = app.top_window().rectangle()
         return client_rect.left, client_rect.top, client_rect.width(), client_rect.height()
+    
+    def mouse_click(self, x, y):
+        autoit.mouse_click("left", x, y, speed=2)
+    
+    def mouse_move(self, x, y):
+        autoit.mouse_move(x, y, speed=2)
+
+    def get_hwnd(self):
+        def callback(hwnd, pids_):
+            _, current_pid = win32process.GetWindowThreadProcessId(hwnd)
+            if current_pid == self.pid:
+                pids_.append(hwnd)
+            return True
+
+        pids = []
+        win32gui.EnumWindows(callback, pids)
+        return pids[0] if pids else None
+
+    def background_screenshot(self):
+        hwnd = self.get_hwnd()
+        if hwnd is None:
+            raise StartupException("Could not find hwnd")
+        img = None
+        dc_obj = None
+        compatible_dc = None
+        window_dc = None
+        data_bit_map = None
+        with RobloxBase.screenshot_lock:
+            try:
+                left, top, right, bottom = win32gui.GetWindowRect(hwnd)
+                width = right - left
+                height = bottom - top
+                window_dc = win32gui.GetWindowDC(hwnd)
+                dc_obj = win32ui.CreateDCFromHandle(window_dc)
+                compatible_dc = dc_obj.CreateCompatibleDC()
+                data_bit_map = win32ui.CreateBitmap()
+                data_bit_map.CreateCompatibleBitmap(dc_obj, width, height)
+                compatible_dc.SelectObject(data_bit_map)
+                compatible_dc.BitBlt((0, 0), (width, height), dc_obj, (0, 0), 13369376)  # win32con.SRCCOPY
+                bmp_str = data_bit_map.GetBitmapBits(True)
+                img = np.frombuffer(bmp_str, dtype='uint8')
+                img.shape = (height, width, 4)
+                img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+            except Exception as e:
+                self.logger.warning(f"Could not take background screenshot: {e}")
+                raise StartupException(f"Could not take background screenshot: {e}")
+            finally:
+                try:
+                    dc_obj.DeleteDC()
+                    compatible_dc.DeleteDC()
+                    win32gui.ReleaseDC(hwnd, window_dc)
+                    win32gui.DeleteObject(data_bit_map.GetHandle())
+                except:
+                    pass
+        return img
 
     def screenshot(self):
-        try:
-            screen = ImageGrab.grab()
-        except OSError:
-            time.sleep(0.5)
-            return self.screenshot()
-        screen_np = np.array(screen)
-        screen_np = cv2.cvtColor(screen_np, cv2.COLOR_RGB2BGR)
+        screen = self.background_screenshot()
         if config.discord_webhook != "":
             current_time = time.time()
             if current_time - RobloxBase.last_screenshot >= 30:
                 RobloxBase.last_screenshot = current_time
-                threading.Thread(target=self.screenshot_webhook, args=(screen_np,)).start()
-        return screen_np
+                threading.Thread(target=self.screenshot_webhook, args=(screen,)).start()
+        return screen
 
     def screenshot_webhook(self, screen_np):
         try:
@@ -222,6 +276,8 @@ class RobloxBase(ABC):
         match text:
             case "start":
                 return ocr.find_start(self.screenshot())
+            case "x":
+                return ocr.find_close_menu(self.screenshot())
             case "$":
                 return ocr.find_sell(self.screenshot())
             case "search":
@@ -242,6 +298,8 @@ class RobloxBase(ABC):
                 return ocr.find_panic_leave(self.screenshot())
             case "friendsonly":
                 return ocr.find_friends_only(self.screenshot())
+            case "items":
+                return ocr.find_inventory(self.screenshot())
             case _:
                 return ocr.find_text(self.screenshot(), text)
 
@@ -251,7 +309,7 @@ class RobloxBase(ABC):
         text_coords = self.find_text(text)
         if text_coords is None:
             return False
-        autoit.mouse_click("left", text_coords[0], text_coords[1])
+        self.mouse_click(text_coords[0], text_coords[1])
         return True
 
     def click_nav_rect(self, sequence, error_message, chapter=False):
@@ -268,7 +326,7 @@ class RobloxBase(ABC):
             return None
         x = rect[0] + rect[2] // 2
         y = rect[1] + rect[3] // 2
-        autoit.mouse_click("left", x, y)
+        self.mouse_click(x, y)
         return rect
 
     def find_nav_rect(self, sequence, chapter=False):
@@ -309,12 +367,7 @@ class RobloxBase(ABC):
 
     def close_menu(self):
         self.logger.info(f"Closing menu for {self.username}")
-        image = self.screenshot()
-        close_coord = ocr.find_close_menu(image)
-        if close_coord is not None:
-            autoit.mouse_click("left", close_coord[0], close_coord[1])
-            return True
-        return False
+        return self.click_text("x", log=False)
 
     def check_placement(self, image=None):
         if image is None:
@@ -363,7 +416,7 @@ class RobloxBase(ABC):
         if fast_travel_coords is None:
             self.logger.warning(f"Could not find fast travel location: {location}")
             return False
-        autoit.mouse_click("left", fast_travel_coords[0], fast_travel_coords[1])
+        self.mouse_click(fast_travel_coords[0], fast_travel_coords[1])
         return True
 
     def check_fast_travel(self, screen):
@@ -394,9 +447,9 @@ class RobloxBase(ABC):
     def enter(self, depth=0):
         pass
 
-    @abstractmethod
     def start(self):
-        pass
+        self.set_foreground()
+        return self.click_text("start")
 
     def spiral(self):
         spiral_coords = []
@@ -437,19 +490,18 @@ class RobloxBase(ABC):
         self.invalid_towers = []
         self.current_wave = [0, 0.0, 0]
         self.sell_flag = False
+        self.over_flag = False
         self.speed_up_attempts = 0
         self.host = host or self.username
         self.set_foreground()
-        time.sleep(1)
         self.wait_game_load("story")
         for username in config.usernames:
             self.roblox_instances[username].set_foreground()
             time.sleep(0.05)
         self.set_foreground()
-        time.sleep(0.1)
         self.spiral()
         self.go_to_play()
-        self.controller.turn_towards_yaw(self.pid, self.y_addrs, self.place_rot, self.place_rot_tolerance, 0.2)
+        self.controller.turn_towards_yaw(self.pid, self.y_addrs, self.place_rot, self.place_rot_tolerance)
         self.controller.look_down(1.0)
         time.sleep(1)
         self.controller.reset_look()
@@ -476,7 +528,6 @@ class RobloxBase(ABC):
 
     def do_custom_sequence(self):
         self.set_foreground()
-        time.sleep(0.5)
         self.wave_checker = RepeatedTimer(1, self.check_wave)
         self.afk_time = time.time()
         for action in self.custom_sequence.get('actions'):
@@ -587,9 +638,9 @@ class RobloxBase(ABC):
             if (x, y) not in placed_towers:
                 if depth == 0 and (x, y) in self.invalid_towers:
                     continue
-                autoit.mouse_move(x, y)
+                self.mouse_move(x, y)
                 time.sleep(0.15)
-                autoit.mouse_click("left", x, y)
+                self.mouse_click(x, y)
                 time.sleep(0.15)
                 if not self.check_placement():
                     self.logger.info(f"Placed tower {tower_id} at {x}, {y}")
@@ -610,7 +661,7 @@ class RobloxBase(ABC):
         if tower_coords is None:
             self.logger.warning(f"Failed to find tower with id: {tower_id}")
             return False
-        autoit.mouse_click("left", tower_coords[0], tower_coords[1])
+        self.mouse_click(tower_coords[0], tower_coords[1])
         time.sleep(0.1)
         start = time.time()
         count = 0
@@ -628,13 +679,13 @@ class RobloxBase(ABC):
             screen = self.screenshot()
             upgrade_info = ocr.read_upgrade_cost(screen)
             if upgrade_info is not None:
-                autoit.mouse_click("left", upgrade_info[1], upgrade_info[2])
+                self.mouse_click(upgrade_info[1], upgrade_info[2])
                 if not skip:
                     self.logger.info(f"Upgraded tower with id {tower_id}")
                 return True
             else:
                 if count != 0 and count % 10 == 0:
-                    autoit.mouse_click("left", tower_coords[0], tower_coords[1])
+                    self.mouse_click(tower_coords[0], tower_coords[1])
             time.sleep(0.1)
             count += 1
 
@@ -644,7 +695,7 @@ class RobloxBase(ABC):
         if tower_coords is None:
             self.logger.warning(f"Failed to find tower with id: {tower_id}")
             return False
-        autoit.mouse_click("left", tower_coords[0], tower_coords[1])
+        self.mouse_click(tower_coords[0], tower_coords[1])
         time.sleep(0.1)
         start = time.time()
         while True:
@@ -709,7 +760,7 @@ class RobloxBase(ABC):
         if tower_coords is None:
             self.logger.warning(f"Failed to find tower with id: {tower_id}")
             return False
-        autoit.mouse_click("left", tower_coords[0], tower_coords[1])
+        self.mouse_click(tower_coords[0], tower_coords[1])
         time.sleep(0.1)
         start = time.time()
         while True:
@@ -724,14 +775,14 @@ class RobloxBase(ABC):
                     return True
 
     def speed_up(self):
-        if self.host != self.username:
-            self.roblox_instances.get(self.host).set_foreground()
-            time.sleep(0.1)
         speed = config.speed_main if self.host == config.usernames[0] else config.speed_default
         self.logger.info(f"Setting speed to {speed}x")
-        speed_rect = ocr.find_speed_up(self.screenshot(), speed)
+        host = self.roblox_instances.get(self.host)
+        speed_rect = ocr.find_speed_up(host.screenshot(), speed)
+        if self.host != self.username:
+            host.set_foreground()
         if speed_rect is not None:
-            autoit.mouse_click("left", speed_rect[0], speed_rect[1])
+            self.mouse_click(speed_rect[0], speed_rect[1])
             self.speed_up_attempts += 10
         if self.host != self.username:
             self.set_foreground()
@@ -741,11 +792,20 @@ class RobloxBase(ABC):
             if self.speed_up_attempts % 5 == 0:
                 self.speed_up()
             self.speed_up_attempts += 1
-        if self.find_text("backtolobby") is not None:
+        if self.over_flag:
+            self.over_flag = False
             return True
+        threading.Thread(target=self.check_over_thread).start()
         if self.current_wave[1] != 0 and time.time() - self.current_wave[1] > 300:
             self.logger.warning("Wave lasted for over 5 minutes and money hasn't changed. Manually leaving")
             return True
+
+    def check_over_thread(self):
+        with self.over_lock:
+            if self.over_flag:
+                return
+            if self.find_text("backtolobby") is not None:
+                self.over_flag = True
 
     def check_wave(self):
         screen = self.screenshot()
@@ -764,48 +824,20 @@ class RobloxBase(ABC):
             instance = self.roblox_instances.get(username)
             try:
                 instance.set_foreground()
-                time.sleep(1)
                 for i in range(5):
                     instance.controller.jump()
             except StartupException:
                 pass
-            time.sleep(0.5)
         self.set_foreground()
-
-    def leave_death(self):
-        self.set_foreground()
-        time.sleep(1)
-        text_coords = self.find_text("backtolobby")
-        if text_coords is None:
-            return self.leave_wave()
-        autoit.mouse_click("left", text_coords[0], text_coords[1])
-        return True
-
-    def play_next(self):
-        self.set_foreground()
-        time.sleep(1)
-        start = time.time()
-        self.logger.info(f"Clicking text \"playnext\" for {self.username}")
-        while not self.click_text("playnext", False) and time.time() - start < 2:
-            time.sleep(0.5)
-
-    def play_again(self):
-        self.set_foreground()
-        time.sleep(1)
-        start = time.time()
-        self.logger.info(f"Clicking text \"playagain\" for {self.username}")
-        while not self.click_text("playagain", False) and time.time() - start < 2:
-            time.sleep(0.5)
 
     def leave_wave(self):
         self.set_foreground()
-        time.sleep(1)
         if self.username == config.usernames[0]:
             if len(self.invalid_towers) > 0:
-                autoit.mouse_click("left", self.invalid_towers[0][0], self.invalid_towers[0][1])
+                self.mouse_click(self.invalid_towers[0][0], self.invalid_towers[0][1])
             else:
                 rect = self.get_window_rect()
-                autoit.mouse_click("left", rect[0] + rect[2] // 2, rect[1] + rect[3] // 2)
+                self.mouse_click(rect[0] + rect[2] // 2, rect[1] + rect[3] // 2)
             time.sleep(0.5)
         self.click_nav_rect(coords.settings_sequence, "Could not find settings button")
         time.sleep(0.25)
@@ -817,7 +849,7 @@ class RobloxBase(ABC):
             if fast_travel_coords is None:
                 self.logger.warning(f"Could not find leavegame button")
                 return False
-        autoit.mouse_click("left", fast_travel_coords[0], fast_travel_coords[1])
+        self.mouse_click(fast_travel_coords[0], fast_travel_coords[1])
         time.sleep(0.5)
         self.click_text("leave")
         return True

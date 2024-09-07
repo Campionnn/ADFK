@@ -19,7 +19,6 @@ class RobloxRealmInfinite(RobloxRealmBase):
 
     def teleport(self, room=1):
         self.set_foreground()
-        time.sleep(1)
         self.wait_game_load("main")
         self.close_menu()
         try:
@@ -31,7 +30,7 @@ class RobloxRealmInfinite(RobloxRealmBase):
                 time.sleep(0.25)
                 if not self.fast_travel("story"):
                     self.controller.jump()
-                    time.sleep(0.5)
+                    time.sleep(0.1)
                     self.controller.look_down(1.0)
                     time.sleep(1)
                     self.controller.reset_look()

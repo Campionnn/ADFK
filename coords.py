@@ -18,7 +18,6 @@ rot_offset = 0x174
 money_color = (22, 218, 243)
 money_tolerance = 10
 
-# Screen Key Sequence
 # Sequence required to get to button after pressing UI Navigation Toggle
 # Fast travel button
 fast_travel_sequence = "d"
@@ -34,9 +33,9 @@ story_play_pos_tolerance = 5.0
 story_enter_pos = [-259.55291748046875, -298.91363525390625]
 story_enter_pos_tolerance = 5.0
 
-portal_play_pos = [80.06132507324219, -328.281494140625]
+portal_play_pos = [77.95010375976562, -328.89202880859375]
 portal_play_pos_tolerance = 1.0
-portal_play_rot = 202
+portal_play_rot = 198
 portal_play_rot_tolerance = 1.0
 
 
