@@ -95,7 +95,10 @@ class RobloxPortal(RobloxBase):
         keyboard.release("e")
         time.sleep(0.1)
         keyboard.press("e")
-        time.sleep(2.5)
+        start = time.time()
+        while time.time() - start < 2.5:
+            if self.find_text("leave"):
+                break
         keyboard.release("e")
 
     def open_portal(self, level=None):
