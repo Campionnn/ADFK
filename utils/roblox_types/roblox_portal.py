@@ -87,6 +87,7 @@ class RobloxPortal(RobloxBase):
     def enter(self, depth=0):
         self.set_foreground()
         self.close_menu()
+        time.sleep(0.1)
         self.controller.move_forward(0.4)
         time.sleep(0.25)
         self.controller.reset()
