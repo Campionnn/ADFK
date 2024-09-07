@@ -1,8 +1,8 @@
 import os
 import time
+import keyboard
 import logging
 import concurrent.futures
-from typing import Type
 from abc import ABC, abstractmethod
 
 from utils.exceptions import *
@@ -194,24 +194,29 @@ class RobloxManagerBase(ABC):
         self.logger.info("Clicking play next for all accounts")
         self.all_click_text("playnext")
 
-    def all_click_text(self, text, skip=False):
+    def all_close_menu(self):
+        self.logger.info("Closing menu for all accounts")
+        self.all_click_text("x")
+
+    def all_click_text(self, text, skip=False, search=None):
         def find_text(username_):
             return username_, self.roblox_instances[username_].find_text(text)
 
-        text_coords = {}
         failed_users = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future_to_username = {executor.submit(find_text, username): username for username in config.usernames}
 
             for future in concurrent.futures.as_completed(future_to_username):
                 username, coords = future.result()
-                text_coords[username] = coords
-
                 instance = self.roblox_instances[username]
                 if coords is not None:
                     try:
                         instance.set_foreground()
                         instance.mouse_click(coords[0], coords[1])
+                        if search is not None:
+                            time.sleep(0.1)
+                            keyboard.write(search)
+                        time.sleep(0.1)
                     except StartupException:
                         if not skip:
                             raise

@@ -274,6 +274,8 @@ class RobloxBase(ABC):
         match text:
             case "start":
                 return ocr.find_start(self.screenshot())
+            case "x":
+                return ocr.find_close_menu(self.screenshot())
             case "$":
                 return ocr.find_sell(self.screenshot())
             case "search":
@@ -294,6 +296,8 @@ class RobloxBase(ABC):
                 return ocr.find_panic_leave(self.screenshot())
             case "friendsonly":
                 return ocr.find_friends_only(self.screenshot())
+            case "items":
+                return ocr.find_inventory(self.screenshot())
             case _:
                 return ocr.find_text(self.screenshot(), text)
 
@@ -361,12 +365,7 @@ class RobloxBase(ABC):
 
     def close_menu(self):
         self.logger.info(f"Closing menu for {self.username}")
-        image = self.screenshot()
-        close_coord = ocr.find_close_menu(image)
-        if close_coord is not None:
-            self.mouse_click(close_coord[0], close_coord[1])
-            return True
-        return False
+        return self.click_text("x", log=False)
 
     def check_placement(self, image=None):
         if image is None:

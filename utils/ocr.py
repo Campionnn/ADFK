@@ -84,6 +84,7 @@ def find_search(image_input: np.ndarray):
     image = image_input.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
+    thresh = thresh[:thresh.shape[0] // 4, :thresh.shape[1] // 2]
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}'
     result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
     result = result.split('\n')
@@ -217,6 +218,21 @@ def find_friends_only(image_input: np.ndarray):
         if len(line) == 12 and difflib.SequenceMatcher(None, "friendsonly", line[11].lower()).ratio() > 0.8:
             x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
             return x - w // 3, y + h // 2
+
+
+def find_inventory(image_input: np.ndarray):
+    image = image_input.copy()
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
+    thresh = thresh[:, :thresh.shape[1] // 4]
+    tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}'
+    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=5)
+    result = result.split('\n')
+    for line in result:
+        line = line.split('\t')
+        if len(line) == 12 and difflib.SequenceMatcher(None, "items", line[11].lower()).ratio() > 0.8:
+            x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
+            return x + w // 2, y + h // 2
 
 
 def find_speed_up(image_input: np.ndarray, speed):
@@ -448,28 +464,16 @@ def find_best_portal(image_input, max_rarity):
     for i in range(5):
         crop = thresh[:, int(thresh.shape[1]//split_lines[i]):int(thresh.shape[1]//split_lines[i+1])]
         tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}()'
-        result = pytesseract.image_to_data(crop, config=tesseract_config, timeout=10)
-        result = result.split('\n')
-        for line in result:
-            line = line.split('\t')
-            if len(line) == 12:
-                found_rarity = 0
-                for rarity_num in possible_rarities:
-                    if word_in_text("("+rarity_numbers.get(rarity_num)+")", line[11].lower()):
-                        found_rarity = rarity_num
-                        break
-                if found_rarity != 0 and found_rarity > rarity:
-                    rarity = found_rarity
-                    if rarity == max_rarity:
-                        return rarity
+        result = pytesseract.image_to_string(crop, config=tesseract_config, timeout=10)
+        found_rarity = 0
+        for rarity_num in possible_rarities:
+            if word_in_text("("+rarity_numbers.get(rarity_num)+")", result.lower()):
+                found_rarity = rarity_num
+                break
+        if found_rarity != 0 and found_rarity > rarity:
+            rarity = found_rarity
+            if rarity == max_rarity:
+                return rarity
     if rarity > 0:
         return rarity
     return None
-
-
-def find_all_text(image_input):
-    image = image_input.copy()
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
-    tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}'
-    return pytesseract.image_to_string(thresh, config=tesseract_config, timeout=10)

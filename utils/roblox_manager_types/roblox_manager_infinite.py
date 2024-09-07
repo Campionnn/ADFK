@@ -55,4 +55,4 @@ class RobloxManagerInfinite(RobloxManagerBase):
         except (PlayException, StartupException, MemoryException):
             self.all_back_to_lobby()
             self.ensure_all_instance()
-            return self.all_enter()
+            return
