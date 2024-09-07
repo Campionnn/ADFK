@@ -50,9 +50,9 @@ class RobloxManagerBase(ABC):
             self.logger.info(f"Roblox PIDs: {pids}")
             self.main_instance = self.roblox_instances[config.usernames[0]]
         else:
-            if type(self.roblox_type) in [RobloxInfinite, RobloxStory, RobloxPortal, RobloxRealmInfinite]:
+            if self.roblox_type in [RobloxInfinite, RobloxStory, RobloxPortal, RobloxRealmInfinite]:
                 self.all_start_instance()
-            elif type(self.roblox_type) is RobloxTower:
+            elif self.roblox_type is RobloxTower:
                 self.all_start_instance([config.usernames[0]])
             else:
                 self.logger.error("Invalid roblox type")
