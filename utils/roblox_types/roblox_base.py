@@ -61,6 +61,8 @@ class RobloxBase(ABC):
         self.afk_time = 0.0
         self.wave_checker = None
         self.sell_flag = False
+        self.over_flag = False
+        self.over_lock = threading.Lock()
         self.speed_up_attempts = 0
         self.host = ""
 
@@ -488,6 +490,7 @@ class RobloxBase(ABC):
         self.invalid_towers = []
         self.current_wave = [0, 0.0, 0]
         self.sell_flag = False
+        self.over_flag = False
         self.speed_up_attempts = 0
         self.host = host or self.username
         self.set_foreground()
@@ -789,11 +792,20 @@ class RobloxBase(ABC):
             if self.speed_up_attempts % 5 == 0:
                 self.speed_up()
             self.speed_up_attempts += 1
-        if self.find_text("backtolobby") is not None:
+        if self.over_flag:
+            self.over_flag = False
             return True
+        threading.Thread(target=self.check_over_thread).start()
         if self.current_wave[1] != 0 and time.time() - self.current_wave[1] > 300:
             self.logger.warning("Wave lasted for over 5 minutes and money hasn't changed. Manually leaving")
             return True
+
+    def check_over_thread(self):
+        with self.over_lock:
+            if self.over_flag:
+                return
+            if self.find_text("backtolobby") is not None:
+                self.over_flag = True
 
     def check_wave(self):
         screen = self.screenshot()

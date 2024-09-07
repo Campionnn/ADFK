@@ -18,7 +18,6 @@ rot_offset = 0x174
 money_color = (22, 218, 243)
 money_tolerance = 10
 
-# Screen Key Sequence
 # Sequence required to get to button after pressing UI Navigation Toggle
 # Fast travel button
 fast_travel_sequence = "d"

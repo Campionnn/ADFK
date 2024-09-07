@@ -1,8 +1,6 @@
 from utils.roblox_types.roblox_base import RobloxBase
 
 import time
-import autoit
-import difflib
 import keyboard
 
 try:
