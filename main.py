@@ -66,12 +66,11 @@ def main():
     except ImportError:
         import config
     from utils.sequence_maker import App
-    from utils.roblox_manager import RobloxManager
-    from utils.roblox_types.roblox_infinite import RobloxInfinite
-    from utils.roblox_types.roblox_story import RobloxStory
-    from utils.roblox_types.roblox_tower import RobloxTower
-    from utils.roblox_types.roblox_portal import RobloxPortal
-    from utils.roblox_types.roblox_realm_infinite import RobloxRealmInfinite
+    from utils.roblox_manager_types.roblox_manager_infinite import RobloxManagerInfinite
+    from utils.roblox_manager_types.roblox_manager_story import RobloxManagerStory
+    from utils.roblox_manager_types.roblox_manager_tower import RobloxManagerTower
+    from utils.roblox_manager_types.roblox_manager_portal import RobloxManagerPortal
+    from utils.roblox_manager_types.roblox_manager_realm_infinite import RobloxManagerRealmInfinite
 
     keyboard.hook_key(config.kill_key, lambda _: os._exit(0))
 
@@ -228,7 +227,7 @@ def main():
                 pass
         logger.info(f"World Choice: {world_names[world_input]}")
 
-        roblox_manager = RobloxManager(RobloxInfinite, roblox_pids=roblox_pids, world=world_input, custom_sequence=custom_sequence)
+        roblox_manager = RobloxManagerInfinite(roblox_pids=roblox_pids, world=world_input, custom_sequence=custom_sequence)
         roblox_manager.start()
 
     elif mode_choice == 2:
@@ -266,13 +265,13 @@ def main():
                 pass
         logger.info(f"Chapter Choice: Chapter {chapter_input}")
 
-        roblox_manager = RobloxManager(RobloxStory, roblox_pids=roblox_pids, world=world_input, level=chapter_input, custom_sequence=custom_sequence)
+        roblox_manager = RobloxManagerStory(roblox_pids=roblox_pids, world=world_input, level=chapter_input, custom_sequence=custom_sequence)
         roblox_manager.start()
 
     elif mode_choice == 3:
         if roblox_pids is not None:
             roblox_pids = {list(roblox_pids.keys())[0]: list(roblox_pids.values())[0]}
-        roblox_manager = RobloxManager(RobloxTower, roblox_pids=roblox_pids, world=0, custom_sequence=custom_sequence)
+        roblox_manager = RobloxManagerTower(roblox_pids=roblox_pids, world=0, custom_sequence=custom_sequence)
         roblox_manager.start()
 
     elif mode_choice == 4:
@@ -324,7 +323,7 @@ def main():
             rarity_input = rarity_input + 11
             logger.info(f"Rarity Stop: {rarity_names2[rarity_input]}")
 
-        roblox_manager = RobloxManager(RobloxPortal, roblox_pids=roblox_pids, world=portal_input, level=rarity_input, custom_sequence=custom_sequence)
+        roblox_manager = RobloxManagerPortal(roblox_pids=roblox_pids, world=portal_input, level=rarity_input, custom_sequence=custom_sequence)
         roblox_manager.start()
 
     elif mode_choice == 5:
@@ -359,7 +358,7 @@ def main():
                     pass
             logger.info(f"World Choice: {realm_names[world_input]}")
 
-            roblox_manager = RobloxManager(RobloxRealmInfinite, roblox_pids=roblox_pids, world=world_input, custom_sequence=custom_sequence)
+            roblox_manager = RobloxManagerRealmInfinite(roblox_pids=roblox_pids, world=world_input, custom_sequence=custom_sequence)
             roblox_manager.start()
         else:
             print("Not implemented yet")
