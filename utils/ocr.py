@@ -456,24 +456,28 @@ def find_portal(image_input, portal_rarity):
 
 
 def find_best_portal(image_input, max_rarity):
-    possible_rarities = [rarity for rarity in list(rarity_numbers.keys()) if rarity <= max_rarity]
+    all_rarities = list(rarity_numbers.keys())
+    all_rarities.reverse()
     image = image_input.copy()
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
-    rarity = 0
+    thresh = thresh[thresh.shape[0]//4:int(thresh.shape[0]//4*3.1), :]
+    max_found = 0
     for i in range(5):
         crop = thresh[:, int(thresh.shape[1]//split_lines[i]):int(thresh.shape[1]//split_lines[i+1])]
         tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}()'
         result = pytesseract.image_to_string(crop, config=tesseract_config, timeout=10)
-        found_rarity = 0
-        for rarity_num in possible_rarities:
-            if word_in_text("("+rarity_numbers.get(rarity_num)+")", result.lower()):
-                found_rarity = rarity_num
-                break
-        if found_rarity != 0 and found_rarity > rarity:
-            rarity = found_rarity
-            if rarity == max_rarity:
-                return rarity
-    if rarity > 0:
-        return rarity
-    return None
+        col_max = 0
+        valid_max = 0
+        for rarity in all_rarities:
+            if word_in_text(f"({rarity_numbers.get(rarity)})", result.lower()):
+                col_max = max(col_max, rarity)
+                if rarity <= max_rarity:
+                    valid_max = rarity
+                    break
+        if col_max < max_found:
+            break
+        max_found = max(max_found, valid_max)
+        if max_found == max_rarity:
+            return max_found
+    return max_found

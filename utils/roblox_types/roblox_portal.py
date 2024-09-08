@@ -146,12 +146,7 @@ class RobloxPortal(RobloxBase):
         return ""
 
     def get_best_portal(self):
-        best_portal = 0
-        rarity = ocr.find_best_portal(self.screenshot(), self.level - 11)
-        if rarity is not None:
-            if self.level - 11 >= rarity > best_portal:
-                best_portal = rarity
-        return best_portal
+        return ocr.find_best_portal(self.screenshot(), self.level - 11)
 
     def go_to_play(self):
         if self.world == 4:
