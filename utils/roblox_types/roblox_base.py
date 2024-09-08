@@ -698,13 +698,18 @@ class RobloxBase(ABC):
         self.mouse_click(tower_coords[0], tower_coords[1])
         time.sleep(0.1)
         start = time.time()
+        count = 0
         while True:
             if time.time() - start > 3:
                 self.logger.warning(f"Timed out toggling auto use for tower: {tower_id}")
                 return True
-            if self.click_text("autouse"):
+            if self.click_text("autouse", log=False):
                 self.logger.info(f"Toggled auto use for tower with id {tower_id}")
                 return True
+            else:
+                if count % 3 == 0:
+                    self.mouse_click(tower_coords[0], tower_coords[1])
+            count += 1
 
     def wait_money(self, amount):
         amount = amount * getattr(self, "cost_multiplier", 1)
