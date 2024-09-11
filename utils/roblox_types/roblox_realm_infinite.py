@@ -96,7 +96,7 @@ class RobloxRealmInfinite(RobloxRealmBase):
     def check_over(self):
         if super().check_over():
             return True
-        if self.current_wave[0] >= config.wave_stop and type(self) is RobloxRealmInfinite:
+        if config.wave_stop != -1 and self.current_wave[0] >= config.wave_stop and type(self) is RobloxRealmInfinite:
             self.wave_checker.stop()
             self.sell_flag = True
             return False
