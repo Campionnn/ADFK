@@ -4,7 +4,7 @@
 # Roblox in game coordinates to search for memory address
 # y coord at leaderboard fast travel
 init_pos_x = -100.8087
-init_pos_y = 13.1135
+init_pos_y = 13.1508
 init_pos_z = -462.4467
 init_pos_tolerance = 0.001
 init_pitch = -0.9848

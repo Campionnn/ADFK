@@ -825,6 +825,7 @@ class RobloxBase(ABC):
             self.current_wave[1] = time.time()
 
     def anti_afk(self):
+        self.logger.info("Anti-AFKing")
         for username in config.usernames:
             instance = self.roblox_instances.get(username)
             try:
