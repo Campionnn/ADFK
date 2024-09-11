@@ -64,6 +64,7 @@ class RobloxManagerPortal(RobloxManagerBase):
                     self.ensure_all_instance()
                     self.all_leave()
                     return
+        time.sleep(0.1)
         self.logger.info(f"Starting portal")
         try:
             if not self.roblox_instances[host].start():

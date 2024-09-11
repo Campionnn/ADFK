@@ -37,8 +37,17 @@ class RobloxManagerInfinite(RobloxManagerBase):
                 self.ensure_all_instance()
                 self.all_leave()
                 return
+        time.sleep(0.1)
         self.logger.info(f"Starting story")
-        self.main_instance.start()
+        try:
+            if not self.main_instance.start():
+                self.all_leave()
+                self.ensure_all_instance()
+                return
+        except StartupException:
+            self.all_leave()
+            self.ensure_all_instance()
+            return
         time.sleep(2)
         self.logger.info("Going to play position")
         try:
