@@ -1,6 +1,6 @@
 # ADFK
 
-## IMPORTANT: This was last updated right before they added the unit manager QoL feature, it likely caused things to break. The new golden portals have not been added either
+## IMPORTANT: This was last updated right before they added the unit manager QoL feature, it still mostly works but it can break in certain circumstances. The new golden portals have not been added either
 ## If this gets enough attention, I will keep it updated with the game
 ## Anime Defenders AFK macro to reliably farm automatically
 
