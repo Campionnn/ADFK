@@ -8,6 +8,7 @@ import tkinter as tk
 import importlib
 import subprocess
 import sys
+from config_loader import load_config
 
 
 def check_and_install_modules():
@@ -56,15 +57,22 @@ def check_and_install_modules():
 
 
 def main():
-    check_and_install_modules()
+    if not os.path.exists("config.py"):
+        from utils.templates import config_template
+        with open("config.py", "w") as f:
+            f.write(config_template)
+        print("Config file created. Please fill in the necessary fields then relaunch.")
+        input("Press enter to exit.")
+        sys.exit(0)
+
+    config = load_config()
+
+    if not getattr(sys, 'frozen', False):
+        check_and_install_modules()
 
     import coloredlogs
     import keyboard
 
-    try:
-        import config_personal as config
-    except ImportError:
-        import config
     from utils.sequence_maker import App
     from utils.roblox_manager_types.roblox_manager_infinite import RobloxManagerInfinite
     from utils.roblox_manager_types.roblox_manager_story import RobloxManagerStory
@@ -74,14 +82,18 @@ def main():
 
     keyboard.hook_key(config.kill_key, lambda _: os._exit(0))
 
+    if getattr(sys, 'frozen', False):
+        log_format = "%(asctime)s - %(levelname)s - %(message)s"
+    else:
+        log_format = "%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"
     pathlib.Path("./logs/").mkdir(parents=True, exist_ok=True)
     pathlib.Path("custom-sequence/").mkdir(parents=True, exist_ok=True)
     logger = logging.getLogger("ADFK")
-    coloredlogs.install(logger=logger, level=config.logging_level, fmt="%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)")
+    coloredlogs.install(logger=logger, level=config.logging_level, fmt=log_format)
     logger.setLevel(logging.DEBUG)
     file_handler = logging.FileHandler(f"./logs/ADFK_{time.strftime('%Y%m%d-%H%M%S')}.log")
     file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"))
+    file_handler.setFormatter(logging.Formatter(log_format))
     logger.addHandler(file_handler)
 
     mode_names = {

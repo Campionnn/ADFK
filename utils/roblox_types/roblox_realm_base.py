@@ -3,10 +3,8 @@ from utils.roblox_types.roblox_base import RobloxBase
 import time
 import keyboard
 
-try:
-    import config_personal as config
-except ImportError:
-    import config
+from config_loader import load_config
+config = load_config()
 import coords
 from utils import memory
 from utils.exceptions import *

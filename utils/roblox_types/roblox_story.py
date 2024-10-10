@@ -2,10 +2,8 @@ from utils.roblox_types.roblox_infinite import RobloxInfinite
 
 import time
 
-try:
-    import config_personal as config
-except ImportError:
-    import config
+from config_loader import load_config
+config = load_config()
 import coords
 from utils.exceptions import *
 

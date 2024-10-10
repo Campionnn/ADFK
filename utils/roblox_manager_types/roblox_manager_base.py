@@ -14,10 +14,8 @@ from utils.roblox_types.roblox_tower import RobloxTower
 from utils.roblox_types.roblox_portal import RobloxPortal
 from utils.roblox_types.roblox_realm_infinite import RobloxRealmInfinite
 from utils.memory import get_pids_by_name
-try:
-    import config_personal as config
-except ImportError:
-    import config
+from config_loader import load_config
+config = load_config()
 
 
 class RobloxManagerBase(ABC):

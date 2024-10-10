@@ -5,10 +5,9 @@ import difflib
 import re
 
 import coords
-try:
-    import config_personal as config
-except ImportError:
-    import config
+from config_loader import load_config
+config = load_config()
+
 
 pytesseract.pytesseract.tesseract_cmd = config.tesseract_path
 LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"

@@ -4,10 +4,8 @@ import time
 
 from utils.exceptions import *
 from utils.roblox_types.roblox_story import RobloxStory
-try:
-    import config_personal as config
-except ImportError:
-    import config
+from config_loader import load_config
+config = load_config()
 
 
 class RobloxManagerStory(RobloxManagerBase):

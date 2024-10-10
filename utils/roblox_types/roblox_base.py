@@ -14,10 +14,8 @@ import win32gui
 import win32process
 from abc import ABC, abstractmethod
 
-try:
-    import config_personal as config
-except ImportError:
-    import config
+from config_loader import load_config
+config = load_config()
 import coords
 from utils.exceptions import *
 from utils import ocr

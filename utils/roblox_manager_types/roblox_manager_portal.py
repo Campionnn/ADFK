@@ -5,10 +5,8 @@ import concurrent.futures
 
 from utils.exceptions import *
 from utils.roblox_types.roblox_portal import RobloxPortal
-try:
-    import config_personal as config
-except ImportError:
-    import config
+from config_loader import load_config
+config = load_config()
 
 
 class RobloxManagerPortal(RobloxManagerBase):
