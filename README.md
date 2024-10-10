@@ -6,6 +6,18 @@
 
 Uses techniques such as reading Roblox memory without modifying it and optical character recognition to automate the game
 
+### Features
+* Automatically start and initialize all clients using Roblox Account Manager webserver
+* Can farm the following game modes on all maps:
+  * Story Mode
+  * Infinite Mode
+  * Portals (except golden portals)
+  * Tower of Eternity (can be buggy)
+  * Athenyx Realm Infinite (can be buggy)
+* Reliably go to the same position on the map when placing for consistent farming
+* Occasionally send screenshots to a Discord webhook for monitoring
+* Custom sequence that lets you place, upgrade, sell, and more in any order you want
+
 ### Requirements
 * [Tesseract OCR](https://github.com/tesseract-ocr/tesseract): [Download](https://github.com/UB-Mannheim/tesseract/releases/download/v5.4.0.20240606/tesseract-ocr-w64-setup-5.4.0.20240606.exe)
 * [ViGEmBus](https://github.com/nefarius/ViGEmBus): [Download](https://github.com/nefarius/ViGEmBus/releases/download/v1.22.0/ViGEmBus_1.22.0_x64_x86_arm64.exe)
