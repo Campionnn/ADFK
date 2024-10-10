@@ -1,5 +1,7 @@
 # ADFK
 
+## IMPORTANT: This was last updated right before they added the unit manager QoL feature, it likely caused things to break. The new golden portals have not been added either
+## If this gets enough attention, I will keep it updated with the game
 ## Anime Defenders AFK macro to reliably farm automatically
 
 Uses techniques such as reading Roblox memory without modifying it and optical character recognition to automate the game
@@ -8,6 +10,8 @@ Uses techniques such as reading Roblox memory without modifying it and optical c
 * [Tesseract OCR](https://github.com/tesseract-ocr/tesseract): [Download](https://github.com/UB-Mannheim/tesseract/releases/download/v5.4.0.20240606/tesseract-ocr-w64-setup-5.4.0.20240606.exe)
 * [ViGEmBus](https://github.com/nefarius/ViGEmBus): [Download](https://github.com/nefarius/ViGEmBus/releases/download/v1.22.0/ViGEmBus_1.22.0_x64_x86_arm64.exe)
   * Should automatically install when installing requirements, but if it breaks then try reinstalling from here
+* [Roblox Account Manager](https://github.com/Campionnn/Roblox-Account-Manager): [Download](https://github.com/Campionnn/Roblox-Account-Manager/releases/tag/3.6.2)
+  * This links to my fork of the official RAM because there were some bugs in the webserver code that caused it to not work sometimes. These changes have been merged on the [official RAM](https://github.com/ic3w0lf22/Roblox-Account-Manager/pull/413), but are not included in the executable in releases for some reason
 
 ### Usage
 Make sure the following are true for all accounts  
@@ -29,6 +33,8 @@ Anime Defenders Settings
 Miscellaneous
 * All instances of Roblox must be on the primary monitor or only have 1 monitor turned on
 * This has only been extensively tested on 1920x1080 and 2560x1440 resolutions and may not work on other resolutions
+* All accounts are added to Roblox Account Manager
+* Everything in `configs.py` is filled out. Discord webhook and webserver password are optional
 
 ### Running from source
 1. Install Python 3.8 or higher (3.11.4 recommended)
