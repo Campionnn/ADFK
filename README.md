@@ -36,6 +36,13 @@ Miscellaneous
 * All accounts are added to Roblox Account Manager
 * Everything in `configs.py` is filled out. Discord webhook and webserver password are optional
 
+### Running from executable(Recommended for most users)
+1. Download the latest release from the [releases page](https://github.com/Campionnn/ADFK/releases)
+2. Put the executable in a folder
+3. Run the executable once to generate the `config.py` file 
+4. Fill out necessary information in `config.py`
+5. Run the executable again
+
 ### Running from source
 1. Install Python 3.8 or higher (3.11.4 recommended)
 2. Install the required packages with `pip install -r requirements.txt` or running the script which will install them for you
