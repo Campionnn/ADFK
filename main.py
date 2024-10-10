@@ -7,6 +7,7 @@ import pathlib
 import tkinter as tk
 import importlib
 import subprocess
+import multiprocessing
 import sys
 from config_loader import load_config
 
@@ -81,6 +82,7 @@ def main():
     from utils.roblox_manager_types.roblox_manager_realm_infinite import RobloxManagerRealmInfinite
 
     keyboard.hook_key(config.kill_key, lambda _: os._exit(0))
+    multiprocessing.freeze_support()
 
     if getattr(sys, 'frozen', False):
         log_format = "%(asctime)s - %(levelname)s - %(message)s"
