@@ -9,6 +9,7 @@ import importlib
 import subprocess
 import multiprocessing
 import sys
+import traceback
 from config_loader import load_config
 
 
@@ -390,4 +391,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print("An unexpected error occurred")
+        print(traceback.format_exc())
+        input("Press enter to exit.")
+        os._exit(0)
