@@ -83,7 +83,6 @@ class RobloxBase(ABC):
             self.logger.critical("Could not connect to Roblox Account Manager. Make sure it is running and all settings are correct")
             os._exit(0)
             return
-        print(result.text)
         if result.status_code != 200 or "Launched" not in result.text:
             if result.text == "":
                 self.logger.critical("Make sure you are using my fork of Roblox Account Manager")
