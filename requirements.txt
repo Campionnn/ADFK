@@ -5,7 +5,6 @@ psutil~=6.0.0
 pybind11~=2.13.1
 setuptools~=73.0.1
 keyboard~=0.13.5
-mouse~=0.7.1
 vgamepad~=0.1.0
 pywinauto~=0.6.8
 PyAutoIt~=0.6.5
