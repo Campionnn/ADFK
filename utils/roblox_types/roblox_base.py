@@ -83,8 +83,23 @@ class RobloxBase(ABC):
             self.logger.critical("Could not connect to Roblox Account Manager. Make sure it is running and all settings are correct")
             os._exit(0)
             return
-        if result.status_code != 200:
-            raise StartupException(f"Invalid status code for {self.username}: {result.status_code}")
+        print(result.text)
+        if result.status_code != 200 or "Launched" not in result.text:
+            if result.text == "":
+                self.logger.critical("Make sure you are using my fork of Roblox Account Manager")
+                self.logger.critical("The official one has a bug with the webserver causing it to not launch correctly")
+                self.logger.critical("My fork can be found at https://github.com/Campionnn/Roblox-Account-Manager/releases/latest")
+                input("Press enter to exit")
+                os._exit(0)
+            if result.text == "Invalid Password":
+                self.logger.critical("Invalid webserver password in config")
+                self.logger.critical("If you get this error and you did not set a password")
+                self.logger.critical("Make sure you are using my fork of Roblox Account Manager")
+                self.logger.critical("The official one has a bug with the webserver causing it to not launch correctly")
+                self.logger.critical("My fork can be found at https://github.com/Campionnn/Roblox-Account-Manager/releases/latest")
+                input("Press enter to exit")
+                os._exit(0)
+            raise StartupException(f"Invalid webserver response for {self.username}: {result.status_code} - {result.text}")
 
         self.logger.info(f"Waiting for Roblox instance for {self.username} to start")
         time.sleep(3)
