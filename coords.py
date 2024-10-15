@@ -1,5 +1,5 @@
 # In game roblox coords for internal use. Do not modify this file unless you know what you are doing.
-# Change your own settings in config.py
+# Change your own settings in config.toml
 
 # Roblox in game coordinates to search for memory address
 # y coord at leaderboard fast travel

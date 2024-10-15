@@ -46,13 +46,13 @@ Miscellaneous
 * All instances of Roblox must be on the primary monitor or only have 1 monitor turned on
 * This has only been extensively tested on 1920x1080 and 2560x1440 resolutions and may not work on other resolutions
 * All accounts are added to Roblox Account Manager
-* Everything in `configs.py` is filled out. Discord webhook and webserver password are optional
+* Everything in `config.toml` is filled out. Discord webhook and webserver password are optional
 
 ### Running from executable(Recommended for most users)
 1. Download the latest release from the [releases page](https://github.com/Campionnn/ADFK/releases)
 2. Put the executable in a folder
-3. Run the executable once to generate the `config.py` file 
-4. Fill out necessary information in `config.py`
+3. Run the executable once to generate the `config.toml` file 
+4. Fill out necessary information in `config.toml`
 5. Run the executable again
 
 ### Running from source
@@ -61,5 +61,5 @@ Miscellaneous
 3. Install Tesseract OCR from above
 4. Optionally delete the precompiled memory_search.cp311-win_amd64.pyd file to automatically recompile yourself
 5. You will likely have to do step 4 if you aren't using Python 3.11.4
-6. Modify the `config.json` file to your settings
+6. Modify the `config.toml` file to your settings
 7. Run the script with `python main.py`

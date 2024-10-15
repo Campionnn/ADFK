@@ -58,9 +58,9 @@ def check_and_install_modules():
 
 
 def main():
-    if not os.path.exists("config.py"):
+    if not os.path.exists("config.toml"):
         from utils.templates import config_template
-        with open("config.py", "w") as f:
+        with open("config.toml", "w") as f:
             f.write(config_template)
         print("Config file created. Please fill in the necessary fields then relaunch.")
         input("Press enter to exit.")
