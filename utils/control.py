@@ -14,8 +14,8 @@ class Control:
         try:
             self.gamepad = vg.VX360Gamepad()
         except AssertionError:
-            self.logger.error("No controller detected. Try relaunching the script")
-            self.logger.error("If that doesn't work reinstall ViGEmBus from https://github.com/nefarius/ViGEmBus/releases")
+            self.logger.critical("No controller detected. Try relaunching the script")
+            self.logger.critical("If that doesn't work reinstall ViGEmBus from https://github.com/nefarius/ViGEmBus/releases")
             os._exit(0)
 
     def reset(self):

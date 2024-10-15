@@ -43,7 +43,7 @@ class RobloxManagerBase(ABC):
             try:
                 pids = {self.roblox_instances[username].pid: self.roblox_instances[username].y_addrs for username in config.usernames}
             except KeyError:
-                self.logger.error("Invalid Roblox PIDs for usernames")
+                self.logger.critical("Invalid Roblox PIDs for usernames")
                 return
             self.logger.info(f"Roblox PIDs: {pids}")
             self.main_instance = self.roblox_instances[config.usernames[0]]
@@ -53,7 +53,7 @@ class RobloxManagerBase(ABC):
             elif self.roblox_type is RobloxTower:
                 self.all_start_instance([config.usernames[0]])
             else:
-                self.logger.error("Invalid roblox type")
+                self.logger.critical("Invalid roblox type")
                 raise StartupException("Invalid roblox type")
 
     def start(self):

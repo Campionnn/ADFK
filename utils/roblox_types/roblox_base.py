@@ -80,7 +80,7 @@ class RobloxBase(ABC):
         try:
             result = requests.get(f"http://localhost:{config.port}/LaunchAccount", params=params)
         except requests.exceptions.ConnectionError:
-            self.logger.error("Could not connect to Roblox Account Manager. Make sure it is running and all settings are correct")
+            self.logger.critical("Could not connect to Roblox Account Manager. Make sure it is running and all settings are correct")
             os._exit(0)
             return
         if result.status_code != 200:
