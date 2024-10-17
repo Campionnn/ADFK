@@ -15,15 +15,25 @@ def update_config():
     if current_config.get("config_version") == template_config.get("config_version"):
         return
 
-    updated_config = template_config.copy()
-    updated_config.update(current_config)
+    print("Mismatched config version, updating config.toml")
 
-    with open("config.toml", "w") as f:
-        for key, value in updated_config.items():
+    for key, value in current_config.items():
+        if key in template_config:
+            template_config[key] = value
+
+    with open("config.toml", "wb") as f:
+        f.write(config_template.strip().encode())
+
+    with open("config.toml", "r+") as f:
+        content = f.read()
+        for key, value in current_config.items():
             if isinstance(value, str):
-                f.write(f'{key} = "{value}"\n')
+                content = content.replace(f'{key} = "{template_config[key]}"', f'{key} = "{value}"')
             else:
-                f.write(f'{key} = {value}\n')
+                content = content.replace(f'{key} = {template_config[key]}', f'{key} = {value}')
+        f.seek(0)
+        f.write(content)
+        f.truncate()
 
 
 def load_config():
