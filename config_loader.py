@@ -44,7 +44,7 @@ def load_config():
         if not os.path.exists("config.toml"):
             from utils.templates import config_template
             with open("config.toml", "w") as f:
-                f.write(config_template)
+                f.write(config_template.strip())
             print("Config file created. Please fill in the necessary fields then relaunch.")
             input("Press enter to exit.")
             os._exit(0)
