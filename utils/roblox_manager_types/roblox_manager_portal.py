@@ -123,9 +123,7 @@ class RobloxManagerPortal(RobloxManagerBase):
         if best_instance is not None:
             self.logger.info(f"Opening {self.main_instance.rarity_names.get(best_portal)} portal for {best_instance.username}")
             attempts = 0
-            while True:
-                if attempts > 3:
-                    return ""
+            while attempts < 3:
                 if best_instance.open_portal(best_portal):
                     return best_instance.username
                 attempts += 1
