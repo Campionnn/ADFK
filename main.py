@@ -388,5 +388,7 @@ if __name__ == "__main__":
     except Exception as e:
         print("An unexpected error occurred")
         print(traceback.format_exc())
+        with open(f"./logs/ADFK_{time.strftime('%Y%m%d-%H%M%S')}_crash.log", "w") as f:
+            f.write(traceback.format_exc())
         input("Press enter to exit.")
         os._exit(0)
