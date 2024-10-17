@@ -22,7 +22,7 @@
 * [ViGEmBus](https://github.com/nefarius/ViGEmBus): [Download](https://github.com/nefarius/ViGEmBus/releases/download/v1.22.0/ViGEmBus_1.22.0_x64_x86_arm64.exe)
   * Should automatically install when installing requirements from source, but if it breaks then try reinstalling from here
   * You must manually install this if you are using the executable
-* [Roblox Account Manager](https://github.com/Campionnn/Roblox-Account-Manager): [Download](https://github.com/Campionnn/Roblox-Account-Manager/releases/tag/3.6.2)
+* [Roblox Account Manager](https://github.com/Campionnn/Roblox-Account-Manager): [Download](https://github.com/Campionnn/Roblox-Account-Manager/releases/download/3.6.2/Roblox.Account.Manager.exe)
   * This links to my fork of the official RAM because there were some bugs in the webserver code that causes it to not work sometimes. These changes have been merged on the [official RAM](https://github.com/ic3w0lf22/Roblox-Account-Manager/pull/413), but are not included in the executable in releases for some reason
   * When asked to update check "Do not ask again" and click "No"
 
