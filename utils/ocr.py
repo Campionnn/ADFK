@@ -260,6 +260,21 @@ def find_speed_up(image_input: np.ndarray, speed):
     return None
 
 
+def find_unit_manager(image_input: np.ndarray):
+    image = image_input.copy()
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
+    thresh = thresh[:, thresh.shape[1] // 5 * 4:]
+    tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}'
+    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    result = result.split('\n')
+    for line in result:
+        line = line.split('\t')
+        if len(line) == 12 and difflib.SequenceMatcher(None, "units", line[11].lower()).ratio() > 0.8:
+            x, y, w, h = int(line[6]), int(line[7]), int(line[8]), int(line[9])
+            return x + w // 2 + (image.shape[1] // 5 * 4), y + h // 2
+
+
 def find_fast_travel(image_input: np.ndarray, location, ratio=3, use_mask=False):
     image = image_input.copy()
     crop = image[:image.shape[0] // ratio, :image.shape[1] // ratio]
@@ -309,7 +324,7 @@ def find_close_menu(image_input: np.ndarray):
 
 def read_upgrade_cost(image_input: np.ndarray):
     image = image_input.copy()
-    crop = image[image.shape[0] // 2:, :image.shape[1] // 2]
+    crop = image[image.shape[0] // 2:, :image.shape[1] // 4]
 
     lower_mask1 = np.array([86, 255, 50])
     upper_mask1 = np.array([86, 255, 170])

@@ -312,6 +312,8 @@ class RobloxBase(ABC):
                 return ocr.find_friends_only(self.screenshot())
             case "items":
                 return ocr.find_inventory(self.screenshot())
+            case "units":
+                return ocr.find_unit_manager(self.screenshot())
             case _:
                 return ocr.find_text(self.screenshot(), text)
 
@@ -324,7 +326,7 @@ class RobloxBase(ABC):
         self.mouse_click(text_coords[0], text_coords[1])
         return True
 
-    def click_nav_rect(self, sequence, error_message, chapter=False):
+    def click_nav_rect(self, sequence, error_message="", chapter=False):
         self.logger.info(f"Clicking button with sequence \"{sequence}\" for {self.username}")
         self.set_foreground()
         keyboard.send("\\")
@@ -381,6 +383,10 @@ class RobloxBase(ABC):
         self.logger.info(f"Closing menu for {self.username}")
         return self.click_text("x", log=False)
 
+    def close_unit_manager(self):
+        self.logger.info(f"Closing unit manager for {self.username}")
+        return self.click_text("units", log=False)
+
     def check_placement(self, image=None):
         if image is None:
             image = self.screenshot()
@@ -404,14 +410,14 @@ class RobloxBase(ABC):
 
     def fast_travel(self, location):
         self.logger.info(f"Fast traveling to {location} for {self.username}")
-        rect = self.click_nav_rect(coords.fast_travel_sequence, "")
+        rect = self.click_nav_rect(coords.fast_travel_sequence)
         time.sleep(0.1)
         attempts = 0
         while rect is None or not self.check_fast_travel(self.screenshot()):
             if attempts > 2:
                 return False
             self.check_crash()
-            rect = self.click_nav_rect(coords.fast_travel_sequence, "")
+            rect = self.click_nav_rect(coords.fast_travel_sequence)
             attempts += 1
             time.sleep(0.1)
         time.sleep(0.25)
@@ -497,7 +503,7 @@ class RobloxBase(ABC):
             self.anti_afk()
             self.afk_time = time.time()
 
-    def play(self, host=None):
+    def play(self, new_world=True, host=None):
         self.placed_towers = {}
         self.invalid_towers = []
         self.current_wave = [0, 0.0, 0]
@@ -518,7 +524,8 @@ class RobloxBase(ABC):
         time.sleep(1)
         self.controller.reset_look()
         self.controller.zoom_out(1)
-        self.wait_game_load("story")
+        if new_world:
+            self.close_unit_manager()
 
     def go_to_play(self):
         self.cont_go_to_pos(self.place_pos[0], self.place_pos[1], self.place_pos_tolerance, jump=True, timeout=15)

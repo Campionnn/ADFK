@@ -35,10 +35,11 @@ class RobloxManagerTower(RobloxManagerBase):
             self.ensure_all_instance()
             return
         time.sleep(2)
+        new_world = True
         while True:
             self.logger.info("Going to play position")
             try:
-                self.main_instance.play()
+                self.main_instance.play(new_world=new_world)
             except (PlayException, StartupException):
                 self.all_back_to_lobby()
                 return
@@ -48,6 +49,7 @@ class RobloxManagerTower(RobloxManagerBase):
                     if self.main_instance.find_text("victory") is not None:
                         self.logger.debug("Detected victory screen")
                         if self.main_instance.find_text("playnext"):
+                            new_world = False
                             self.logger.debug("Clicking play next")
                             self.all_play_next()
                             continue
@@ -56,6 +58,7 @@ class RobloxManagerTower(RobloxManagerBase):
                             self.all_back_to_lobby()
                             break
                     else:
+                        self.logger.info("Detected defeat screen")
                         self.all_back_to_lobby()
                         break
             except (PlayException, StartupException, MemoryException):

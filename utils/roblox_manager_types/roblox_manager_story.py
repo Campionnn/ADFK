@@ -50,10 +50,11 @@ class RobloxManagerStory(RobloxManagerBase):
                 self.ensure_all_instance()
                 return
             time.sleep(2)
+            new_world = True
             while True:
                 self.logger.info("Going to play position")
                 try:
-                    self.main_instance.play()
+                    self.main_instance.play(new_world=new_world)
                 except (PlayException, StartupException):
                     self.all_back_to_lobby()
                     return
@@ -64,17 +65,19 @@ class RobloxManagerStory(RobloxManagerBase):
                         if self.main_instance.find_text("victory") is not None:
                             self.logger.debug("Detected victory screen")
                             if self.main_instance.find_text("playnext"):
+                                new_world = False
                                 self.logger.debug("Clicking play next")
                                 self.all_play_next()
                                 self.level += 1
                                 continue
                             else:
-                                self.logger.debug("Finished world. Going back to lobby")
+                                self.logger.info("Finished world. Going back to lobby")
                                 self.all_back_to_lobby()
                                 self.world += 1
                                 self.level = 1
                                 break
                         elif self.main_instance.find_text("defeat") is not None:
+                            new_world = False
                             self.logger.warning("Detected defeat screen. Trying again")
                             self.all_play_again()
                             continue

@@ -55,16 +55,18 @@ class RobloxManagerRealmInfinite(RobloxManagerBase):
             self.ensure_all_instance()
             return
         time.sleep(2)
+        new_world = True
         while True:
             self.logger.info("Going to play position")
             try:
-                self.main_instance.play()
+                self.main_instance.play(new_world=new_world)
             except (PlayException, StartupException):
                 self.all_back_to_lobby()
                 return
             self.logger.info("Performing custom sequence")
             try:
                 if not self.main_instance.do_custom_sequence():
+                    new_world = False
                     self.logger.info("Playing again")
                     self.all_play_again()
             except (PlayException, StartupException, MemoryException):

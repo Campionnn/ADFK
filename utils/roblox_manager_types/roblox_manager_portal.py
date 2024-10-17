@@ -77,7 +77,7 @@ class RobloxManagerPortal(RobloxManagerBase):
         time.sleep(2)
         self.logger.info("Going to play position")
         try:
-            self.main_instance.play(host)
+            self.main_instance.play(host=host)
         except (PlayException, StartupException):
             self.all_back_to_lobby()
             return

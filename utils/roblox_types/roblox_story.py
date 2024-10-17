@@ -25,7 +25,7 @@ class RobloxStory(RobloxInfinite):
             self.controller.zoom_out(0.25)
             self.click_nav_rect(self.world_sequence, "Could not find world button")
             time.sleep(0.5)
-            self.click_nav_rect("d"*10 + "a"*3 + "s" * self.level * 2, "Could not find selected chapter", chapter=True)
+            self.click_nav_rect("d"*10 + "a"*3 + "s" * (self.level - 1), "Could not find selected chapter", chapter=True)
             time.sleep(0.5)
             self.click_text("confirm")
         return True
