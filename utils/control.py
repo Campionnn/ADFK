@@ -14,8 +14,8 @@ class Control:
         try:
             self.gamepad = vg.VX360Gamepad()
         except AssertionError:
-            self.logger.critical("No controller detected. Try relaunching the script")
-            self.logger.critical("If that doesn't work reinstall ViGEmBus from https://github.com/nefarius/ViGEmBus/releases")
+            self.logger.critical("No controller detected. Try relaunching the script (This will happen randomly for some reason)")
+            self.logger.critical("If that doesn't work reinstall ViGEmBus from https://github.com/Campionnn/ADFK?tab=readme-ov-file#requirements")
             os._exit(0)
 
     def reset(self):
@@ -133,6 +133,7 @@ class Control:
         if abs(current_x - final_x) > tolerance and abs(current_z - final_z) > tolerance:
             self.turn_towards_yaw(pid, y_addrs, self.calculate_degree_pos(current_x, current_z, final_x, final_z), 2, 0.3)
         start = time.time()
+        stuck_start = time.time()
         count = 0
         while time.time() - start < timeout:
             current_x = current_pos[0]
@@ -153,7 +154,15 @@ class Control:
             time.sleep(0.1)
             if slow:
                 self.reset_move()
-            current_pos = memory.get_current_info(pid, y_addrs)
+            new_pos = memory.get_current_info(pid, y_addrs)
+            if self.calculate_distance(new_pos[0], new_pos[2], current_x, current_z) < 1:
+                if time.time() - stuck_start > 5:
+                    self.logger.warning("Stuck while moving to position")
+                    self.reset_move()
+                    return False
+            else:
+                stuck_start = time.time()
+            current_pos = new_pos
             count += 1
         self.logger.warning("Timed out while moving to position")
         self.reset_move()
