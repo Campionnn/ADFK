@@ -58,14 +58,6 @@ def check_and_install_modules():
 
 
 def main():
-    if not os.path.exists("config.toml"):
-        from utils.templates import config_template
-        with open("config.toml", "w") as f:
-            f.write(config_template)
-        print("Config file created. Please fill in the necessary fields then relaunch.")
-        input("Press enter to exit.")
-        sys.exit(0)
-
     config = load_config()
 
     if not getattr(sys, 'frozen', False):

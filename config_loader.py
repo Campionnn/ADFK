@@ -41,7 +41,16 @@ def update_config():
 def load_config():
     global _config
     if _config is None:
+        if not os.path.exists("config.toml"):
+            from utils.templates import config_template
+            with open("config.toml", "w") as f:
+                f.write(config_template)
+            print("Config file created. Please fill in the necessary fields then relaunch.")
+            input("Press enter to exit.")
+            os._exit(0)
+
         update_config()
+
         _config = types.ModuleType('config')
         with open("config.toml", "rb") as f:
             toml_data = tomllib.load(f)
