@@ -74,12 +74,18 @@ Make sure the following are true for all accounts
    1. Optional settings are marked
    2. Read the comment (the lines that start with #) above each setting to understand what they do and how to format them
    3. Set a port for the web server in Roblox Account Manager which can be any 4 numbers and put it in `config.toml` under `port`
-   4. If you add a password to RAM webserver, you must add it to `config.toml` under `password`
-   5. **Do the following steps if your private server link does not end in `privateServerLinkCode=12345678901234567890123456789012` with a bunch of random numbers**
+   4. Add usernames from Roblox Account Manager to `config.toml` under `usernames`
+      1. Make sure that these are usernames and not display names
+      2. Each username should be in quotes and separated by a comma
+      3. Square brackets surround the list of usernames
+      4. Example: `usernames = ["username1", "username2", "username3"]`
+      5. You can use any number of usernames from 1 to 4
+   5. If you add a password to RAM webserver, you must add it to `config.toml` under `password`
+   6. **Do the following steps if your private server link does not end in `privateServerLinkCode=12345678901234567890123456789012` with a bunch of random numbers**
       1. Open your private server link in a browser where you are logged into Roblox
       2. Wait for Roblox to launch and close the game
       3. Copy the new link from the browser and paste it into `config.toml` under `private_server_link`
-   6. To create a Discord webhook, follow these instructions
+   7. To create a Discord webhook, follow these instructions
       1. Go to a private Discord server that you have permission to create webhooks in
       2. Right-click on a channel and click `Edit Channel`
       3. Go to `Integrations` and click `Webhooks`
