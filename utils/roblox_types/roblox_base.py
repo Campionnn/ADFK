@@ -816,7 +816,7 @@ class RobloxBase(ABC):
             self.set_foreground()
 
     def check_over(self):
-        if self.speed_up_attempts <= 50:
+        if not config.auto_max_speed and self.speed_up_attempts <= 50:
             if self.speed_up_attempts % 5 == 0:
                 self.speed_up()
             self.speed_up_attempts += 1

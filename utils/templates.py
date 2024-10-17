@@ -14,6 +14,8 @@ wave_stop = 31
 speed_main = 2
 # Default speed for accounts that are not main account ex: 1, 2, 3
 speed_default = 2
+# Whether Auto Max Speed is enabled. Won't click the speed-up buttons if enabled ex: true or false
+auto_max_speed = false
 # Discord webhook link that occasionally sends screenshots of the game
 discord_webhook = "" # Optional
 # Screenshot quality from 1-100. Lower numbers means less quality ex: 50

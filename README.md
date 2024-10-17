@@ -44,7 +44,7 @@ Make sure the following are true for all accounts
 * Damage Indicators are disabled
 * Have the appropriate level that you want to farm unlocked
 * Auto Max Speed can be enabled but might make early game less reliable
-  * The script will automatically increase the speed based on the configs in `config.toml`
+  * The script will automatically increase the speed based on the configs in `config.toml` if it is disabled
 
 ### Roblox Account Manager
 * All accounts are added and logged in
