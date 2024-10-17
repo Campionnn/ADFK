@@ -571,6 +571,8 @@ class RobloxBase(ABC):
                             self.check_afk()
                             if not self.upgrade_tower(tower_id, True):
                                 return False
+                            if self.check_placement():
+                                keyboard.send("c")
                 for _ in range(int(action.get('amount'))):
                     for tower_id in action.get("ids"):
                         self.check_afk()
@@ -595,6 +597,8 @@ class RobloxBase(ABC):
                     self.check_afk()
                     if not self.sell_tower(tower_id):
                         return False
+            if self.check_placement():
+                keyboard.send("c")
             time.sleep(0.2)
         while True:
             self.check_afk()
