@@ -40,3 +40,6 @@ usernames = []
 # Link to private server ex: "https://www.roblox.com/games/17017769292/Anime-Defenders?privateServerLinkCode=12345678901234567890123456789012"
 # If it does not end in all numbers, open private server link in a browser and copy the code from the url once it changes
 private_server_link = ""
+
+# Config version
+config_version = "1.0.0"
