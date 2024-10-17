@@ -29,12 +29,16 @@
 ## Settings
 Make sure the following are true for all accounts  
 ### Roblox
-* Fullscreen is enabled and automatically opens in fullscreen
-* Chat is closed
-* Camera Mode is set to "Default (Classic)"
-* UI Navigation Toggle is enabled
-* Graphics settings are set to the lowest
-* Language is set to English
+* Experience Language is set to English
+* The following settings should be set automatically, but please set them manually if it fails
+  * Fullscreen is enabled
+  * Chat is closed
+  * Shift Lock Switch is disabled
+  * Camera Mode is set to "Default (Classic)"
+  * Movement Mode is set to "Default (Keyboard)"
+  * UI Navigation Toggle is enabled
+  * Graphics settings are set to the lowest
+  * Sensitivity is set to lowest (0.2)
 
 ### Anime Defenders
 * Skill VFX is disabled

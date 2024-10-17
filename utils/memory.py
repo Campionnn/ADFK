@@ -19,11 +19,11 @@ def floats_to_degree(float1, float2):
     return yaw_degrees
 
 
-def get_pids_by_name(process_name):
+def get_pids():
     pids = []
-    for process in psutil.process_iter(['pid', 'name']):
-        if process.info['name'] == process_name:
-            pids.append(process.info['pid'])
+    for process in psutil.process_iter(["pid", "name"]):
+        if process.info["name"] == "RobloxPlayerBeta.exe":
+            pids.append(process.info["pid"])
     return pids
 
 

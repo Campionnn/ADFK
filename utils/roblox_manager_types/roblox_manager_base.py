@@ -4,6 +4,7 @@ import keyboard
 import logging
 import concurrent.futures
 from abc import ABC, abstractmethod
+import xml.etree.ElementTree as ET
 
 from utils.exceptions import *
 from utils.control import Control
@@ -13,7 +14,7 @@ from utils.roblox_types.roblox_story import RobloxStory
 from utils.roblox_types.roblox_tower import RobloxTower
 from utils.roblox_types.roblox_portal import RobloxPortal
 from utils.roblox_types.roblox_realm_infinite import RobloxRealmInfinite
-from utils.memory import get_pids_by_name
+from utils.memory import get_pids
 from config_loader import load_config
 config = load_config()
 
@@ -23,21 +24,79 @@ class RobloxManagerBase(ABC):
         self.roblox_type = getattr(self, "roblox_type", RobloxBase)
         self.logger = logging.getLogger("ADFK")
         self.controller = Control()
+        self.roblox_pids = roblox_pids
         self.world = world
         self.level = level
         self.custom_sequence = custom_sequence
         if self.custom_sequence is None:
             self.default_sequence()
 
-        self.place_id = "17017769292"
-        self.roblox_exe = "RobloxPlayerBeta.exe"
-
         self.main_instance = None
         self.roblox_instances = {}
-        if roblox_pids is not None:
+
+    def start(self):
+        self.set_roblox_settings()
+        self.init_instances()
+
+        while True:
+            if self.all_enter():
+                break
+            try:
+                self.main_instance.wave_checker.stop()
+            except AttributeError:
+                pass
+
+    def set_roblox_settings(self):
+        self.logger.info("Changing Roblox settings")
+        setting_path = os.path.join(os.getenv('LOCALAPPDATA'), 'Roblox', 'GlobalBasicSettings_13.xml')
+        tree = ET.parse(setting_path)
+        root = tree.getroot()
+
+        settings_changed = False
+
+        for item in root.findall(".//Item[@class='UserGameSettings']"):
+            properties = item.find("Properties")
+            settings_to_change = {
+                "CameraMode": "0",
+                "CameraYInverted": "false",
+                "ChatVisible": "false",
+                "ComputerCameraMovementChanged": "true",
+                "ComputerCameraMovementMode": "0",
+                "ComputerMovementChanged": "true",
+                "ComputerMovementMode": "0",
+                "ControlMode": "0",
+                "Fullscreen": "true",
+                "GamepadCameraSensitivity": "0.200159997",
+                "GraphicsOptimizationMode": "1",
+                "GraphicsQualityLevel": "3",
+                "MaxQualityEnabled": "false",
+                "MouseSensitivity": "0.200159997",
+                "SavedQualityLevel": "1",
+                "StartMaximized": "true",
+                "UiNavigationKeyBindEnabled": "true",
+            }
+            for key, new_value in settings_to_change.items():
+                element = properties.find(f"./*[@name='{key}']")
+                if element is not None:
+                    current_value = element.text
+                    if current_value != new_value:
+                        element.text = new_value
+                        settings_changed = True
+
+        if settings_changed:
+            try:
+                tree.write(setting_path, encoding="utf-8", xml_declaration=True)
+            except OSError:
+                self.logger.warning("Failed to automatically change Roblox settings")
+                self.logger.warning("Please change the settings manually according to https://github.com/Campionnn/ADFK?tab=readme-ov-file#roblox")
+                self.logger.warning("After changing the settings, close Roblox to save settings")
+                input("Press enter once finished")
+
+    def init_instances(self):
+        if self.roblox_pids is not None:
             self.logger.info("Initializing Roblox instances from given PIDs and Memory Addresses")
-            for pid, y_addrs in roblox_pids.items():
-                username = config.usernames[list(roblox_pids.keys()).index(pid)]
+            for pid, y_addrs in self.roblox_pids.items():
+                username = config.usernames[list(self.roblox_pids.keys()).index(pid)]
                 instance = self.roblox_type(self.roblox_instances, self.controller, username, self.world, self.level, self.custom_sequence, pid, y_addrs)
                 self.roblox_instances[username] = instance
             try:
@@ -55,15 +114,6 @@ class RobloxManagerBase(ABC):
             else:
                 self.logger.critical("Invalid roblox type")
                 raise StartupException("Invalid roblox type")
-
-    def start(self):
-        while True:
-            if self.all_enter():
-                break
-            try:
-                self.main_instance.wave_checker.stop()
-            except AttributeError:
-                pass
 
     def all_start_instance(self, usernames=None):
         self.roblox_instances = {}
@@ -132,7 +182,7 @@ class RobloxManagerBase(ABC):
 
     def kill_all_roblox(self):
         self.logger.warning("Killing all bad Roblox instances")
-        pids = get_pids_by_name(self.roblox_exe)
+        pids = get_pids()
         count = 0
         while len(pids) > 0:
             if count > 5:
@@ -145,7 +195,7 @@ class RobloxManagerBase(ABC):
                         pass
             count += 1
             time.sleep(1)
-            pids = get_pids_by_name(self.roblox_exe)
+            pids = get_pids()
         time.sleep(5)
 
     def default_sequence(self):

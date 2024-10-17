@@ -21,7 +21,7 @@ from utils.exceptions import *
 from utils import ocr
 from utils import memory
 from utils import control
-from utils.memory import get_pids_by_name
+from utils.memory import get_pids
 from utils.repeated_timer import RepeatedTimer
 
 
@@ -108,7 +108,7 @@ class RobloxBase(ABC):
             if time.time() - start > 120:
                 raise StartupException(f"Timed out looking for Roblox instance for {self.username}")
             current_pids = [instance.pid for instance in self.roblox_instances.values()]
-            unique_pids = [pid for pid in get_pids_by_name(ROBLOX_EXE) if pid not in current_pids]
+            unique_pids = [pid for pid in get_pids() if pid not in current_pids]
             time.sleep(1)
         if len(unique_pids) > 1:
             start2 = time.time()
@@ -116,7 +116,7 @@ class RobloxBase(ABC):
                 if time.time() - start2 > 10:
                     raise PlayException(f"Too many Roblox instances found")
                 current_pids = [instance.pid for instance in self.roblox_instances.values()]
-                unique_pids = [pid for pid in get_pids_by_name(ROBLOX_EXE) if pid not in current_pids]
+                unique_pids = [pid for pid in get_pids() if pid not in current_pids]
                 time.sleep(1)
         self.pid = unique_pids[0]
         self.logger.info(f"Roblox instance for {self.username} started. Waiting for window to appear")
@@ -172,7 +172,7 @@ class RobloxBase(ABC):
             pass
         self.logger.debug("Waiting for Roblox instance to close")
         while True:
-            if self.pid not in get_pids_by_name(ROBLOX_EXE):
+            if self.pid not in get_pids():
                 break
             time.sleep(1)
         time.sleep(5)
