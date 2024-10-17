@@ -61,6 +61,7 @@ Make sure the following are true for all accounts
 * All instances of Roblox must be on the primary monitor or only have 1 monitor turned on
 * This has only been extensively tested on 1920x1080 and 2560x1440 resolutions and may not work consistently on other resolutions
 * Everything in `config.toml` is filled out. Optional settings are marked
+* Custom fonts will likely break the OCR, so if you have issues try changing your font to the default one
 
 ## Step-by-step guide for first time users
 1. Download and install the required software from [Requirements](#requirements)
