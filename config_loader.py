@@ -1,3 +1,4 @@
+import os
 import types
 import tomllib
 from utils.templates import config_template
@@ -34,6 +35,10 @@ def update_config():
         f.seek(0)
         f.write(content)
         f.truncate()
+
+    print("Please fill in the new config.toml file")
+    input("Press any key to exit")
+    os._exit(0)
 
 
 def load_config():
