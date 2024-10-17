@@ -18,23 +18,20 @@ def update_config():
 
     print("Mismatched config version, updating config.toml")
 
+    new_config = config_template.strip()
     for key, value in current_config.items():
-        if key in template_config:
-            template_config[key] = value
-
-    with open("config.toml", "wb") as f:
-        f.write(config_template.strip().encode())
-
-    with open("config.toml", "r+") as f:
-        content = f.read()
-        for key, value in current_config.items():
+        if key == "config_version":
+            continue
+        try:
             if isinstance(value, str):
-                content = content.replace(f'{key} = "{template_config[key]}"', f'{key} = "{value}"')
+                new_config = new_config.replace(f'{key} = "{template_config[key]}"', f'{key} = "{value}"')
             else:
-                content = content.replace(f'{key} = {template_config[key]}', f'{key} = {value}')
-        f.seek(0)
-        f.write(content)
-        f.truncate()
+                new_config = new_config.replace(f'{key} = {template_config[key]}', f'{key} = {value}')
+        except KeyError:
+            pass
+
+    with open("config.toml", "w") as f:
+        f.write(new_config)
 
     print("Please fill in the new config.toml file")
     input("Press any key to exit")

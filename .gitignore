@@ -10,3 +10,5 @@
 /*.exe
 /*.zip
 /config.toml
+/dev.py
+/test.py

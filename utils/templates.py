@@ -42,6 +42,6 @@ usernames = []
 # If it does not end in all numbers, open private server link in a browser and copy the code from the url once it changes
 private_server_link = ""
 
-# Config version
-config_version = "1.0.0"
+# Config version, do not modify
+config_version = "v1"
 """

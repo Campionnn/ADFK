@@ -72,7 +72,7 @@ Make sure the following are true for all accounts
 7. Run the executable once to generate `config.toml` and close it
 8. Fill out necessary information in `config.toml`. Open `config.toml` in any text editor such as Notepad or [Notepad++](https://notepad-plus-plus.org/downloads/)
    1. Optional settings are marked
-   2. Read the comments above each setting to understand what they do and how to format them
+   2. Read the comment (the lines that start with #) above each setting to understand what they do and how to format them
    3. Set a port for the web server in Roblox Account Manager which can be any 4 numbers and put it in `config.toml` under `port`
    4. If you add a password to RAM webserver, you must add it to `config.toml` under `password`
    5. **Do the following steps if your private server link does not end in `privateServerLinkCode=12345678901234567890123456789012` with a bunch of random numbers**
