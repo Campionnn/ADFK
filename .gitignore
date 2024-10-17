@@ -9,7 +9,6 @@
 /dist/
 /*.exe
 /*.zip
-/ADFK.log
-/config_personal.py
+/config.toml
 /dev.py
 /test.py

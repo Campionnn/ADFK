@@ -22,7 +22,7 @@
 * [ViGEmBus](https://github.com/nefarius/ViGEmBus): [Download](https://github.com/nefarius/ViGEmBus/releases/download/v1.22.0/ViGEmBus_1.22.0_x64_x86_arm64.exe)
   * Should automatically install when installing requirements from source, but if it breaks then try reinstalling from here
   * You must manually install this if you are using the executable
-* [Roblox Account Manager](https://github.com/Campionnn/Roblox-Account-Manager): [Download](https://github.com/Campionnn/Roblox-Account-Manager/releases/tag/3.6.2)
+* [Roblox Account Manager](https://github.com/Campionnn/Roblox-Account-Manager): [Download](https://github.com/Campionnn/Roblox-Account-Manager/releases/download/3.6.2/Roblox.Account.Manager.exe)
   * This links to my fork of the official RAM because there were some bugs in the webserver code that causes it to not work sometimes. These changes have been merged on the [official RAM](https://github.com/ic3w0lf22/Roblox-Account-Manager/pull/413), but are not included in the executable in releases for some reason
   * When asked to update check "Do not ask again" and click "No"
 
@@ -72,7 +72,7 @@ Make sure the following are true for all accounts
 7. Run the executable once to generate `config.toml` and close it
 8. Fill out necessary information in `config.toml`. Open `config.toml` in any text editor such as Notepad or [Notepad++](https://notepad-plus-plus.org/downloads/)
    1. Optional settings are marked
-   2. Read the comments above each setting to understand what they do and how to format them
+   2. Read the comment (the lines that start with #) above each setting to understand what they do and how to format them
    3. Set a port for the web server in Roblox Account Manager which can be any 4 numbers and put it in `config.toml` under `port`
    4. If you add a password to RAM webserver, you must add it to `config.toml` under `password`
    5. **Do the following steps if your private server link does not end in `privateServerLinkCode=12345678901234567890123456789012` with a bunch of random numbers**
