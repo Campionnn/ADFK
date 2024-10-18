@@ -58,7 +58,7 @@ class RobloxPortal(RobloxBase):
         try:
             pos = memory.get_current_pos(self.pid, self.y_addrs)
             attempts = 0
-            while self.controller.calculate_distance(pos[0], pos[2], coords.portal_play_pos[0], coords.portal_play_pos[1]) > 15:
+            while self.controller.calculate_distance(pos[0], pos[2], coords.portal_play_pos[0], coords.portal_play_pos[1]) > 25:
                 if attempts > 2:
                     raise StartupException("Could not find portal")
                 time.sleep(0.1)

@@ -6,6 +6,7 @@ import vgamepad as vg
 import logging
 import random
 from utils import memory
+from utils.exceptions import *
 
 
 class Control:
@@ -125,6 +126,8 @@ class Control:
         min_speed = 0.4 if not slow else 0.2
         max_speed = 1.0 if not slow else 0.3
         current_pos = memory.get_current_info(pid, y_addrs)
+        if any(math.isnan(x) for x in current_pos):
+            raise MemoryException("Could not read player info")
         init_distance = self.calculate_distance(current_pos[0], current_pos[2], final_x, final_z)
         self.logger.debug(f"Going to ({final_x}, {final_z}) from ({current_pos[0]}, {current_pos[2]})")
         self.logger.debug(f"Distance to target: {init_distance}")
