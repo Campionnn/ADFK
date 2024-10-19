@@ -148,14 +148,15 @@ class RobloxBase(ABC):
         self.controller.look_down(1.0)
         time.sleep(1.0)
         self.controller.reset_look()
+        time.sleep(0.5)
         self.logger.info(f"Searching for memory address for {self.username}")
         try:
             self.y_addrs = memory.search(self.pid)
         except MemoryException:
             self.y_addrs = None
         if self.y_addrs is None or self.y_addrs == 0:
-            self.logger.debug(f"Could not find memory address for {self.username}")
-            self.logger.debug(f"If this happens repeatedly, there was likely a Roblox update")
+            self.logger.warning(f"Could not find memory address for {self.username}")
+            self.logger.warning(f"If this happens repeatedly, there was likely a Roblox update")
             raise StartupException("Could not find memory address")
         self.logger.info(f"Memory address found for {self.username}. {self.pid}: {self.y_addrs}")
         return
@@ -404,7 +405,7 @@ class RobloxBase(ABC):
     def check_crash(self):
         if self.pid is None:
             raise StartupException("Roblox pid does not exist")
-        if not psutil.pid_exists(self.pid):
+        if self.pid not in memory.get_pids():
             raise StartupException("Roblox instance crashed")
 
     def fast_travel(self, location):
@@ -421,15 +422,20 @@ class RobloxBase(ABC):
             time.sleep(0.1)
         time.sleep(0.25)
         screen = self.screenshot()
-        fast_travel_coords = None
-        for i in range(2, 5):
-            fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=i)
-            if fast_travel_coords is not None:
-                break
-            else:
-                fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=i, use_mask=True)
-                if fast_travel_coords is not None:
-                    break
+        fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=4)
+        if fast_travel_coords is None:
+            fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=4, use_mask=True)
+        if fast_travel_coords is None:
+            self.controller.jump()
+            time.sleep(0.5)
+            self.controller.look_down(1.0)
+            time.sleep(1)
+            self.controller.reset_look()
+            time.sleep(0.25)
+            screen = self.screenshot()
+            fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=4)
+            if fast_travel_coords is None:
+                fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=4, use_mask=True)
         if fast_travel_coords is None:
             self.logger.warning(f"Could not find fast travel location: {location}")
             return False
@@ -437,7 +443,7 @@ class RobloxBase(ABC):
         return True
 
     def check_fast_travel(self, screen):
-        self.logger.info(f"Checking if fast travel menu is open for {self.username}")
+        self.logger.debug(f"Checking if fast travel menu is open for {self.username}")
         location = "challenges"
         fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=4)
         if fast_travel_coords is None:

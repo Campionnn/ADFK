@@ -149,7 +149,7 @@ class RobloxManagerBase(ABC):
 
         while True:
             if self.check_all_crash():
-                time.sleep(5)
+                time.sleep(10)
                 if self.check_all_crash():
                     break
             time.sleep(1)
@@ -157,8 +157,6 @@ class RobloxManagerBase(ABC):
         pids = {self.roblox_instances[username].pid: self.roblox_instances[username].y_addrs for username in config.usernames}
         self.logger.info(f"Roblox PIDs: {pids}")
         self.main_instance = self.roblox_instances[config.usernames[0]]
-
-        time.sleep(5)
 
         if not self.check_all_crash():
             self.ensure_all_instance()
@@ -279,6 +277,8 @@ class RobloxManagerBase(ABC):
                         instance.mouse_click(coords[0], coords[1])
                         if search is not None:
                             time.sleep(0.1)
+                            instance.mouse_click(coords[0], coords[1])
+                            time.sleep(0.2)
                             keyboard.write(search)
                         time.sleep(0.1)
                     except StartupException:
