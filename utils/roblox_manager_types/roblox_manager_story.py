@@ -35,8 +35,8 @@ class RobloxManagerStory(RobloxManagerBase):
                     instance.enter()
                 except (StartupException, MemoryException):
                     instance.close_instance()
-                    self.ensure_all_instance()
                     self.all_leave()
+                    self.ensure_all_instance()
                     return
             time.sleep(0.1)
             self.logger.debug(f"Starting story")
@@ -56,7 +56,8 @@ class RobloxManagerStory(RobloxManagerBase):
                 try:
                     self.main_instance.play(new_world=new_world)
                 except (PlayException, StartupException):
-                    self.all_back_to_lobby()
+                    self.all_back_to_lobby(True)
+                    self.ensure_all_instance()
                     return
                 self.logger.info("Performing custom sequence")
                 try:
@@ -85,7 +86,7 @@ class RobloxManagerStory(RobloxManagerBase):
                             self.all_back_to_lobby()
                             break
                 except (PlayException, StartupException, MemoryException):
-                    self.all_back_to_lobby()
+                    self.all_back_to_lobby(True)
                     self.ensure_all_instance()
                     break
         return True

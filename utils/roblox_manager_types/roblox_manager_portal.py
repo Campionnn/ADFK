@@ -30,10 +30,15 @@ class RobloxManagerPortal(RobloxManagerBase):
         if self.level > 10:
             self.logger.info(f"Looking for best {self.main_instance.portal_names.get(self.world)} to open")
             self.all_open_inventory(self.main_instance.portal_names.get(self.world))
-            host = self.open_best_portal()
-            if host == "":
-                self.ensure_all_instance()
+            try:
+                host = self.open_best_portal()
+            except StartupException:
                 self.all_leave()
+                self.ensure_all_instance()
+                return
+            if host == "":
+                self.all_leave()
+                self.ensure_all_instance()
                 return
         else:
             self.logger.info(f"Looking for {self.main_instance.rarity_names.get(self.level)} {self.main_instance.portal_names.get(self.world)} to open")
@@ -42,8 +47,8 @@ class RobloxManagerPortal(RobloxManagerBase):
             attempts = 0
             while not found:
                 if attempts > 3:
-                    self.ensure_all_instance()
                     self.all_leave()
+                    self.ensure_all_instance()
                     return
                 for username in config.usernames:
                     if self.roblox_instances[username].open_portal():
@@ -59,8 +64,8 @@ class RobloxManagerPortal(RobloxManagerBase):
                     instance.enter()
                 except (StartupException, MemoryException):
                     instance.close_instance()
-                    self.ensure_all_instance()
                     self.all_leave()
+                    self.ensure_all_instance()
                     return
         time.sleep(0.1)
         self.logger.info(f"Starting portal")
@@ -79,7 +84,8 @@ class RobloxManagerPortal(RobloxManagerBase):
         try:
             self.main_instance.play(host=host)
         except (PlayException, StartupException):
-            self.all_back_to_lobby()
+            self.all_back_to_lobby(True)
+            self.ensure_all_instance()
             return
         self.logger.info("Performing custom sequence")
         try:
@@ -87,21 +93,26 @@ class RobloxManagerPortal(RobloxManagerBase):
                 self.all_back_to_lobby()
                 return
         except (PlayException, StartupException, MemoryException):
-            self.all_back_to_lobby()
+            self.all_back_to_lobby(True)
             self.ensure_all_instance()
             return
 
     def all_open_inventory(self, search=None):
-        self.all_close_menu()
-        self.logger.info(f"Opening inventory for all accounts")
-        failed = self.all_click_text("items")
-        if len(failed) > 0:
-            return self.all_open_inventory(search)
-        time.sleep(0.1)
-        self.logger.info(f"Searching for {search} in inventory")
-        failed = self.all_click_text("search", search=search)
-        if len(failed) > 0:
-            return self.all_open_inventory(search)
+        try:
+            self.all_close_menu()
+            self.logger.info(f"Opening inventory for all accounts")
+            failed = self.all_click_text("items")
+            if len(failed) > 0:
+                return self.all_open_inventory(search)
+            time.sleep(0.1)
+            self.logger.info(f"Searching for {search} in inventory")
+            failed = self.all_click_text("search", search=search)
+            if len(failed) > 0:
+                return self.all_open_inventory(search)
+        except StartupException:
+            self.all_leave()
+            self.ensure_all_instance()
+            return
 
     def open_best_portal(self):
         def find_best_portal(username_):
@@ -122,9 +133,12 @@ class RobloxManagerPortal(RobloxManagerBase):
                     best_instance = self.roblox_instances[username]
         if best_instance is not None:
             self.logger.info(f"Opening {self.main_instance.rarity_names.get(best_portal)} portal for {best_instance.username}")
-            attempts = 0
-            while attempts < 3:
-                if best_instance.open_portal(best_portal):
-                    return best_instance.username
-                attempts += 1
+            try:
+                attempts = 0
+                while attempts < 3:
+                    if best_instance.open_portal(best_portal):
+                        return best_instance.username
+                    attempts += 1
+            except StartupException:
+                best_instance.close_instance()
         return ""

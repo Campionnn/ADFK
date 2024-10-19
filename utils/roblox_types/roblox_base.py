@@ -235,7 +235,6 @@ class RobloxBase(ABC):
                 img.shape = (height, width, 4)
                 img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
             except Exception as e:
-                self.logger.warning(f"Could not take background screenshot: {e}")
                 raise StartupException(f"Could not take background screenshot: {e}")
             finally:
                 try:

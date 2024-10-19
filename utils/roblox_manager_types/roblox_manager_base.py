@@ -158,6 +158,8 @@ class RobloxManagerBase(ABC):
         self.logger.info(f"Roblox PIDs: {pids}")
         self.main_instance = self.roblox_instances[config.usernames[0]]
 
+        time.sleep(5)
+
         if not self.check_all_crash():
             self.ensure_all_instance()
 
@@ -224,14 +226,20 @@ class RobloxManagerBase(ABC):
 
     def all_leave(self):
         self.logger.info("Clicking leave for all accounts")
-        self.all_click_text("leave", skip=True)
+        try:
+            self.all_click_text("leave", skip=True)
+        except StartupException:
+            pass
 
-    def all_back_to_lobby(self):
+    def all_back_to_lobby(self, skip=False):
         self.logger.info("Going back to lobby for all accounts")
-        failed = self.all_click_text("backtolobby")
+        failed = self.all_click_text("backtolobby", skip=skip)
         for username in failed:
             instance = self.roblox_instances[username]
-            if not instance.leave_wave():
+            try:
+                if not instance.leave_wave():
+                    instance.close_instance()
+            except StartupException:
                 instance.close_instance()
 
     def all_play_again(self):
@@ -254,8 +262,16 @@ class RobloxManagerBase(ABC):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future_to_username = {executor.submit(find_text, username): username for username in config.usernames}
 
+            exception = None
+
             for future in concurrent.futures.as_completed(future_to_username):
-                username, coords = future.result()
+                try:
+                    username, coords = future.result()
+                except StartupException:
+                    if not skip:
+                        exception = future.exception()
+                    failed_users.append(username)
+                    continue
                 instance = self.roblox_instances[username]
                 if coords is not None:
                     try:
@@ -267,8 +283,12 @@ class RobloxManagerBase(ABC):
                         time.sleep(0.1)
                     except StartupException:
                         if not skip:
-                            raise
-                    continue
-                failed_users.append(username)
+                            exception = future.exception()
+                        failed_users.append(username)
+                        continue
+                else:
+                    failed_users.append(username)
 
+        if exception is not None:
+            raise exception
         return failed_users

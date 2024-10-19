@@ -41,7 +41,8 @@ class RobloxManagerTower(RobloxManagerBase):
             try:
                 self.main_instance.play(new_world=new_world)
             except (PlayException, StartupException):
-                self.all_back_to_lobby()
+                self.all_back_to_lobby(True)
+                self.ensure_all_instance()
                 return
             self.logger.info("Performing custom sequence")
             try:
@@ -62,6 +63,6 @@ class RobloxManagerTower(RobloxManagerBase):
                         self.all_back_to_lobby()
                         break
             except (PlayException, StartupException, MemoryException):
-                self.all_back_to_lobby()
+                self.all_back_to_lobby(True)
                 self.ensure_all_instance()
                 return

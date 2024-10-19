@@ -32,8 +32,8 @@ class RobloxManagerInfinite(RobloxManagerBase):
                 instance.enter()
             except (StartupException, MemoryException):
                 instance.close_instance()
-                self.ensure_all_instance()
                 self.all_leave()
+                self.ensure_all_instance()
                 return
         time.sleep(0.1)
         self.logger.info(f"Starting story")
@@ -51,7 +51,8 @@ class RobloxManagerInfinite(RobloxManagerBase):
         try:
             self.main_instance.play()
         except (PlayException, StartupException):
-            self.all_back_to_lobby()
+            self.all_back_to_lobby(True)
+            self.ensure_all_instance()
             return
         self.logger.info("Performing custom sequence")
         try:
@@ -60,6 +61,6 @@ class RobloxManagerInfinite(RobloxManagerBase):
                 self.all_back_to_lobby()
                 return
         except (PlayException, StartupException, MemoryException):
-            self.all_back_to_lobby()
+            self.all_back_to_lobby(True)
             self.ensure_all_instance()
             return
