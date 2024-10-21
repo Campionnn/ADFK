@@ -268,7 +268,6 @@ class RobloxManagerBase(ABC):
                 except StartupException:
                     if not skip:
                         exception = future.exception()
-                    failed_users.append(username)
                     continue
                 instance = self.roblox_instances[username]
                 if coords is not None:
