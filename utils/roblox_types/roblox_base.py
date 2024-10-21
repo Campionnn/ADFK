@@ -422,9 +422,11 @@ class RobloxBase(ABC):
             time.sleep(0.1)
         time.sleep(0.25)
         screen = self.screenshot()
-        fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=3)
-        if fast_travel_coords is None:
-            fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=3, use_mask=True)
+        fast_travel_coords = None
+        for i in range(2, 5):
+            fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=i)
+            if fast_travel_coords is None:
+                fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=i, use_mask=True)
         if fast_travel_coords is None:
             self.controller.jump()
             time.sleep(0.5)
@@ -433,9 +435,10 @@ class RobloxBase(ABC):
             self.controller.reset_look()
             time.sleep(0.25)
             screen = self.screenshot()
-            fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=3)
-            if fast_travel_coords is None:
-                fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=3, use_mask=True)
+            for i in range(2, 5):
+                fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=i)
+                if fast_travel_coords is None:
+                    fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=i, use_mask=True)
         if fast_travel_coords is None:
             self.logger.warning(f"Could not find fast travel location: {location}")
             return False
