@@ -292,16 +292,15 @@ def find_speed_up(image_input: np.ndarray, speed):
             result = pytesseract.image_to_data(contour_crop, config=tesseract_config, timeout=10)
         except RuntimeError:
             return None
-        result = result.split('\n')
-        try:
-            for line in result:
-                line = line.split('\t')
-                if len(line) == 12 and line[11].lower() in speed_map:
-                    found_speed = speed_map.get(line[11].lower())
-                    diff = speed - found_speed
-                    return x + w // 2 + (diff * int(w * 0.9)) + (image.shape[1] // 3), y + h // 2
         except SystemError:
             continue
+        result = result.split('\n')
+        for line in result:
+            line = line.split('\t')
+            if len(line) == 12 and line[11].lower() in speed_map:
+                found_speed = speed_map.get(line[11].lower())
+                diff = speed - found_speed
+                return x + w // 2 + (diff * int(w * 0.9)) + (image.shape[1] // 3), y + h // 2
     return None
 
 
