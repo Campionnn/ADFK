@@ -15,9 +15,13 @@ class Control:
         try:
             self.gamepad = vg.VX360Gamepad()
         except AssertionError:
-            self.logger.critical("No controller detected. Try relaunching the script (This will happen randomly for some reason)")
-            self.logger.critical("If that doesn't work reinstall ViGEmBus from https://github.com/Campionnn/ADFK?tab=readme-ov-file#requirements")
-            os._exit(0)
+            time.sleep(5)
+            try:
+                self.gamepad = vg.VX360Gamepad()
+            except AssertionError:
+                self.logger.critical("No controller detected. Try relaunching the script (This will happen randomly for some reason)")
+                self.logger.critical("If that doesn't work reinstall ViGEmBus from https://github.com/Campionnn/ADFK?tab=readme-ov-file#requirements")
+                os._exit(0)
 
     def reset(self):
         self.gamepad.reset()
