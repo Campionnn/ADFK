@@ -19,7 +19,10 @@ def find_text(image_input: np.ndarray, text):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    try:
+        result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    except RuntimeError:
+        return None
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -35,7 +38,10 @@ def find_game_load(image_input: np.ndarray):
     _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
     thresh = thresh[:, :thresh.shape[1] // 5]
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    try:
+        result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    except RuntimeError:
+        return None
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -52,7 +58,10 @@ def find_start(image_input: np.ndarray):
     _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
     thresh = thresh[:, thresh.shape[1] // 4 * 3:]
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    try:
+        result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    except RuntimeError:
+        return None
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -67,7 +76,10 @@ def find_sell(image_input: np.ndarray):
     _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
     thresh = thresh[thresh.shape[0] // 3 * 2:, :thresh.shape[1] // 3]
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}{NUMBERS}$'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    try:
+        result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    except RuntimeError:
+        return None
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -85,7 +97,10 @@ def find_search(image_input: np.ndarray):
     _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
     thresh = thresh[:thresh.shape[0] // 4, :thresh.shape[1] // 2]
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    try:
+        result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    except RuntimeError:
+        return None
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -99,7 +114,10 @@ def find_type_here(image_input: np.ndarray):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    try:
+        result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    except RuntimeError:
+        return None
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -113,7 +131,10 @@ def find_open_portal(image_input: np.ndarray):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    try:
+        result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    except RuntimeError:
+        return None
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -127,7 +148,10 @@ def find_play_again(image_input: np.ndarray):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    try:
+        result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    except RuntimeError:
+        return None
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -144,7 +168,10 @@ def find_back_to_lobby(image_input: np.ndarray):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    try:
+        result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    except RuntimeError:
+        return None
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -161,7 +188,10 @@ def find_teleport(image_input: np.ndarray):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    try:
+        result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    except RuntimeError:
+        return None
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -178,7 +208,10 @@ def find_join_friend(image_input: np.ndarray):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    try:
+        result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    except RuntimeError:
+        return None
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -196,7 +229,10 @@ def find_panic_leave(image_input: np.ndarray):
     _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
     thresh = thresh[:, thresh.shape[1] // 6 * 5:]
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=5)
+    try:
+        result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    except RuntimeError:
+        return None
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -210,7 +246,10 @@ def find_friends_only(image_input: np.ndarray):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=5)
+    try:
+        result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    except RuntimeError:
+        return None
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -225,7 +264,10 @@ def find_inventory(image_input: np.ndarray):
     _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
     thresh = thresh[:, :thresh.shape[1] // 4]
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=5)
+    try:
+        result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    except RuntimeError:
+        return None
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -247,8 +289,11 @@ def find_speed_up(image_input: np.ndarray, speed):
         contour_crop = thresh[y + int(h * 0.2):y + int(h * 0.8), x + int(w * 0.2):x + int(w * 0.8)]
         tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}{NUMBERS}'
         try:
-            result = pytesseract.image_to_data(contour_crop, config=tesseract_config, timeout=5)
-            result = result.split('\n')
+            result = pytesseract.image_to_data(contour_crop, config=tesseract_config, timeout=10)
+        except RuntimeError:
+            return None
+        result = result.split('\n')
+        try:
             for line in result:
                 line = line.split('\t')
                 if len(line) == 12 and line[11].lower() in speed_map:
@@ -266,7 +311,10 @@ def find_unit_manager(image_input: np.ndarray):
     _, thresh = cv2.threshold(gray, 253, 255, cv2.THRESH_BINARY)
     thresh = thresh[:, thresh.shape[1] // 5 * 4:]
     tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}'
-    result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    try:
+        result = pytesseract.image_to_data(thresh, config=tesseract_config, timeout=10)
+    except RuntimeError:
+        return None
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -291,7 +339,10 @@ def find_fast_travel(image_input: np.ndarray, location, ratio=3, use_mask=False)
         cv2.drawContours(mask, contours, -1, (255, 255, 255), cv2.FILLED)
         crop = cv2.bitwise_and(crop, mask)
 
-    result = pytesseract.image_to_data(crop, config=f'--psm 6 -c tessedit_char_whitelist={LETTERS}', timeout=10).lower()
+    try:
+        result = pytesseract.image_to_data(crop, config=f'--psm 6 -c tessedit_char_whitelist={LETTERS}', timeout=10).lower()
+    except RuntimeError:
+        return None
     result = result.split('\n')
     for line in result:
         line = line.split('\t')
@@ -316,7 +367,10 @@ def find_close_menu(image_input: np.ndarray):
         if 0.8 < w / h < 1.2:
             _, contour_thresh = cv2.threshold(cv2.cvtColor(contour_crop, cv2.COLOR_BGR2GRAY), 253, 255, cv2.THRESH_BINARY)
             if 0.05 < cv2.countNonZero(contour_thresh) / (w * h) < 0.15:
-                result = pytesseract.image_to_string(contour_thresh, config=f'--psm 6 -c tessedit_char_whitelist={LETTERS}', timeout=5).strip().lower()
+                try:
+                    result = pytesseract.image_to_string(contour_thresh, config=f'--psm 6 -c tessedit_char_whitelist={LETTERS}', timeout=10).strip().lower()
+                except RuntimeError:
+                    return None
                 if result == "x":
                     return x + w // 2 + (image.shape[1] // 2), y + h // 2
     return None
@@ -349,10 +403,13 @@ def read_upgrade_cost(image_input: np.ndarray):
         crop = crop[y:y + h, x + w//4:x + w]
         gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)
         _, thresh = cv2.threshold(gray, 254, 255, cv2.THRESH_BINARY)
-        text = str(pytesseract.image_to_string(thresh, config=f'--psm 8 -c tessedit_char_whitelist={NUMBERS}', timeout=5)).strip()
-        if text == "":
+        try:
+            result = str(pytesseract.image_to_string(thresh, config=f'--psm 8 -c tessedit_char_whitelist={NUMBERS}', timeout=10)).strip()
+        except RuntimeError:
             return None
-        return [int(text), x + w // 2, (y + h // 2) + (image.shape[0] // 2)]
+        if result == "":
+            return None
+        return [int(result), x + w // 2, (y + h // 2) + (image.shape[0] // 2)]
     except SystemError:
         return None
 
@@ -372,7 +429,7 @@ def read_current_money(image_input: np.ndarray):
     image[mask != 255] = [0, 0, 0]
     image[mask == 255] = [255, 255, 255]
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    dilate = cv2.dilate(gray, np.ones((3, 3), np.uint8), iterations=5)
+    dilate = cv2.dilate(gray, np.ones((3, 3), np.uint8), iterations=10)
     contours, _ = cv2.findContours(dilate, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     max_area = 0
     x, y, w, h = 0, 0, 0, 0
@@ -385,11 +442,11 @@ def read_current_money(image_input: np.ndarray):
         return None
     try:
         crop = gray[y:y + h, x:x + w]
-        text = str(pytesseract.image_to_string(crop, config=f'--psm 8 --oem 3 -c tessedit_char_whitelist={NUMBERS}', timeout=5)).strip()
+        text = str(pytesseract.image_to_string(crop, config=f'--psm 8 --oem 3 -c tessedit_char_whitelist={NUMBERS}', timeout=10)).strip()
         if text == "":
             return None
         return int(text)
-    except (SystemError, ValueError):
+    except (SystemError, ValueError, RuntimeError):
         return None
 
 
@@ -400,7 +457,10 @@ def read_current_wave(image_input: np.ndarray):
     thresh = thresh[:thresh.shape[0]//2, :]
     kernel = np.ones((3, 3), np.uint8)
     thresh = cv2.erode(thresh, kernel, iterations=1)
-    result = pytesseract.image_to_string(thresh, config=f'--psm 6 -c tessedit_char_whitelist={LETTERS}{NUMBERS}', timeout=5)
+    try:
+        result = pytesseract.image_to_string(thresh, config=f'--psm 6 -c tessedit_char_whitelist={LETTERS}{NUMBERS}', timeout=10)
+    except RuntimeError:
+        return None
     result = result.split('\n')
     for line in result:
         line = line.lower()
@@ -460,7 +520,10 @@ def find_portal(image_input, portal_rarity):
     for i in range(5):
         crop = thresh[:, int(thresh.shape[1]//split_lines[i]):int(thresh.shape[1]//split_lines[i+1])]
         tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}()'
-        result = pytesseract.image_to_data(crop, config=tesseract_config, timeout=10)
+        try:
+            result = pytesseract.image_to_data(crop, config=tesseract_config, timeout=10)
+        except RuntimeError:
+            return None
         result = result.split('\n')
         for line in result:
             line = line.split('\t')
@@ -480,7 +543,10 @@ def find_best_portal(image_input, max_rarity):
     for i in range(5):
         crop = thresh[:, int(thresh.shape[1]//split_lines[i]):int(thresh.shape[1]//split_lines[i+1])]
         tesseract_config = f'--psm 6 -c tessedit_char_whitelist={LETTERS}()'
-        result = pytesseract.image_to_string(crop, config=tesseract_config, timeout=10)
+        try:
+            result = pytesseract.image_to_string(crop, config=tesseract_config, timeout=10)
+        except RuntimeError:
+            return None
         col_max = 0
         valid_max = 0
         for rarity in all_rarities:

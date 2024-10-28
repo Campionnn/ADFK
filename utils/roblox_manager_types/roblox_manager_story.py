@@ -55,7 +55,7 @@ class RobloxManagerStory(RobloxManagerBase):
                 self.logger.info("Going to play position")
                 try:
                     self.main_instance.play(new_world=new_world)
-                except (PlayException, StartupException):
+                except (PlayException, StartupException, MemoryException):
                     self.all_back_to_lobby(True)
                     self.ensure_all_instance()
                     return
