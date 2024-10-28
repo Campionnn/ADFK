@@ -95,7 +95,12 @@ class Control:
 
     def turn_towards_yaw(self, pid, y_addrs, degree, tolerance, min_amount=0.2):
         error = 0
+        start = time.time()
         while True:
+            if time.time() - start > 5:
+                self.logger.warning("Timed out while turning towards yaw")
+                self.reset_look()
+                raise MemoryException("Could not read player info")
             rot = memory.get_current_rot(pid, y_addrs)
             if rot[0] == 0 and abs(90 - rot[1]) < 0.00001 and error < 5:
                 error += 1
