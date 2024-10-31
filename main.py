@@ -107,7 +107,9 @@ def main():
         5: "Underwater Temple",
         6: "Swordsman Dojo",
         7: "Snowy Woods",
-        8: "Crystal Cave"
+        8: "Crystal Cave",
+        9: "Magma Cave",
+        10: "Underwater City"
     }
 
     portal_names = {
@@ -224,10 +226,12 @@ def main():
         print("6: Swordsman Dojo")
         print("7: Snowy Woods")
         print("8: Crystal Cave")
+        print("9: Magma Cave")
+        print("10: Underwater City")
         while True:
             try:
                 world_input = int(input("Enter choice: "))
-                if world_input in [1, 2, 3, 4, 5, 6, 7, 8]:
+                if world_input in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
                     break
             except ValueError:
                 pass
@@ -246,10 +250,12 @@ def main():
         print("6: Swordsman Dojo")
         print("7: Snowy Woods")
         print("8: Crystal Cave")
+        print("9: Magma Cave")
+        print("10: Underwater City")
         while True:
             try:
                 world_input = int(input("Enter choice: "))
-                if world_input in [1, 2, 3, 4, 5, 6, 7, 8]:
+                if world_input in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
                     break
             except ValueError:
                 pass

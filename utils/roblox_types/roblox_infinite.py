@@ -24,7 +24,9 @@ class RobloxInfinite(RobloxBase):
             5: 'underwater',
             6: 'swordsman',
             7: 'snowy',
-            8: 'crystal'
+            8: 'crystal',
+            9: 'magma',
+            10: 'underwater2'
         }
 
         world_prefix = world_map.get(self.world)

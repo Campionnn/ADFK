@@ -112,6 +112,24 @@ crystal_place_rot_tolerance = 1.0
 crystal_place_color = (90, 20, 80)
 crystal_place_color_tolerance = 15
 
+# Magma Cave
+magma_sequence = "a"*2 + "s"*8
+magma_place_pos = [22.15917205810547, 200.3734130859375]
+magma_place_pos_tolerance = 5.0
+magma_place_rot = 208
+magma_place_rot_tolerance = 1.0
+magma_place_color = (80, 80, 150)
+magma_place_color_tolerance = 5
+
+# Underwater City
+underwater2_sequence = "a"*2 + "s"*9
+underwater2_place_pos = [-145.69981384277344, -1275.3985595703125]
+underwater2_place_pos_tolerance = 5.0
+underwater2_place_rot = 0
+underwater2_place_rot_tolerance = 1.0
+underwater2_place_color = (50, 50, 80)
+underwater2_place_color_tolerance = 15
+
 # Tower of Eternity
 tower_enter_pos = [8.400460243225098, -325.99554443359375]
 tower_enter_pos_tolerance = 5.0
