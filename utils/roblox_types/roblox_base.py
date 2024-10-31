@@ -427,6 +427,10 @@ class RobloxBase(ABC):
             fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=i)
             if fast_travel_coords is None:
                 fast_travel_coords = ocr.find_fast_travel(screen, location, ratio=i, use_mask=True)
+                if fast_travel_coords is not None:
+                    break
+            else:
+                break
         if fast_travel_coords is None:
             self.controller.jump()
             time.sleep(0.5)
